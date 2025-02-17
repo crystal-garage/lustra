@@ -55,10 +55,10 @@ module PolymorphismSpec
 
   describe "Clear::Model::IsPolymorphic" do
     it "has a field telling you if the model class is polymorphic" do
-      AbstractClass.polymorphic?.should eq true
-      ConcreteClass1.polymorphic?.should eq true
-      ConcreteClass2.polymorphic?.should eq true
-      OtherModel.polymorphic?.should eq false
+      AbstractClass.polymorphic?.should be_true
+      ConcreteClass1.polymorphic?.should be_true
+      ConcreteClass2.polymorphic?.should be_true
+      OtherModel.polymorphic?.should be_false
     end
 
     it "properly save and load a concrete model" do
@@ -70,7 +70,7 @@ module PolymorphismSpec
         c.save!
 
         AbstractClass.query.count.should eq 1
-        AbstractClass.query.first!.is_a?(ConcreteClass1).should eq true
+        AbstractClass.query.first!.is_a?(ConcreteClass1).should be_true
         AbstractClass.query.first!.print_value.should eq "1"
       end
     end
@@ -127,7 +127,7 @@ module PolymorphismSpec
     end
 
     it "call validators of both parent and children" do
-      ConcreteClass1.new.save.should eq false
+      ConcreteClass1.new.save.should be_false
     end
   end
 end

@@ -44,7 +44,7 @@ module PaginationSpec
         r = Clear::SQL.select.from(:users).offset(0).limit(25)
         r.total_entries = 1_901_902_i64
         r.current_page.should eq 1
-        r.previous_page.should eq nil
+        r.previous_page.should be_nil
       end
 
       it "returns 6 as next_page when on page 5" do
@@ -58,20 +58,20 @@ module PaginationSpec
         r = Clear::SQL.select.from(:users).offset(1_901_900).limit(25)
         r.total_entries = 1_901_902_i64
         r.current_page.should eq 76_077
-        r.next_page.should eq nil
+        r.next_page.should be_nil
       end
 
       it "returns true for out_of_bounds? when current_page is 76078" do
         r = Clear::SQL.select.from(:users).offset(1_901_925).limit(25)
         r.total_entries = 1_901_902_i64
         r.current_page.should eq 76_078
-        r.out_of_bounds?.should eq true
+        r.out_of_bounds?.should be_true
       end
 
       it "returns false for out_of_bounds? when current_page is in normal range" do
         r = Clear::SQL.select.from(:users).offset(925).limit(25)
         r.total_entries = 1_901_902_i64
-        r.out_of_bounds?.should eq false
+        r.out_of_bounds?.should be_false
       end
     end
   end

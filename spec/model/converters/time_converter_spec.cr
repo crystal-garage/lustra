@@ -4,7 +4,7 @@ module TimeConverterSpec
   describe "Clear::Model::Converter::TimeConverter" do
     it "converts nil" do
       converter = Clear::Model::Converter::TimeConverter
-      converter.to_column(nil).should eq(nil)
+      converter.to_column(nil).should be_nil
     end
 
     it "converts a time object" do

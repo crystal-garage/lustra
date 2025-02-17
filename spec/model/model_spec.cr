@@ -63,7 +63,7 @@ module ModelSpec
           u = User.new({id: 1, first_name: "x", active: nil})
           u.save!
           u2 = User.query.first!
-          u2.active.should eq(nil)
+          u2.active.should be_nil
         end
       end
 
@@ -184,11 +184,11 @@ module ModelSpec
           u = User.new
           p = Post.new({title: "some post"})
           p.user = u
-          p.save.should eq(false) # < Must save the user first. but user is missing is first name !
+          p.save.should be_false # < Must save the user first. but user is missing is first name !
 
           p.user.first_name = "I fix the issue!" # < Fix the issue
 
-          p.save.should eq(true) # Should save now
+          p.save.should be_true # Should save now
 
           u.id.should eq(1)      # Should be set
           p.user.id.should eq(1) # And should be set
@@ -237,12 +237,12 @@ module ModelSpec
         temporary do
           reinit_example_models
           u = User.new
-          u.persisted?.should eq false
+          u.persisted?.should be_false
           u.first_name = "hello"
           u.last_name = "world"
           u.save!
 
-          u.persisted?.should eq true
+          u.persisted?.should be_true
           u.id.should eq 1
         end
       end
@@ -282,7 +282,7 @@ module ModelSpec
           reinit_example_models
           User.create
           User.query.each do |u|
-            u.id.should_not eq nil
+            u.id.should_not be_nil
           end
         end
       end
@@ -292,7 +292,7 @@ module ModelSpec
           reinit_example_models
           User.create
           User.query.each_with_cursor(batch: 50) do |u|
-            u.id.should_not eq nil
+            u.id.should_not be_nil
           end
         end
       end
@@ -342,7 +342,7 @@ module ModelSpec
           u.created_at = now
 
           u.save!
-          u.id.should_not eq nil
+          u.id.should_not be_nil
 
           u = User.find! u.id
           u.created_at.to_unix.should be_close(now.to_unix, 1)
@@ -425,15 +425,15 @@ module ModelSpec
 
           u.first_name = "Yacine"
           u.last_name = "Petitprez"
-          u.save.should eq true
+          u.save.should be_true
 
           u.notification_preferences = JSON.parse(JSON.build do |json|
             json.object do
               json.field "email", true
             end
           end)
-          u.save.should eq true
-          u.persisted?.should eq true
+          u.save.should be_true
+          u.persisted?.should be_true
         end
       end
 
@@ -479,13 +479,13 @@ module ModelSpec
           u = User.new
           u.first_name = "LeBron"
           u.last_name = "James"
-          u.save.should eq true
+          u.save.should be_true
 
           User.query.count.should eq 2
-          u.persisted?.should eq true
+          u.persisted?.should be_true
 
-          u.delete.should eq true
-          u.persisted?.should eq false
+          u.delete.should be_true
+          u.persisted?.should be_false
           User.query.count.should eq 1
         end
       end

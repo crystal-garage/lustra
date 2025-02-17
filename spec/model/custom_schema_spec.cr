@@ -12,7 +12,7 @@ module CustomSchemaSpec
         model.class.full_table_name.should eq(
           %("another_schema"."model_within_another_schemas")
         )
-        model.persisted?.should eq(true)
+        model.persisted?.should be_true
 
         mdl = ModelWithinAnotherSchema.query.where { title == "Some title" }.first!
 

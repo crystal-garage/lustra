@@ -50,10 +50,10 @@ module ValidationSpec
   describe "Clear::Model Validation" do
     it "validate presence using the type of the column" do
       u = User.new
-      u.valid?.should eq(false)
+      u.valid?.should be_false
       u.print_errors.should eq("user_name: must be present")
       u.user_name = "helloworld"
-      u.valid?.should eq(true)
+      u.valid?.should be_true
       u.errors.size.should eq(0)
     end
 
@@ -69,41 +69,41 @@ module ValidationSpec
       # selection of column, then the model is still valid for update even
       # without the presence of user_name.
       u = User.new({id: 1}, persisted: true)
-      u.valid?.should eq(true)
+      u.valid?.should be_true
     end
 
     it "validate multiple columns" do
       m = MultiValidation.new
       m.email = "test"
 
-      m.valid?.should eq(false)
+      m.valid?.should be_false
       m.print_errors.should eq("email: must be email")
 
       m.email = "test@gmail.com"
-      m.valid?.should eq(false)
+      m.valid?.should be_false
       m.print_errors.should eq("email: must not be a free email")
 
       m.email = "abdul(at)gmail.com"
-      m.valid?.should eq(false)
+      m.valid?.should be_false
       m.print_errors.should eq("email: must be email, must not be a free email")
     end
 
     it "use on_presence helper" do
       u = User.new({user_name: "u"}); u.valid?
-      u.on_presence_working?.should eq false
+      u.on_presence_working?.should be_false
 
       u = User.new({user_name: "u", first_name: "f"}); u.valid?
-      u.on_presence_working?.should eq true
+      u.on_presence_working?.should be_true
     end
 
     it "validate" do
       v = ValidateNotEmpty.new
       v.a = ""
-      v.valid?.should eq(false)
+      v.valid?.should be_false
       v.print_errors.should eq("a: must not be empty")
 
       v.a = "toto"
-      v.valid?.should eq(true)
+      v.valid?.should be_true
       v.errors.size.should eq(0)
     end
   end

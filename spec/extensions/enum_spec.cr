@@ -4,9 +4,9 @@ require "../data/example_models"
 module EnumSpec
   describe "Clear.enum" do
     it "call custom member methods" do
-      GenderType::Male.male?.should eq true
-      GenderType::Female.male?.should eq false
-      GenderType::Other.female?.should eq false
+      GenderType::Male.male?.should be_true
+      GenderType::Female.male?.should be_false
+      GenderType::Other.female?.should be_false
     end
 
     it "create and use enum" do

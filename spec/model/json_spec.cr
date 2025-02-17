@@ -10,7 +10,7 @@ module ModelSpec
       u.id.should eq 1
       u.first_name.should eq "hello"
       u.last_name.should eq "boss"
-      u.changed?.should eq false
+      u.changed?.should be_false
 
       json2 = JSON.parse(%<{"tags": ["a", "b", "c"], "flags_other_column_name": [1, 2, 3]}>)
 

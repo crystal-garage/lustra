@@ -18,7 +18,7 @@ module ReflectionSpec
             first_table.save!
           end
 
-          first_table.columns.first!.save.should eq false
+          first_table.columns.first!.save.should be_false
 
           expect_raises Clear::Model::ReadOnlyError do
             first_table.columns.first!.save!
