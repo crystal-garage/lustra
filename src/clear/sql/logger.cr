@@ -4,7 +4,7 @@ require "benchmark"
 module Clear::SQL::Logger
   class_property? colorize : Bool = STDOUT.tty? && STDERR.tty?
 
-  private SQL_KEYWORDS = Set(String).new(%w(
+  private SQL_KEYWORDS = Set(String).new(%w[
     ADD ALL ALTER ANALYSE ANALYZE AND ANY ARRAY AS ASC ASYMMETRIC
     BEGIN BOTH BY CASE CAST CHECK COLLATE COLUMN COMMIT CONSTRAINT COUNT CREATE CROSS
     CURRENT_DATE CURRENT_ROLE CURRENT_TIME CURRENT_TIMESTAMP
@@ -16,7 +16,7 @@ module Clear::SQL::Logger
     RIGHT ROLLBACK SAVEPOINT SELECT SESSION_USER SET SOME SYMMETRIC
     TABLE THEN TO TRAILING TRIGGER TRUE UNION UNIQUE UPDATE USER USING VALUES
     WHEN WHERE WINDOW
-  ))
+  ])
 
   def self.colorize_query(qry : String)
     return qry unless @@colorize

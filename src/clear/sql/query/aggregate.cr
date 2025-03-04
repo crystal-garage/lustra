@@ -45,7 +45,7 @@ module Clear::SQL::Query::Aggregate
     agg("SUM(#{field})", Union(Int64 | PG::Numeric | Nil)).try(&.to_f) || 0.0
   end
 
-  {% for x in %w(min max avg) %}
+  {% for x in %w[min max avg] %}
     # SQL aggregation function {{x.upcase}}:
     #
     # ```

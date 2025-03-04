@@ -118,7 +118,7 @@ module PolymorphismSpec
         5.times { ConcreteClass1.new({integer_value: 1, common_value: 0}).save! }
         10.times { ConcreteClass2.new({"string_value" => "Yey", "common_value" => 1}).save! }
 
-        json = JSON.parse(%<{"string_value": "Yey", "common_value": -1}>)
+        json = JSON.parse(%({"string_value": "Yey", "common_value": -1}))
         10.times { ConcreteClass2.new(json).save! }
 
         ConcreteClass1.find(1).class.should eq ConcreteClass1

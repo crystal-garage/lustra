@@ -53,7 +53,7 @@ module EnumSpec
 
         User.create!({first_name: "John", gender: GenderType::Male})
         u = User.query.first!
-        u.to_json.should contain %<,"gender":"male",>
+        u.to_json.should contain %(,"gender":"male",)
       end
     end
   end

@@ -112,12 +112,12 @@ pause
 # Now it's time to create users and post !
 # But first, let's create a lorem ipsum function !
 def lorem(count)
-  dictionnary = %w(si dolor es null nunc tempor eros urna vitae malesuada nibh
+  dictionnary = %w[si dolor es null nunc tempor eros urna vitae malesuada nibh
     elementum id class aptent taciti sociosqu ad litora torquent per conubia
     nostra per inceptos himenaeos pellentesque molestie vitae nisi vitae ornare
     sed condimentum sed arcu non rhoncus mauris fringilla sit amet ligula ut
     ultrices aenean maximus enim nec malesuada pellentesque suspendisse hendrerit
-    dignissim sapien eu malesuada magna laoreet vel)
+    dignissim sapien eu malesuada magna laoreet vel]
   raise "count must be > 2" unless count > 2 # Always fail fast !
   # This should do the trick!
   "Lorem ipsum" + dictionnary.sample(count - 2).join(" ")

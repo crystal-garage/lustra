@@ -89,7 +89,7 @@ module BCryptSpec
 
         User.query.create!({encrypted_password: Crypto::Bcrypt::Password.create("abcd")})
         u = User.query.first!
-        u.to_json.should contain %<,"encrypted_password":">
+        u.to_json.should contain %(,"encrypted_password":")
       end
     end
   end

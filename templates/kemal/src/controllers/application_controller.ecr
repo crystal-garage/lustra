@@ -1,5 +1,5 @@
 class ApplicationController
-  HTTP_METHODS = %w(get post put patch delete options)
+  HTTP_METHODS = %w[get post put patch delete options]
 
   class_property default_layout : -> TreeTemplate = -> { View::Layouts.application }
 

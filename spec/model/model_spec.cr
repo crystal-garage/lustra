@@ -269,7 +269,7 @@ module ModelSpec
 
           # Set from json
           u = User.new
-          u.set(JSON.parse(%<{"first_name": "hello", "last_name": "world"}>))
+          u.set(JSON.parse(%({"first_name": "hello", "last_name": "world"})))
           u.save!
           u.persisted?.should be_true
           u.first_name.should eq "hello"

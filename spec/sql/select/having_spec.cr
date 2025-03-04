@@ -18,24 +18,24 @@ module HavingSpec
   describe Clear::SQL::Query::Having do
     it "accepts simple string as parameter" do
       r = Clear::SQL.select.from(:users).having("a = b")
-      r.to_sql.should eq %[SELECT * FROM "users" HAVING a = b]
+      r.to_sql.should eq %(SELECT * FROM "users" HAVING a = b)
     end
 
     it "transforms Nil to NULL" do
       q = Clear::SQL.select.from(:users).having({user_id: nil})
-      q.to_sql.should eq %[SELECT * FROM "users" HAVING ("user_id" IS NULL)]
+      q.to_sql.should eq %(SELECT * FROM "users" HAVING ("user_id" IS NULL))
     end
 
     it "uses IN operator if an array is found" do
       q = Clear::SQL.select.from(:users).having({user_id: [1, 2, 3, 4, "hello"]})
-      q.to_sql.should eq %[SELECT * FROM "users" HAVING "user_id" IN (1, 2, 3, 4, 'hello')]
+      q.to_sql.should eq %(SELECT * FROM "users" HAVING "user_id" IN (1, 2, 3, 4, 'hello'))
     end
 
     it "accepts ranges as tuple value and transform them" do
       Clear::SQL.select.from(:users).having({x: 1..4}).to_sql
-        .should eq %[SELECT * FROM "users" HAVING ("x" >= 1 AND "x" <= 4)]
+        .should eq %(SELECT * FROM "users" HAVING ("x" >= 1 AND "x" <= 4))
       Clear::SQL.select.from(:users).having({x: 1...4}).to_sql
-        .should eq %[SELECT * FROM "users" HAVING ("x" >= 1 AND "x" < 4)]
+        .should eq %(SELECT * FROM "users" HAVING ("x" >= 1 AND "x" < 4))
     end
 
     it "allows prepared query" do
@@ -161,23 +161,23 @@ module HavingSpec
 
       it "Between" do
         Clear::SQL.select.having { x.between(1, 2) }
-          .to_sql.should eq(%[SELECT * HAVING ("x" BETWEEN 1 AND 2)])
+          .to_sql.should eq(%(SELECT * HAVING ("x" BETWEEN 1 AND 2)))
 
         Clear::SQL.select.having { not(x.between(1, 2)) }
-          .to_sql.should eq(%[SELECT * HAVING NOT ("x" BETWEEN 1 AND 2)])
+          .to_sql.should eq(%(SELECT * HAVING NOT ("x" BETWEEN 1 AND 2)))
       end
 
       it "Function" do
         Clear::SQL.select.having { ops_transform(x, "string", raw("INTERVAL '2 seconds'")) }
-          .to_sql.should eq(%[SELECT * HAVING ops_transform("x", 'string', INTERVAL '2 seconds')])
+          .to_sql.should eq(%(SELECT * HAVING ops_transform("x", 'string', INTERVAL '2 seconds')))
       end
 
       it "InArray" do
         Clear::SQL.select.having { x.in?([1, 2, 3, 4]) }
-          .to_sql.should eq(%[SELECT * HAVING "x" IN (1, 2, 3, 4)])
+          .to_sql.should eq(%(SELECT * HAVING "x" IN (1, 2, 3, 4)))
 
         Clear::SQL.select.having { x.in?({1, 2, 3, 4}) }
-          .to_sql.should eq(%[SELECT * HAVING "x" IN (1, 2, 3, 4)])
+          .to_sql.should eq(%(SELECT * HAVING "x" IN (1, 2, 3, 4)))
       end
 
       it "InRange" do
@@ -202,43 +202,43 @@ module HavingSpec
       it "InSelect" do
         sub_query = Clear::SQL.select("id").from("users")
         Clear::SQL.select.having { x.in?(sub_query) }
-          .to_sql.should eq(%[SELECT * HAVING "x" IN (SELECT id FROM users)])
+          .to_sql.should eq(%(SELECT * HAVING "x" IN (SELECT id FROM users)))
       end
 
       it "Minus" do
         Clear::SQL.select.having { -x > 2 }
-          .to_sql.should eq(%[SELECT * HAVING (-"x" > 2)])
+          .to_sql.should eq(%(SELECT * HAVING (-"x" > 2)))
       end
 
       it "Not" do
         Clear::SQL.select.having { not(raw("TRUE")) }
-          .to_sql.should eq(%[SELECT * HAVING NOT TRUE])
+          .to_sql.should eq(%(SELECT * HAVING NOT TRUE))
 
         Clear::SQL.select.having { ~(raw("TRUE")) }
-          .to_sql.should eq(%[SELECT * HAVING NOT TRUE])
+          .to_sql.should eq(%(SELECT * HAVING NOT TRUE))
       end
 
       it "Null" do
         Clear::SQL.select.having { x == nil }
-          .to_sql.should eq(%[SELECT * HAVING ("x" IS NULL)])
+          .to_sql.should eq(%(SELECT * HAVING ("x" IS NULL)))
         Clear::SQL.select.having { x != nil }
-          .to_sql.should eq(%[SELECT * HAVING ("x" IS NOT NULL)])
+          .to_sql.should eq(%(SELECT * HAVING ("x" IS NOT NULL)))
       end
 
       it "Raw" do
         Clear::SQL.select.having { raw("Anything") }
-          .to_sql.should eq(%[SELECT * HAVING Anything])
+          .to_sql.should eq(%(SELECT * HAVING Anything))
 
         Clear::SQL.select.having { raw("x > ?", 1) }
-          .to_sql.should eq(%[SELECT * HAVING x > 1])
+          .to_sql.should eq(%(SELECT * HAVING x > 1))
 
         Clear::SQL.select.having { raw("x > :num", num: 2) }
-          .to_sql.should eq(%[SELECT * HAVING x > 2])
+          .to_sql.should eq(%(SELECT * HAVING x > 2))
       end
 
       it "Variable" do
         Clear::SQL.select.having { var("public", "users", "id") < 1000 }
-          .to_sql.should eq(%[SELECT * HAVING ("public"."users"."id" < 1000)])
+          .to_sql.should eq(%(SELECT * HAVING ("public"."users"."id" < 1000)))
       end
     end
   end

@@ -14,34 +14,34 @@ module WhereSpec
   describe Clear::SQL::Query::Where do
     it "accepts simple string as parameter" do
       r = Clear::SQL.select.from(:users).where("a = b")
-      r.to_sql.should eq %[SELECT * FROM "users" WHERE a = b]
+      r.to_sql.should eq %(SELECT * FROM "users" WHERE a = b)
     end
 
     it "accepts NamedTuple argument" do
       # tuple as argument
       q = Clear::SQL.select.from(:users).where({user_id: 1})
-      q.to_sql.should eq %[SELECT * FROM "users" WHERE ("user_id" = 1)]
+      q.to_sql.should eq %(SELECT * FROM "users" WHERE ("user_id" = 1))
 
       # splatted tuple
       q = Clear::SQL.select.from(:users).where(user_id: 2)
-      q.to_sql.should eq %[SELECT * FROM "users" WHERE ("user_id" = 2)]
+      q.to_sql.should eq %(SELECT * FROM "users" WHERE ("user_id" = 2))
     end
 
     it "transforms Nil to NULL" do
       q = Clear::SQL.select.from(:users).where({user_id: nil})
-      q.to_sql.should eq %[SELECT * FROM "users" WHERE ("user_id" IS NULL)]
+      q.to_sql.should eq %(SELECT * FROM "users" WHERE ("user_id" IS NULL))
     end
 
     it "uses IN operator if an array is found" do
       q = Clear::SQL.select.from(:users).where({user_id: [1, 2, 3, 4, "hello"]})
-      q.to_sql.should eq %[SELECT * FROM "users" WHERE "user_id" IN (1, 2, 3, 4, 'hello')]
+      q.to_sql.should eq %(SELECT * FROM "users" WHERE "user_id" IN (1, 2, 3, 4, 'hello'))
     end
 
     it "accepts ranges as tuple value and transform them" do
       Clear::SQL.select.from(:users).where({x: 1..4}).to_sql
-        .should eq %[SELECT * FROM "users" WHERE ("x" >= 1 AND "x" <= 4)]
+        .should eq %(SELECT * FROM "users" WHERE ("x" >= 1 AND "x" <= 4))
       Clear::SQL.select.from(:users).where({x: 1...4}).to_sql
-        .should eq %[SELECT * FROM "users" WHERE ("x" >= 1 AND "x" < 4)]
+        .should eq %(SELECT * FROM "users" WHERE ("x" >= 1 AND "x" < 4))
     end
 
     it "allows prepared query" do
@@ -172,23 +172,23 @@ module WhereSpec
 
       it "between(a, b)" do
         Clear::SQL.select.where { x.between(1, 2) }
-          .to_sql.should eq(%[SELECT * WHERE ("x" BETWEEN 1 AND 2)])
+          .to_sql.should eq(%(SELECT * WHERE ("x" BETWEEN 1 AND 2)))
 
         Clear::SQL.select.where { not(x.between(1, 2)) }
-          .to_sql.should eq(%[SELECT * WHERE NOT ("x" BETWEEN 1 AND 2)])
+          .to_sql.should eq(%(SELECT * WHERE NOT ("x" BETWEEN 1 AND 2)))
       end
 
       it "custom functions" do
         Clear::SQL.select.where { ops_transform(x, "string", raw("INTERVAL '2 seconds'")) }
-          .to_sql.should eq(%[SELECT * WHERE ops_transform("x", 'string', INTERVAL '2 seconds')])
+          .to_sql.should eq(%(SELECT * WHERE ops_transform("x", 'string', INTERVAL '2 seconds')))
       end
 
       it "in?(array)" do
         Clear::SQL.select.where { x.in?([1, 2, 3, 4]) }
-          .to_sql.should eq(%[SELECT * WHERE "x" IN (1, 2, 3, 4)])
+          .to_sql.should eq(%(SELECT * WHERE "x" IN (1, 2, 3, 4)))
 
         Clear::SQL.select.where { x.in?({1, 2, 3, 4}) }
-          .to_sql.should eq(%[SELECT * WHERE "x" IN (1, 2, 3, 4)])
+          .to_sql.should eq(%(SELECT * WHERE "x" IN (1, 2, 3, 4)))
       end
 
       it "in?(range)" do
@@ -213,43 +213,43 @@ module WhereSpec
       it "in?(sub_query)" do
         sub_query = Clear::SQL.select("id").from("users")
         Clear::SQL.select.where { x.in?(sub_query) }
-          .to_sql.should eq(%[SELECT * WHERE "x" IN (SELECT id FROM users)])
+          .to_sql.should eq(%(SELECT * WHERE "x" IN (SELECT id FROM users)))
       end
 
       it "unary minus" do
         Clear::SQL.select.where { -x > 2 }
-          .to_sql.should eq(%[SELECT * WHERE (-"x" > 2)])
+          .to_sql.should eq(%(SELECT * WHERE (-"x" > 2)))
       end
 
       it "not()" do
         Clear::SQL.select.where { not(raw("TRUE")) }
-          .to_sql.should eq(%[SELECT * WHERE NOT TRUE])
+          .to_sql.should eq(%(SELECT * WHERE NOT TRUE))
 
         Clear::SQL.select.where { ~(raw("TRUE")) }
-          .to_sql.should eq(%[SELECT * WHERE NOT TRUE])
+          .to_sql.should eq(%(SELECT * WHERE NOT TRUE))
       end
 
       it "nil" do
         Clear::SQL.select.where { x == nil }
-          .to_sql.should eq(%[SELECT * WHERE ("x" IS NULL)])
+          .to_sql.should eq(%(SELECT * WHERE ("x" IS NULL)))
         Clear::SQL.select.where { x != nil }
-          .to_sql.should eq(%[SELECT * WHERE ("x" IS NOT NULL)])
+          .to_sql.should eq(%(SELECT * WHERE ("x" IS NOT NULL)))
       end
 
       it "raw()" do
         Clear::SQL.select.where { raw("Anything") }
-          .to_sql.should eq(%[SELECT * WHERE Anything])
+          .to_sql.should eq(%(SELECT * WHERE Anything))
 
         Clear::SQL.select.where { raw("x > ?", 1) }
-          .to_sql.should eq(%[SELECT * WHERE x > 1])
+          .to_sql.should eq(%(SELECT * WHERE x > 1))
 
         Clear::SQL.select.where { raw("x > :num", num: 2) }
-          .to_sql.should eq(%[SELECT * WHERE x > 2])
+          .to_sql.should eq(%(SELECT * WHERE x > 2))
       end
 
       it "var()" do
         Clear::SQL.select.where { var("public", "users", "id") < 1000 }
-          .to_sql.should eq(%[SELECT * WHERE ("public"."users"."id" < 1000)])
+          .to_sql.should eq(%(SELECT * WHERE ("public"."users"."id" < 1000)))
       end
     end
   end
