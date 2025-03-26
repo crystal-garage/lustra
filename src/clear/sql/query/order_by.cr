@@ -117,8 +117,6 @@ module Clear::SQL::Query::OrderBy
       "NULLS FIRST"
     when :nulls_last
       "NULLS LAST"
-    else
-      nil
     end
   end
 

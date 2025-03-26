@@ -51,11 +51,9 @@ class Clear::Migration::Manager
     @migrations_up.max
   end
 
-  def max_version
+  def max_version : Clear::Migration?
     if @migrations.size > 0
       @migrations.max_of(&.uid)
-    else
-      nil
     end
   end
 
