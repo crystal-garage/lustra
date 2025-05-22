@@ -40,18 +40,18 @@ You don't want to use Clear if:
 - Expressiveness as mantra - even with advanced features like jsonb, regexp... -
 
 ```crystal
-  # Like ...
-  Product.query.where { ( type == "Book" ) & ( metadata.jsonb("author.full_name") == "Philip K. Dick" ) }
-  # ^--- will use @> operator, to relay on your gin index. For real.
+# Like ...
+Product.query.where { ( type == "Book" ) & ( metadata.jsonb("author.full_name") == "Philip K. Dick" ) }
+# ^--- will use @> operator, to relay on your gin index. For real.
 
-  Product.query.where { ( products.type == "Book" ) & ( products.metadata.jsonb("author.full_name") != "Philip K. Dick" ) }
-  # ^--- this time will use -> notation, because no optimizations possible :/
+Product.query.where { ( products.type == "Book" ) & ( products.metadata.jsonb("author.full_name") != "Philip K. Dick" ) }
+# ^--- this time will use -> notation, because no optimizations possible :/
 
-  # Or...
-  User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
+# Or...
+User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
 
-  # Or even...
-  ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear! :-)
+# Or even...
+ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear! :-)
 ```
 
 - Proper debug information
@@ -79,7 +79,7 @@ dependencies:
 Then:
 
 ```crystal
-  require "clear"
+require "clear"
 ```
 
 ### Model definition
@@ -89,7 +89,6 @@ Clear offers some mixins, just include them in your classes to _clear_ them:
 #### Column mapping
 
 ```crystal
-
 class User
   include Clear::Model
 
@@ -294,14 +293,14 @@ In the case above:
 
 - The first request will be
 
-```
-  SELECT * FROM users;
+```sql
+SELECT * FROM users;
 ```
 
 - Thanks to the cache, a second request will be called before fetching the users:
 
-```
-  SELECT * FROM posts WHERE user_id IN ( SELECT id FROM users )
+```sql
+SELECT * FROM posts WHERE user_id IN ( SELECT id FROM users )
 ```
 
 I have plan in a late future to offer different query strategies for the cache (e.g. joins, unions...)
@@ -373,21 +372,21 @@ end
 `inspect` over model offers debugging insights:
 
 ```text
-  p # => #<Post:0x10c5f6720
-          @attributes={},
-          @cache=
-           #<Clear::Model::QueryCache:0x10c6e8100
-            @cache={},
-            @cache_activation=Set{}>,
-          @content_column=
-           "...",
-          @errors=[],
-          @id_column=38,
-          @persisted=true,
-          @published_column=true,
-          @read_only=false,
-          @title_column="Lorem ipsum torquent inceptos"*,
-          @user_id_column=5>
+p # => #<Post:0x10c5f6720
+        @attributes={},
+        @cache=
+         #<Clear::Model::QueryCache:0x10c6e8100
+          @cache={},
+          @cache_activation=Set{}>,
+        @content_column=
+         "...",
+        @errors=[],
+        @id_column=38,
+        @persisted=true,
+        @published_column=true,
+        @read_only=false,
+        @title_column="Lorem ipsum torquent inceptos"*,
+        @user_id_column=5>
 ```
 
 In this case, the `*` means a column is changed and the object is dirty and diverge from the database.
@@ -400,7 +399,7 @@ Clear is offering SQL logging tools, with SQL syntax colorizing in your terminal
 
 For activation, simply setup the logger to `DEBUG` level !
 
-```
+```crystal
 Log.builder.bind "clear.*", :debug, Log::IOBackend.new(STDOUT)
 ```
 
@@ -457,7 +456,7 @@ end
 
 Thus, in all case this will fail:
 
-```
+```crystal
 u = User.new
 u.id # raise error
 ```
@@ -480,14 +479,14 @@ end
 Validation fails if `model#errors` is not empty:
 
 ```crystal
-  class MyModel
-    #...
-    def validate
-      if first_name_column.defined? && first_name != "ABCD" #< See below why `defined?` must be called.
-        add_error("first_name", "must be ABCD!")
-      end
+class MyModel
+  #...
+  def validate
+    if first_name_column.defined? && first_name != "ABCD" #< See below why `defined?` must be called.
+      add_error("first_name", "must be ABCD!")
     end
   end
+end
 ```
 
 ##### Unique validator
@@ -598,16 +597,16 @@ It provides few methods: `up?`, `down?`, `up(&block)`, `down(&block)`
 You can create a table:
 
 ```crystal
-  def change(dir)
-    create_table(:test) do |t|
-      t.column :first_name, :string, index: true
-      t.column :last_name, :string, unique: true
+def change(dir)
+  create_table(:test) do |t|
+    t.column :first_name, :string, index: true
+    t.column :last_name, :string, unique: true
 
-      t.index "lower(first_name || ' ' || last_name)", using: :btree
+    t.index "lower(first_name || ' ' || last_name)", using: :btree
 
-      t.timestamps
-    end
+    t.timestamps
   end
+end
 ```
 
 #### Constraints
@@ -615,7 +614,7 @@ You can create a table:
 I strongly encourage to use the foreign key constraints of postgres for your references:
 
 ```crystal
-  t.references to: "users", on_delete: "cascade", null: false
+t.references to: "users", on_delete: "cascade", null: false
 ```
 
 There's no plan to offer on Crystal level the `on_delete` feature, like
