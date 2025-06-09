@@ -25,6 +25,7 @@ class Clear::SQL::ConnectionPool
           @@fiber_connections[fiber_target] = new_connection
           yield new_connection
         ensure
+          new_connection.release
           @@fiber_connections.delete(fiber_target)
         end
       end
