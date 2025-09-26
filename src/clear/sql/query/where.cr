@@ -193,6 +193,85 @@ module Clear::SQL::Query::Where
     change!
   end
 
+  # Build SQL `where NOT` condition using the Expression engine.
+  # This is equivalent to wrapping the condition in `NOT(...)`.
+  #
+  # ```
+  # query.where.not { id == 1 }        # WHERE NOT (id = 1)
+  # query.where.not { active == true } # WHERE NOT (active = true)
+  # ```
+  def where_not(&)
+    where(Clear::Expression.new.not(Clear::Expression.ensure_node!(with Clear::Expression.new yield)))
+  end
+
+  # Build SQL `where NOT` condition using a NamedTuple.
+  # This will negate each condition in the tuple.
+  #
+  # ```
+  # query.where.not({active: true})  # WHERE NOT (active = true)
+  # query.where.not({id: [1, 2, 3]}) # WHERE NOT (id IN (1,2,3))
+  # ```
+  def where_not(**tuple)
+    where_not(conditions: tuple)
+  end
+
+  # Build SQL `where NOT` condition using a NamedTuple or Hash.
+  def where_not(conditions : NamedTuple | Hash(String, Clear::SQL::Any))
+    conditions.each do |k, v|
+      k = Clear::Expression::Node::Variable.new(k.to_s)
+
+      negated_node =
+        case v
+        when Array
+          Clear::Expression::Node::InArray.new(k, v.map { |it| Clear::Expression[it] })
+        when SelectBuilder
+          Clear::Expression::Node::InSelect.new(k, v)
+        when Range
+          Clear::Expression::Node::InRange.new(k,
+            Clear::Expression[v.begin]..Clear::Expression[v.end],
+            v.exclusive?)
+        else
+          Clear::Expression::Node::DoubleOperator.new(k,
+            Clear::Expression::Node::Literal.new(v),
+            (v.nil? ? "IS" : "=")
+          )
+        end
+
+      @wheres << Clear::Expression.new.not(negated_node)
+    end
+
+    change!
+  end
+
+  # Build SQL `where NOT` condition using a template string.
+  #
+  # ```
+  # query.where_not("id = :id", id: 1) # WHERE NOT (id = 1)
+  # ```
+  def where_not(template : String, **tuple)
+    where(Clear::Expression.new.not(Clear::Expression::Node::Raw.new(Clear::SQL.raw(template, **tuple))))
+  end
+
+  # Build SQL `where NOT` condition using a template string with positional parameters.
+  #
+  # ```
+  # query.where_not("id = ?", 1) # WHERE NOT (id = 1)
+  # ```
+  def where_not(template : String, *args)
+    where(Clear::Expression.new.not(Clear::Expression::Node::Raw.new(Clear::SQL.raw(template, *args))))
+  end
+
+  # Build custom SQL `where NOT` condition.
+  # Beware of SQL injections!
+  #
+  # ```
+  # query.where_not("id = 1") # WHERE NOT (id = 1)
+  # ```
+  def where_not(template : String)
+    @wheres << Clear::Expression.new.not(Clear::Expression::Node::Raw.new(template))
+    change!
+  end
+
   # :nodoc:
   protected def print_wheres
     {"WHERE ", @wheres.join(" AND ", &.resolve)}.join unless @wheres.empty?
