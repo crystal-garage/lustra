@@ -96,6 +96,35 @@ module ModelSpec
         end
       end
 
+      it "where and where_not chaining" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+          User.create!(id: 4, first_name: "Alice", active: nil)
+
+          # Test chaining where and where_not
+          users = User.query
+            .where { id > 1 }
+            .where_not { active == false }
+            .where_not(id: [4])
+            .to_a
+
+          users.size.should eq(1)
+          users.first.first_name.should eq("Bob")
+
+          # Test another chaining combination
+          users = User.query
+            .where_not(id: [1, 2])
+            .where_not { active == nil }
+            .to_a
+
+          users.size.should eq(1)
+          users.first.first_name.should eq("Bob")
+        end
+      end
+
       it "detect persistence" do
         temporary do
           reinit_example_models
