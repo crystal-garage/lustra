@@ -1,6 +1,6 @@
 # :nodoc:
 module Clear::Model::Relations::BelongsToMacro
-  macro generate(self_type, method_name, relation_type, nilable, foreign_key, primary, no_cache, foreign_key_type)
+  macro generate(self_type, method_name, relation_type, nilable, foreign_key, primary, no_cache, foreign_key_type, touch)
     {% foreign_key = foreign_key || method_name.stringify.underscore + "_id" %}
 
     {%
@@ -98,10 +98,43 @@ module Clear::Model::Relations::BelongsToMacro
       end
     end
 
+    {% if touch %}
+      # :nodoc:
+      # touch the parent model's timestamp column
+      def _bt_touch_{{method_name}}
+        {% if nilable %}
+          parent = {{method_name}}
+          return if parent.nil?
+        {% else %}
+          parent = {{method_name}}
+        {% end %}
+
+        {% if touch == true %}
+          parent.touch
+        {% else %}
+          # Touch a specific column
+          parent.{{touch}} = Time.local
+          parent.save!
+        {% end %}
+
+        # Reload the parent to ensure the timestamp is updated
+        parent.reload
+      end
+    {% end %}
+
     __on_init__ do
       {{self_type}}.before(:validate) do |mdl|
         mdl.as(self)._bt_save_{{method_name}}
       end
+
+      {% if touch %}
+        {{self_type}}.after(:create) do |mdl|
+          mdl.as(self)._bt_touch_{{method_name}}
+        end
+        {{self_type}}.after(:update) do |mdl|
+          mdl.as(self)._bt_touch_{{method_name}}
+        end
+      {% end %}
     end
 
     class Collection
