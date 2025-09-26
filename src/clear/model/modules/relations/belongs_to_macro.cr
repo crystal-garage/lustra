@@ -145,7 +145,7 @@ module Clear::Model::Relations::BelongsToMacro
         {% end %}
 
         {% if counter_cache == true %}
-          counter_column_name = "{{method_name}}_count"
+          counter_column_name = "#{self.class.table}_count"
         {% else %}
           counter_column_name = "{{counter_cache}}"
         {% end %}
