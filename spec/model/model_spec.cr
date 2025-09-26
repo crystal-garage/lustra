@@ -38,6 +38,64 @@ module ModelSpec
         end
       end
 
+      it "exists?" do
+        temporary do
+          reinit_example_models
+
+          # Empty table should return false
+          User.query.exists?.should be_false
+
+          # Create a user
+          User.create!(id: 1, first_name: "John")
+          User.query.exists?.should be_true
+
+          # Test with conditions
+          User.query.where { first_name == "John" }.exists?.should be_true
+          User.query.where { first_name == "Jane" }.exists?.should be_false
+
+          # Test with NamedTuple conditions
+          User.query.where(first_name: "John").exists?.should be_true
+          User.query.where(first_name: "Jane").exists?.should be_false
+        end
+      end
+
+      it "where.not" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+
+          # Test with expression engine
+          users = User.query.where_not { active == false }.to_a
+          users.size.should eq(2)
+          users.map(&.first_name).should contain("John")
+          users.map(&.first_name).should contain("Bob")
+          users.map(&.first_name).should_not contain("Jane")
+
+          # Test with NamedTuple
+          users = User.query.where_not(active: false).to_a
+          users.size.should eq(2)
+          users.map(&.first_name).should contain("John")
+          users.map(&.first_name).should contain("Bob")
+          users.map(&.first_name).should_not contain("Jane")
+
+          # Test with array (NOT IN)
+          users = User.query.where_not(id: [1, 2]).to_a
+          users.size.should eq(1)
+          users.first.first_name.should eq("Bob")
+
+          # Test with nil (NOT NULL)
+          User.create!(id: 4, first_name: "Alice", active: nil)
+          users = User.query.where_not(active: nil).to_a
+          users.size.should eq(3)
+          users.map(&.first_name).should contain("John")
+          users.map(&.first_name).should contain("Jane")
+          users.map(&.first_name).should contain("Bob")
+          users.map(&.first_name).should_not contain("Alice")
+        end
+      end
+
       it "detect persistence" do
         temporary do
           reinit_example_models
