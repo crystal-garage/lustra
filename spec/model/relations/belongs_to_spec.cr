@@ -82,5 +82,90 @@ module BelongsToSpec
         end
       end
     end
+
+    it "touches parent model updated_at when touch: true" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!(first_name: "name")
+        original_updated_at = user.updated_at
+
+        # Sleep a bit to ensure timestamp difference
+        sleep 10.milliseconds
+
+        # Create a post with touch: true (default updated_at)
+        post = PostWithTouch.create!(user: user, title: "test post")
+
+        # Reload user to get updated timestamp
+        user = User.find!(user.id)
+        user.updated_at.should_not eq(original_updated_at)
+      end
+    end
+
+    it "touches specific column when specified" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!(first_name: "name")
+        original_last_comment_at = user.last_comment_at
+
+        # Sleep a bit to ensure timestamp difference
+        sleep 10.milliseconds
+
+        comment = Comment.create!(user: user, content: "test comment")
+
+        # Reload user to get updated timestamp
+        user = User.find!(user.id)
+        user.last_comment_at.should_not eq(original_last_comment_at)
+      end
+    end
+
+    it "touches parent when child model is updated" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!(first_name: "name")
+        comment = Comment.create!(user: user, content: "test comment")
+
+        # Get the timestamp after creation
+        user = User.find!(user.id)
+        original_last_comment_at = user.last_comment_at
+
+        # Sleep a bit to ensure timestamp difference
+        sleep 10.milliseconds
+
+        # Update the comment
+        comment.content = "updated content"
+        comment.save!
+
+        # Reload user to get updated timestamp
+        user = User.find!(user.id)
+        user.last_comment_at.should_not eq(original_last_comment_at)
+      end
+    end
+
+    it "touches parent updated_at when child model with touch: true is updated" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!(first_name: "name")
+        post = PostWithTouch.create!(user: user, title: "test post")
+
+        # Get the timestamp after creation
+        user = User.find!(user.id)
+        original_updated_at = user.updated_at
+
+        # Sleep a bit to ensure timestamp difference
+        sleep 10.milliseconds
+
+        # Update the post
+        post.title = "updated title"
+        post.save!
+
+        # Reload user to get updated timestamp
+        user = User.find!(user.id)
+        user.updated_at.should_not eq(original_updated_at)
+      end
+    end
   end
 end

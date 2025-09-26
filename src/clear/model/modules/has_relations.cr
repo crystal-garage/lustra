@@ -117,9 +117,10 @@ module Clear::Model::HasRelations
   #   belongs_to user : User, foreign_key: "the_user_id"
   # end
   # ```
-  macro belongs_to(name, foreign_key = nil, no_cache = false, primary = false, foreign_key_type = Int64)
+  macro belongs_to(name, foreign_key = nil, no_cache = false, primary = false, foreign_key_type = Int64, touch = nil)
     {%
       foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
+      touch = touch.id if touch.is_a?(SymbolLiteral) || touch.is_a?(StringLiteral)
 
       nilable = false
 
@@ -149,6 +150,7 @@ module Clear::Model::HasRelations
         primary:          primary,
         no_cache:         no_cache,
         foreign_key_type: foreign_key_type,
+        touch:            touch,
       }
     %}
   end
@@ -166,7 +168,8 @@ module Clear::Model::HasRelations
           {{settings[:foreign_key]}},
           {{settings[:primary]}},
           {{settings[:no_cache]}},
-          {{settings[:foreign_key_type]}}
+          {{settings[:foreign_key_type]}},
+          {{settings[:touch]}}
         )
       {% elsif settings[:relation_type] == :has_many %}
         Relations::HasManyMacro.generate(

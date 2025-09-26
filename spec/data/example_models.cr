@@ -26,8 +26,10 @@ class User
   column active : Bool?
 
   column notification_preferences : JSON::Any, presence: false
+  column last_comment_at : Time?
 
   has_many posts : Post, foreign_key: "user_id"
+  has_many comments : Comment, foreign_key: "user_id"
   has_one info : UserInfo?, foreign_key: "user_id"
   has_many categories : Category, through: :posts, own_key: :user_id, foreign_key: :category_id
 
@@ -74,6 +76,20 @@ class Post
   belongs_to category : Category, foreign_key_type: Int32?
 end
 
+class PostWithTouch
+  include Clear::Model
+
+  self.table = "posts_with_touch"
+
+  primary_key
+
+  column title : String
+
+  belongs_to user : User, touch: true
+
+  timestamps
+end
+
 class Tag
   include Clear::Model
 
@@ -111,6 +127,18 @@ class Category
 
   has_many posts : Post
   has_many users : User, through: Post, foreign_key: :user_id, own_key: :category_id
+
+  timestamps
+end
+
+class Comment
+  include Clear::Model
+
+  primary_key
+
+  column content : String
+
+  belongs_to user : User, touch: :last_comment_at
 
   timestamps
 end
@@ -181,6 +209,7 @@ class ModelSpecMigration123
       t.column "active", "bool", null: true
 
       t.column "notification_preferences", "jsonb", index: "gin", default: "'{}'"
+      t.column "last_comment_at", "timestamp"
 
       t.timestamps
     end
@@ -203,6 +232,22 @@ class ModelSpecMigration123
 
       t.references to: "users", name: "user_id", on_delete: "cascade"
       t.references to: "categories", name: "category_id", null: true, on_delete: "set null"
+    end
+
+    create_table "posts_with_touch" do |t|
+      t.column "title", "string", null: false
+
+      t.references to: "users", name: "user_id", on_delete: "cascade"
+
+      t.timestamps
+    end
+
+    create_table "comments" do |t|
+      t.column "content", "string", null: false
+
+      t.references to: "users", name: "user_id", on_delete: "cascade"
+
+      t.timestamps
     end
 
     create_table "post_tags" do |t|
