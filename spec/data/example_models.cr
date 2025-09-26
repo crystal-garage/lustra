@@ -73,7 +73,7 @@ class Post
   has_many post_tags : PostTag, foreign_key: "post_id"
   has_many tag_relations : Tag, through: :post_tags, foreign_key: :tag_id, own_key: :post_id
 
-  # belongs_to user : User, counter_cache: posts_count
+  # belongs_to user : User, counter_cache: :posts_count
   belongs_to user : User, counter_cache: true
 
   belongs_to category : Category, foreign_key_type: Int32?
