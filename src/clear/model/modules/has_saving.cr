@@ -1,3 +1,13 @@
+# This module handles saving models to the database and triggers lifecycle callbacks.
+# It's where the actual `:create`, `:update`, `:delete`, and `:save` callbacks are triggered.
+#
+# Key callback trigger points:
+# - `:save` callbacks: triggered for the entire save operation (wraps create/update)
+# - `:create` callbacks: triggered when a new record is inserted into the database
+# - `:update` callbacks: triggered when an existing record is updated in the database
+# - `:delete` callbacks: triggered when a record is deleted from the database
+#
+# The callbacks are triggered via `with_triggers` which calls `Clear::Model::EventManager`
 module Clear::Model::HasSaving
   # Default class-wise read_only? method is `false`
   macro included # When included into Model
@@ -177,10 +187,10 @@ module Clear::Model::HasSaving
     self
   end
 
-  #  Delete the model by building and executing a `DELETE` query.
-  #  A deleted model is not persisted anymore, and can be saved again.
-  #     Clear will do `INSERT` instead of `UPDATE` then
-  #  Return `true` if the model has been successfully deleted, and `false` otherwise.
+  # Delete the model by building and executing a `DELETE` query.
+  # A deleted model is not persisted anymore, and can be saved again.
+  # Clear will do `INSERT` instead of `UPDATE` then
+  # Return `true` if the model has been successfully deleted, and `false` otherwise.
   def delete
     return false unless persisted?
 
