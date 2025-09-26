@@ -7,8 +7,8 @@ module Clear::Model::Converter
 
   CONVERTERS = {} of String => Base.class
 
-  macro add_converter(name, klazz)
-    {% CONVERTERS[name] = klazz %}
+  macro add_converter(name, klass)
+    {% CONVERTERS[name] = klass %}
   end
 
   macro to_column(name, value)

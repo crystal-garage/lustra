@@ -18,7 +18,7 @@ class Clear::Model::EventManager
 
   # Trigger all callbacks for a specific model, direction, and event
   #
-  # `klazz` - the model class
+  # `klass` - the model class
   # `direction` - `:before` or `:after`
   # `event` - the lifecycle event (`:create`, `:update`, `:validate`, etc.)
   # `mdl` - the model instance
@@ -29,10 +29,10 @@ class Clear::Model::EventManager
   #
   # This ensures that the most recently defined callbacks run first for `:before`
   # and last for `:after`, allowing for proper layering of functionality.
-  def self.trigger(klazz, direction : Symbol, event : Symbol, mdl : Clear::Model)
-    arr = EVENT_CALLBACKS.fetch({klazz.to_s, direction, event}) { [] of HookFunction }
+  def self.trigger(klass, direction : Symbol, event : Symbol, mdl : Clear::Model)
+    arr = EVENT_CALLBACKS.fetch({klass.to_s, direction, event}) { [] of HookFunction }
 
-    parent = INHERITANCE_MAP[klazz.to_s]?
+    parent = INHERITANCE_MAP[klass.to_s]?
 
     if direction == :after
       arr = arr.reverse
@@ -53,15 +53,15 @@ class Clear::Model::EventManager
 
   # Register a callback for a specific model class, direction, and event
   #
-  # `klazz` - The model class
+  # `klass` - The model class
   # `direction` - `:before` or `:after`
   # `event` - The lifecycle event (`:create`, `:update`, `:validate`, etc.)
   # `block` - The callback function to execute
   #
   # This is called internally by `Clear::Model::HasHooks` when you define
   # `before` or `after` callbacks in your model.
-  def self.attach(klazz, direction : Symbol, event : Symbol, block : HookFunction)
-    tuple = {klazz.to_s, direction, event}
+  def self.attach(klass, direction : Symbol, event : Symbol, block : HookFunction)
+    tuple = {klass.to_s, direction, event}
     arr = EVENT_CALLBACKS.fetch(tuple) { [] of HookFunction }
 
     arr.push(block)
