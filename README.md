@@ -227,17 +227,40 @@ u : User? = User.query.find { email =~ /yacine/i }
 
 ##### Fetch multiple models
 
-To prepare a collection, juste use `Model#query`.
+To prepare a collection, just use `Model#query`.
 Collections include `SQL::Select` object, so all the low level API
-(`where`, `join`, `group_by`, `lock`...) can be used in this context.
+(`where`, `where_not`, `join`, `group_by`, `lock`...) can be used in this context.
 
 ```crystal
-# Get multiple users
+# Basic filtering with where
 User.query.where { (id >= 100) & (id <= 200) }.each do |user|
   # Do something with user !
 end
 
-#In case you know there's millions of row, use a cursor to avoid memory issues !
+# Negative filtering with where_not
+User.query.where_not { active == false }.each do |user|
+  # Get all users that are not inactive
+end
+
+# Chaining where and where_not conditions
+User.query
+  .where { id > 10 }
+  .where_not { role == "admin" }
+  .where_not(id: [1, 2, 3])
+  .each do |user|
+    # Complex filtering with chained conditions
+  end
+
+# Check if any records exist
+if User.query.where { active == true }.exists?
+  puts "There are active users!"
+end
+
+# Extract specific column values
+user_names = User.query.pluck_col("first_name")
+user_data = User.query.pluck("first_name", "last_name")
+
+# In case you know there's millions of rows, use a cursor to avoid memory issues!
 User.query.where { (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |user|
   # Do something with user; only 100 users will be stored in memory
   # This method is using pg cursor, so it's 100% transaction-safe
