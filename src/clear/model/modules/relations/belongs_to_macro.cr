@@ -135,8 +135,8 @@ module Clear::Model::Relations::BelongsToMacro
 
     {% if counter_cache %}
       # :nodoc:
-      # increment counter cache on the parent model
-      def _bt_increment_counter_{{method_name}}
+      # Execute atomic counter cache update
+      def _bt_update_counter_{{method_name}}(operation : String)
         {% if nilable %}
           parent = {{method_name}}
           return if parent.nil?
@@ -144,42 +144,29 @@ module Clear::Model::Relations::BelongsToMacro
           parent = {{method_name}}
         {% end %}
 
-        counter_column = "{{method_name}}_count"
-
-        # Increment counter cache
         {% if counter_cache == true %}
           counter_column_name = "{{method_name}}_count"
-          current_count = parent.{{method_name}}_count || 0
         {% else %}
           counter_column_name = "{{counter_cache}}"
-          current_count = parent.{{counter_cache}} || 0
         {% end %}
-        parent.set({counter_column_name => current_count + 1})
-        parent.save!
+
+        Clear::SQL.execute(<<-SQL)
+          UPDATE #{parent.class.full_table_name}
+              SET #{counter_column_name} = #{counter_column_name} #{operation}
+            WHERE #{parent.class.__pkey__} = #{parent.__pkey__}
+          SQL
+      end
+
+      # :nodoc:
+      # increment counter cache on the parent model
+      def _bt_increment_counter_{{method_name}}
+        _bt_update_counter_{{method_name}}("+ 1")
       end
 
       # :nodoc:
       # decrement counter cache on the parent model
       def _bt_decrement_counter_{{method_name}}
-        {% if nilable %}
-          parent = {{method_name}}
-          return if parent.nil?
-        {% else %}
-          parent = {{method_name}}
-        {% end %}
-
-        counter_column = "{{method_name}}_count"
-
-        # Decrement counter cache
-        {% if counter_cache == true %}
-          counter_column_name = "{{method_name}}_count"
-          current_count = parent.{{method_name}}_count || 0
-        {% else %}
-          counter_column_name = "{{counter_cache}}"
-          current_count = parent.{{counter_cache}} || 0
-        {% end %}
-        parent.set({counter_column_name => [current_count - 1, 0].max})
-        parent.save!
+        _bt_update_counter_{{method_name}}("- 1")
       end
     {% end %}
 
