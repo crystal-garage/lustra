@@ -252,5 +252,53 @@ module WhereSpec
           .to_sql.should eq(%(SELECT * WHERE ("public"."users"."id" < 1000)))
       end
     end
+
+    describe "where_not" do
+      it "accepts simple string as parameter" do
+        r = Clear::SQL.select.from(:users).where_not("a = b")
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT a = b)
+      end
+
+      it "accepts NamedTuple argument" do
+        q = Clear::SQL.select.from(:users).where_not({user_id: 1})
+        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("user_id" = 1))
+
+        q = Clear::SQL.select.from(:users).where_not(user_id: 2)
+        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("user_id" = 2))
+      end
+
+      it "transforms Nil to NULL" do
+        q = Clear::SQL.select.from(:users).where_not({user_id: nil})
+        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("user_id" IS NULL))
+      end
+
+      it "uses NOT IN operator if an array is found" do
+        q = Clear::SQL.select.from(:users).where_not({user_id: [1, 2, 3, 4, "hello"]})
+        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT "user_id" IN (1, 2, 3, 4, 'hello'))
+      end
+
+      it "accepts ranges as tuple value and transform them" do
+        Clear::SQL.select.from(:users).where_not({x: 1..4}).to_sql
+          .should eq %(SELECT * FROM "users" WHERE NOT ("x" >= 1 AND "x" <= 4))
+        Clear::SQL.select.from(:users).where_not({x: 1...4}).to_sql
+          .should eq %(SELECT * FROM "users" WHERE NOT ("x" >= 1 AND "x" < 4))
+      end
+
+      it "allows prepared query" do
+        r = Clear::SQL.select.from(:users).where_not("a LIKE ?", "hello")
+        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT a LIKE 'hello'"
+
+        r = Clear::SQL.select.from(:users).where_not("a LIKE :hello", hello: "world")
+        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT a LIKE 'world'"
+      end
+
+      it "works with expression engine" do
+        r = Clear::SQL.select.from(:users).where_not { users.id == 1 }
+        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT (\"users\".\"id\" = 1)"
+
+        r = Clear::SQL.select.from(:users).where_not { users.active == true }
+        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT (\"users\".\"active\" = TRUE)"
+      end
+    end
   end
 end

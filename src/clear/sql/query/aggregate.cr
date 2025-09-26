@@ -55,4 +55,15 @@ module Clear::SQL::Query::Aggregate
       agg("{{x.id.upcase}}(#{field})", X)
     end
   {% end %}
+
+  # Check if any records exist matching the query conditions.
+  # Returns `true` if at least one record exists, `false` otherwise.
+  #
+  # ```
+  # User.query.where { active == true }.exists? # => true/false
+  # ```
+  def exists? : Bool
+    # Use a simple EXISTS subquery for optimal performance
+    Clear::SQL.select("1").from({subquery: dup.limit(1)}).first != nil
+  end
 end
