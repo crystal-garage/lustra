@@ -40,8 +40,8 @@ module EventSpec
     column callback_triggered : Bool, presence: false
 
     after(:create) { |model| model.as(CallbackTestModel).callback_triggered = true }
-    after(:update) { |model| ACCUMULATOR << "update_callback" }
-    after(:delete) { |model| ACCUMULATOR << "delete_callback" }
+    after(:update) { |_| ACCUMULATOR << "update_callback" }
+    after(:delete) { |_| ACCUMULATOR << "delete_callback" }
   end
 
   describe "Clear::Model" do
