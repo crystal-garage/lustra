@@ -265,6 +265,13 @@ class ModelSpecMigration123
       t.timestamps
     end
 
+    create_table "callback_test_models" do |t|
+      t.column "name", "string", null: false
+      t.column "callback_triggered", "boolean", default: "false", null: false
+
+      t.timestamps
+    end
+
     dir.up { execute "CREATE SCHEMA another_schema" }
 
     create_table "model_within_another_schemas", schema: "another_schema" do |t|
