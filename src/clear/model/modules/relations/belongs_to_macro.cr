@@ -1,6 +1,17 @@
 # :nodoc:
 module Clear::Model::Relations::BelongsToMacro
-  macro generate(self_type, method_name, relation_type, nilable, foreign_key, primary, no_cache, foreign_key_type, touch)
+  macro generate(
+    self_type,
+    method_name,
+    relation_type,
+    nilable,
+    foreign_key,
+    primary,
+    no_cache,
+    foreign_key_type,
+    touch,
+    counter_cache,
+  )
     {% foreign_key = foreign_key || method_name.stringify.underscore + "_id" %}
 
     {%
@@ -122,6 +133,56 @@ module Clear::Model::Relations::BelongsToMacro
       end
     {% end %}
 
+    {% if counter_cache %}
+      # :nodoc:
+      # increment counter cache on the parent model
+      def _bt_increment_counter_{{method_name}}
+        {% if nilable %}
+          parent = {{method_name}}
+          return if parent.nil?
+        {% else %}
+          parent = {{method_name}}
+        {% end %}
+
+        counter_column = "{{method_name}}_count"
+
+        # Increment counter cache
+        {% if counter_cache == true %}
+          counter_column_name = "{{method_name}}_count"
+          current_count = parent.{{method_name}}_count || 0
+        {% else %}
+          counter_column_name = "{{counter_cache}}"
+          current_count = parent.{{counter_cache}} || 0
+        {% end %}
+        parent.set({counter_column_name => current_count + 1})
+        parent.save!
+      end
+
+      # :nodoc:
+      # decrement counter cache on the parent model
+      def _bt_decrement_counter_{{method_name}}
+        {% if nilable %}
+          parent = {{method_name}}
+          return if parent.nil?
+        {% else %}
+          parent = {{method_name}}
+        {% end %}
+
+        counter_column = "{{method_name}}_count"
+
+        # Decrement counter cache
+        {% if counter_cache == true %}
+          counter_column_name = "{{method_name}}_count"
+          current_count = parent.{{method_name}}_count || 0
+        {% else %}
+          counter_column_name = "{{counter_cache}}"
+          current_count = parent.{{counter_cache}} || 0
+        {% end %}
+        parent.set({counter_column_name => [current_count - 1, 0].max})
+        parent.save!
+      end
+    {% end %}
+
     __on_init__ do
       {{self_type}}.before(:validate) do |mdl|
         mdl.as(self)._bt_save_{{method_name}}
@@ -133,6 +194,15 @@ module Clear::Model::Relations::BelongsToMacro
         end
         {{self_type}}.after(:update) do |mdl|
           mdl.as(self)._bt_touch_{{method_name}}
+        end
+      {% end %}
+
+      {% if counter_cache %}
+        {{self_type}}.after(:create) do |mdl|
+          mdl.as(self)._bt_increment_counter_{{method_name}}
+        end
+        {{self_type}}.after(:delete) do |mdl|
+          mdl.as(self)._bt_decrement_counter_{{method_name}}
         end
       {% end %}
     end

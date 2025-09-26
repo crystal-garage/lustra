@@ -125,6 +125,39 @@ module ModelSpec
         end
       end
 
+      it "counter cache functionality" do
+        temporary do
+          reinit_example_models
+
+          # Create users
+          user1 = User.create!(first_name: "John", last_name: "Doe")
+          user2 = User.create!(first_name: "Jane", last_name: "Doe")
+
+          user1.posts_count.should eq(0)
+          user2.posts_count.should eq(0)
+
+          # Create posts - counter should increment
+          post1 = Post.create!(title: "First Post", content: "Content 1", user: user1)
+          user1.reload
+          user1.posts_count.should eq(1)
+          user2.posts_count.should eq(0)
+
+          post2 = Post.create!(title: "Second Post", content: "Content 2", user: user1)
+          user1.reload
+          user1.posts_count.should eq(2)
+
+          # Delete a post - counter should decrement
+          post1.delete
+          user1.reload
+          user1.posts_count.should eq(1)
+
+          # Delete another post - counter should decrement
+          post2.delete
+          user1.reload
+          user1.posts_count.should eq(0)
+        end
+      end
+
       it "detect persistence" do
         temporary do
           reinit_example_models
@@ -797,7 +830,7 @@ module ModelSpec
           u.to_json.should eq %({"first_name":"Hello","last_name":"World"})
 
           u.to_json(emit_nulls: true).should eq(
-            %({"id":null,"first_name":"Hello","last_name":"World","middle_name":null,"gender":null,"active":null,"notification_preferences":null,"last_comment_at":null,"updated_at":null,"created_at":null}))
+            %({"id":null,"first_name":"Hello","last_name":"World","middle_name":null,"gender":null,"active":null,"posts_count":null,"notification_preferences":null,"last_comment_at":null,"updated_at":null,"created_at":null}))
         end
       end
 
