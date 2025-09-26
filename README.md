@@ -4,6 +4,8 @@
 
 ![Crystal CI](https://github.com/crystal-garage/clear/workflows/Crystal%20CI/badge.svg)
 [![GitHub release](https://img.shields.io/github/release/crystal-garage/clear.svg)](https://github.com/crystal-garage/clear/releases)
+[![License](https://img.shields.io/github/license/crystal-garage/clear.svg)](https://github.com/crystal-garage/clear/blob/master/LICENSE)
+
 
 Clear is an ORM built specifically for PostgreSQL in Crystal.
 
