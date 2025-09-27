@@ -157,16 +157,22 @@ module Clear::Model::Relations::BelongsToMacro
           SQL
       end
 
-      # Register counter cache information with the parent class at runtime
+      # Register counter cache information with the parent class at runtime.
+      # Add initialization code to register counter cache when the class is loaded.
       {% if counter_cache == true %}
-        {% counter_column_name = "#{self_type.id.underscore}s_count" %}
+        # generate code that interpolates Model.table at runtime
+        {{relation_type}}.register_counter_cache(
+          {{self_type}},
+          "#{ {{self_type}}.table }_count",
+          {{foreign_key.id.stringify}}
+        )
       {% else %}
-        {% counter_column_name = counter_cache.id %}
+        {{relation_type}}.register_counter_cache(
+          {{self_type}},
+          {{counter_cache.id.stringify}},
+          {{foreign_key.id.stringify}}
+        )
       {% end %}
-
-      # Add initialization code to register counter cache when the class is loaded
-      # Use the model class directly for type safety
-      {{relation_type}}.register_counter_cache({{self_type}}, {{counter_column_name.stringify}}, {{foreign_key.id.stringify}})
 
       # :nodoc:
       # increment counter cache on the parent model
