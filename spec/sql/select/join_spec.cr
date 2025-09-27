@@ -204,16 +204,18 @@ module JoinSpec
         user2 = User.create!({first_name: "Jane", last_name: "Smith"})
 
         post1 = Post.create!({title: "John's Post", user_id: user1.id})
+        post2 = Post.create!({title: "John's Second Post", user_id: user1.id})
         # user2 has no posts
 
-        # Test RIGHT JOIN - should return all users, even those without posts
+        # Test RIGHT JOIN - should return all users with matching posts
+        # RIGHT JOIN from users to posts returns all users that have posts
         results = User.query
           .right_join(:posts) { posts.user_id == users.id }
           .to_a
 
-        # Should return users that have posts
-        results.size.should eq(1) # Only user1 (has posts)
-        results[0].first_name.should eq("John")
+        # Should return all users that have posts (John appears twice for his 2 posts)
+        results.size.should eq(2) # John appears twice (once per post)
+        results.map(&.first_name).should eq(["John", "John"])
       end
     end
 
