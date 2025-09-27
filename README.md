@@ -56,17 +56,76 @@ User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
 ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear! :-)
 ```
 
-- Proper debug information
-  - Log and colorize query. Show you the last query if your code crash !
-  - If failing on compile for a good reason, give proper explaination (or at least try)
-- Migration system
-- Validation system
-- N+1 query avoidance strategy
-- Transaction, rollback & savepoint
-- Access to CTE, locks, cursors, scope, pagination, join, window, multi-connection and many others features
-- Model lifecycle/hooks
-- Counter cache with automatic updates and reset functionality
-- JSONB, UUID, FullTextSearch
+## Core ORM Features
+
+**Model & Database Management**
+- Complete migration system with versioning and rollbacks
+- Comprehensive validation system with custom validators
+- Model lifecycle hooks (before/after callbacks for create, update, delete, validate, save)
+- Primary key support (auto-incrementing integers, UUIDs)
+- Timestamps (created_at, updated_at) with automatic touch functionality
+
+**Associations & Relations**
+- belongs_to, has_many, has_one relationships with full support
+- Through associations for complex relationships
+- Polymorphic associations and Single Table Inheritance (STI)
+- Counter cache with atomic updates and reset functionality
+- Touch functionality for automatic timestamp updates on related models
+
+**Query Interface**
+- Chainable and expressive query builder
+- Scopes for reusable query fragments with parameter support
+- Advanced WHERE clauses with complex conditions
+- JOIN operations (inner, left, right, full outer)
+- Subqueries and CTEs (Common Table Expressions)
+- Window functions and advanced SQL features
+- Pagination with limit/offset
+- Ordering and grouping
+- Aggregation functions (count, sum, avg, etc.)
+
+**Performance & Optimization**
+- N+1 query avoidance with eager loading
+- Query result caching
+- Database connection pooling
+- Lazy loading and batch processing
+- Query optimization and SQL analysis
+
+**Data Types & Storage**
+- Full PostgreSQL JSON and JSONB support with complex queries
+- Array columns (strings, integers, booleans)
+- UUID columns and primary keys
+- Enum support with type-safe database integration
+- Custom data type converters
+- Null handling and presence validation
+
+## Advanced Features
+
+**Full-Text Search**
+- PostgreSQL TSVector integration
+- Natural language query parsing
+- Weighted search with relevance scoring
+- Complex search operators (AND, OR, NOT, phrases)
+
+**Database Features**
+- Transaction support with rollback and savepoint
+- Database locking (optimistic and pessimistic)
+- Multiple database connections
+- Database views as models
+- Raw SQL execution when needed
+- Stored procedures and functions support
+
+**Developer Experience**
+- Comprehensive error messages and debugging
+- Query logging with colorized output
+- Crash reporting with last executed query
+- Compile-time type checking and validation
+- Intuitive API design following ActiveRecord conventions
+
+**Data Management**
+- Database seeding utilities
+- Model factories for testing
+- Bulk operations and batch processing
+- Data import/export capabilities
 
 ### Installation
 
