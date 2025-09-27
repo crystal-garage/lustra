@@ -371,8 +371,7 @@ User.query.with_posts.each do |user|
 end
 ```
 
-Note than Clear doesn't perform a join method, and the SQL produced will use
-the operator `IN` on the association.
+Note: For association eager loading (like `with_posts`), Clear uses separate queries with the `IN` operator rather than JOINs for optimal performance.
 
 In the case above:
 
