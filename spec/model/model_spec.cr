@@ -158,6 +158,34 @@ module ModelSpec
         end
       end
 
+      it "reset_counters method" do
+        temporary do
+          reinit_example_models
+
+          # Create user
+          user = User.create!(first_name: "John", last_name: "Doe")
+          user.posts_count.should eq(0)
+
+          # Create posts normally - counter should increment
+          post1 = Post.create!(title: "First Post", content: "Content 1", user: user)
+          post2 = Post.create!(title: "Second Post", content: "Content 2", user: user)
+          user.reload
+          user.posts_count.should eq(2)
+
+          # Manually insert a post directly into database (bypassing counter cache)
+          Clear::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Direct Post', 'Direct Content', #{user.id})")
+
+          # Counter is now out of sync
+          user.reload
+          user.posts_count.should eq(2) # Still shows 2, but there are actually 3 posts
+
+          # Use reset_counters to fix the counter
+          User.reset_counters(user.id, Post)
+          user.reload
+          user.posts_count.should eq(3) # Now correctly shows 3
+        end
+      end
+
       it "detect persistence" do
         temporary do
           reinit_example_models
