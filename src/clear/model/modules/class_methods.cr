@@ -1,6 +1,20 @@
 module Clear::Model::ClassMethods
   macro included # When included into Model
     macro included # When included into final Model
+      # :nodoc:
+      # Registry for counter caches pointing to this model
+      COUNTER_CACHES = {} of String => NamedTuple(counter_column: String, foreign_key: String)
+
+      # Register a counter cache for this model using model class
+      def self.register_counter_cache(association_model : Class, counter_column : String, foreign_key : String)
+        association_name = association_model.table.to_s
+
+        COUNTER_CACHES[association_name] = {
+          counter_column: counter_column,
+          foreign_key: foreign_key,
+        }
+      end
+
       macro inherited #Polymorphism
         macro finished
           __generate_relations__
@@ -191,6 +205,56 @@ module Clear::Model::ClassMethods
 
       def self.columns
         @@columns
+      end
+
+      # Reset counter cache columns to their correct values.
+      # This is useful when counter caches become out of sync due to direct SQL operations.
+      #
+      # Example:
+      # ```
+      # User.reset_counters(user.id, Post)
+      # User.reset_counters(user.id, Post, Comment)
+      # ```
+      def self.reset_counters(id, *counter_models)
+        counter_models.each do |counter_model|
+          association_name = counter_model.table.to_s
+
+          counter_info = COUNTER_CACHES[association_name]?
+
+          unless counter_info
+            raise "Counter cache for #{counter_model.name} not found for #{self.name}"
+          end
+
+          # Count actual records using direct SQL query
+          actual_count = Clear::SQL
+            .select("COUNT(*)")
+            .from(association_name)
+            .where { raw(counter_info[:foreign_key]) == id }
+            .scalar(Int64)
+
+          # Update counter column directly (bypassing callbacks)
+          update_counters(id, {counter_info[:counter_column] => actual_count})
+        end
+      end
+
+      private def self.update_counters(id, counters)
+        # Direct SQL update, no callbacks
+        set_clause = counters.map { |k, v| "#{k} = #{v}" }.join(", ")
+        Clear::SQL.execute("UPDATE #{full_table_name} SET #{set_clause} WHERE #{__pkey__} = #{id}")
+      end
+
+      # Reset counter cache columns
+      #
+      # Example:
+      # ```
+      # user = User.find(1)
+      # user.reset_counters(Post)
+      # user.reset_counters(Post, Comment)
+      # ```
+      def reset_counters(*counter_models)
+        self.class.reset_counters(self.__pkey__, *counter_models)
+        # Reload the instance to get the updated counter values
+        reload
       end
     end
   end

@@ -24,6 +24,7 @@ class User
   column gender : GenderType?
 
   column active : Bool?
+  column posts_count : Int32?
 
   column notification_preferences : JSON::Any, presence: false
   column last_comment_at : Time?
@@ -72,7 +73,9 @@ class Post
   has_many post_tags : PostTag, foreign_key: "post_id"
   has_many tag_relations : Tag, through: :post_tags, foreign_key: :tag_id, own_key: :post_id
 
-  belongs_to user : User
+  # belongs_to user : User, counter_cache: :posts_count
+  belongs_to user : User, counter_cache: true
+
   belongs_to category : Category, foreign_key_type: Int32?
 end
 
@@ -207,6 +210,7 @@ class ModelSpecMigration123
       t.column :gender, :gender_type
 
       t.column "active", "bool", null: true
+      t.column "posts_count", "int", null: false, default: "0"
 
       t.column "notification_preferences", "jsonb", index: "gin", default: "'{}'"
       t.column "last_comment_at", "timestamp"

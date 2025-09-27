@@ -1,6 +1,17 @@
 # :nodoc:
 module Clear::Model::Relations::BelongsToMacro
-  macro generate(self_type, method_name, relation_type, nilable, foreign_key, primary, no_cache, foreign_key_type, touch)
+  macro generate(
+    self_type,
+    method_name,
+    relation_type,
+    nilable,
+    foreign_key,
+    primary,
+    no_cache,
+    foreign_key_type,
+    touch,
+    counter_cache,
+  )
     {% foreign_key = foreign_key || method_name.stringify.underscore + "_id" %}
 
     {%
@@ -122,6 +133,60 @@ module Clear::Model::Relations::BelongsToMacro
       end
     {% end %}
 
+    {% if counter_cache %}
+      # :nodoc:
+      # Execute atomic counter cache update
+      def _bt_update_counter_{{method_name}}(operation : String)
+        {% if nilable %}
+          parent = {{method_name}}
+          return if parent.nil?
+        {% else %}
+          parent = {{method_name}}
+        {% end %}
+
+        {% if counter_cache == true %}
+          counter_column_name = "#{self.class.table}_count"
+        {% else %}
+          counter_column_name = "{{counter_cache.id}}"
+        {% end %}
+
+        Clear::SQL.execute(<<-SQL)
+          UPDATE #{parent.class.full_table_name}
+              SET #{counter_column_name} = #{counter_column_name} #{operation}
+            WHERE #{parent.class.__pkey__} = #{parent.__pkey__}
+          SQL
+      end
+
+      # Register counter cache information with the parent class at runtime.
+      # Add initialization code to register counter cache when the class is loaded.
+      {% if counter_cache == true %}
+        # generate code that interpolates Model.table at runtime
+        {{relation_type}}.register_counter_cache(
+          {{self_type}},
+          "#{ {{self_type}}.table }_count",
+          {{foreign_key.id.stringify}}
+        )
+      {% else %}
+        {{relation_type}}.register_counter_cache(
+          {{self_type}},
+          {{counter_cache.id.stringify}},
+          {{foreign_key.id.stringify}}
+        )
+      {% end %}
+
+      # :nodoc:
+      # increment counter cache on the parent model
+      def _bt_increment_counter_{{method_name}}
+        _bt_update_counter_{{method_name}}("+ 1")
+      end
+
+      # :nodoc:
+      # decrement counter cache on the parent model
+      def _bt_decrement_counter_{{method_name}}
+        _bt_update_counter_{{method_name}}("- 1")
+      end
+    {% end %}
+
     __on_init__ do
       {{self_type}}.before(:validate) do |mdl|
         mdl.as(self)._bt_save_{{method_name}}
@@ -133,6 +198,15 @@ module Clear::Model::Relations::BelongsToMacro
         end
         {{self_type}}.after(:update) do |mdl|
           mdl.as(self)._bt_touch_{{method_name}}
+        end
+      {% end %}
+
+      {% if counter_cache %}
+        {{self_type}}.after(:create) do |mdl|
+          mdl.as(self)._bt_increment_counter_{{method_name}}
+        end
+        {{self_type}}.after(:delete) do |mdl|
+          mdl.as(self)._bt_decrement_counter_{{method_name}}
         end
       {% end %}
     end
