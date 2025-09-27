@@ -239,6 +239,8 @@ module JoinSpec
         results.size.should eq(2) # user1+post1, user2+null
         results.map(&.["first_name"]).should contain("John")
         results.map(&.["first_name"]).should contain("Jane")
+        results.map(&.["title"]).should contain("John's Post")
+        results.map(&.["title"]).should contain(nil) # Jane has no posts
       end
     end
 
