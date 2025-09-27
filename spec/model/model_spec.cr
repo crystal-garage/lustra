@@ -179,10 +179,22 @@ module ModelSpec
           user.reload
           user.posts_count.should eq(2) # Still shows 2, but there are actually 3 posts
 
-          # Use reset_counters to fix the counter
+          # Use reset_counters to fix the counter (class method)
           User.reset_counters(user.id, Post)
           user.reload
           user.posts_count.should eq(3) # Now correctly shows 3
+
+          # Test instance method version
+          # Manually insert another post to make counter out of sync again
+          Clear::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Another Direct Post', 'Another Direct Content', #{user.id})")
+
+          # Counter is out of sync again
+          user.reload
+          user.posts_count.should eq(3) # Still shows 3, but there are actually 4 posts
+
+          # Use instance method to fix the counter
+          user.reset_counters(Post)
+          user.posts_count.should eq(4) # Now correctly shows 4
         end
       end
 

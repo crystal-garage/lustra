@@ -242,6 +242,20 @@ module Clear::Model::ClassMethods
         set_clause = counters.map { |k, v| "#{k} = #{v}" }.join(", ")
         Clear::SQL.execute("UPDATE #{full_table_name} SET #{set_clause} WHERE #{__pkey__} = #{id}")
       end
+
+      # Reset counter cache columns
+      #
+      # Example:
+      # ```
+      # user = User.find(1)
+      # user.reset_counters(Post)
+      # user.reset_counters(Post, Comment)
+      # ```
+      def reset_counters(*counter_models)
+        self.class.reset_counters(self.__pkey__, *counter_models)
+        # Reload the instance to get the updated counter values
+        reload
+      end
     end
   end
 end
