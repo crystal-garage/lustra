@@ -56,17 +56,76 @@ User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
 ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear! :-)
 ```
 
-- Proper debug information
-  - Log and colorize query. Show you the last query if your code crash !
-  - If failing on compile for a good reason, give proper explaination (or at least try)
-- Migration system
-- Validation system
-- N+1 query avoidance strategy
-- Transaction, rollback & savepoint
-- Access to CTE, locks, cursors, scope, pagination, join, window, multi-connection and many others features
-- Model lifecycle/hooks
-- Counter cache with automatic updates and reset functionality
-- JSONB, UUID, FullTextSearch
+## Core ORM Features
+
+**Model & Database Management**
+- Complete migration system with versioning and rollbacks
+- Comprehensive validation system with custom validators
+- Model lifecycle hooks (before/after callbacks for create, update, delete, validate, save)
+- Primary key support (auto-incrementing integers, UUIDs)
+- Timestamps (created_at, updated_at) with automatic touch functionality
+
+**Associations & Relations**
+- belongs_to, has_many, has_one relationships with full support
+- Through associations for complex relationships
+- Polymorphic associations and Single Table Inheritance (STI)
+- Counter cache with atomic updates and reset functionality
+- Touch functionality for automatic timestamp updates on related models
+
+**Query Interface**
+- Chainable and expressive query builder
+- Scopes for reusable query fragments with parameter support
+- Advanced WHERE clauses with complex conditions
+- JOIN operations (inner, left, right, full outer)
+- Subqueries and CTEs (Common Table Expressions)
+- Window functions and advanced SQL features
+- Pagination with limit/offset
+- Ordering and grouping
+- Aggregation functions (count, sum, avg, etc.)
+
+**Performance & Optimization**
+- N+1 query avoidance with eager loading
+- Query result caching
+- Database connection pooling
+- Lazy loading and batch processing
+- Query optimization and SQL analysis
+
+**Data Types & Storage**
+- Full PostgreSQL JSON and JSONB support with complex queries
+- Array columns (strings, integers, booleans)
+- UUID columns and primary keys
+- Enum support with type-safe database integration
+- Custom data type converters
+- Null handling and presence validation
+
+## Advanced Features
+
+**Full-Text Search**
+- PostgreSQL TSVector integration
+- Natural language query parsing
+- Weighted search with relevance scoring
+- Complex search operators (AND, OR, NOT, phrases)
+
+**Database Features**
+- Transaction support with rollback and savepoint
+- Database locking (optimistic and pessimistic)
+- Multiple database connections
+- Database views as models
+- Raw SQL execution when needed
+- Stored procedures and functions support
+
+**Developer Experience**
+- Comprehensive error messages and debugging
+- Query logging with colorized output
+- Crash reporting with last executed query
+- Compile-time type checking and validation
+- Intuitive API design following ActiveRecord conventions
+
+**Data Management**
+- Database seeding utilities
+- Model factories for testing
+- Bulk operations and batch processing
+- Data import/export capabilities
 
 ### Installation
 
@@ -158,14 +217,14 @@ This approach offers more flexibility:
 
 ```crystal
 User.query.select("last_name").each do |usr|
-  puts usr.first_name #Will raise an exception, as first_name hasn't been fetched.
+  puts usr.first_name # Will raise an exception, as first_name hasn't been fetched.
 end
 
 u = User.new
-u.first_name_column.defined? #Return false
+u.first_name_column.defined? # Return false
 u.first_name_column.value("") # Call the value or empty string if not defined :-)
 u.first_name = "bonjour"
-u.first_name_column.defined? #Return true now !
+u.first_name_column.defined? # Return true now !
 ```
 
 Wrapper give also some pretty useful features:
@@ -217,10 +276,10 @@ To fetch one model:
 
 ```crystal
 # 1. Get the first user
-User.query.first #Get the first user, ordered by primary key
+User.query.first # Get the first user, ordered by primary key
 
 # Get a specific user
-User.find!(1) #Get the first user, or throw exception if not found.
+User.find!(1) # Get the first user, or throw exception if not found.
 
 # Usage of query provides a `find_by` kind of method:
 u : User? = User.query.find { email =~ /yacine/i }
@@ -276,7 +335,7 @@ and keep the model query for _fetching_ models only
 
 ```crystal
 # count
-user_on_gmail = User.query.where { email.ilike "@gmail.com%" }.count #Note: count return is Int64
+user_on_gmail = User.query.where { email.ilike "@gmail.com%" }.count # Note: count return is Int64
 # min/max
 max_id = User.query.where { email.ilike "@gmail.com%" }.max("id", Int32)
 # your own aggregate
@@ -291,7 +350,7 @@ To access to an association, just call it !
 ```crystal
 User.query.each do |user|
   puts "User #{user.id} posts:"
-  user.posts.each do |post| #Works, but will trigger a request for each user.
+  user.posts.each do |post| # Works, but will trigger a request for each user.
     puts "• #{post.id}"
   end
 end
@@ -312,8 +371,7 @@ User.query.with_posts.each do |user|
 end
 ```
 
-Note than Clear doesn't perform a join method, and the SQL produced will use
-the operator `IN` on the association.
+Note: For association eager loading (like `with_posts`), Clear uses separate queries with the `IN` operator rather than JOINs for optimal performance.
 
 In the case above:
 
@@ -380,8 +438,8 @@ In case you want columns computed by postgres, or stored in another table, you c
 By default, for performance reasons, `fetch_columns` option is set to false.
 
 ```crystal
-users = User.query.select(email: "users.email",
-  remark: "infos.remark").join("infos"){ infos.user_id == users.id }.to_a(fetch_columns: true)
+users = User.query.select(email: "users.email", remark: "infos.remark")
+  .join("infos") { infos.user_id == users.id }.to_a(fetch_columns: true)
 
 # Now the column "remark" will be fetched into each user object.
 # Access can be made using `[]` operator on the model.
@@ -438,7 +496,7 @@ Object can be persisted, saved, updated:
 ```crystal
 u = User.new
 u.email = "test@example.com"
-u.save! #Save or throw if unsavable (validation failed).
+u.save! # Save or throw if unsavable (validation failed).
 ```
 
 Columns can be checked & reverted:
@@ -476,7 +534,7 @@ In this case, you can write:
 
 ```crystal
 class User
-    column id : Int64, primary: true, presence: false #id will be set using pg serial !
+  column id : Int64, primary: true, presence: false # id will be set using pg serial !
 end
 ```
 
@@ -495,7 +553,7 @@ the `validate` method:
 
 ```crystal
 class MyModel
-#...
+  #...
   def validate
     # Your code goes here
   end
@@ -508,7 +566,7 @@ Validation fails if `model#errors` is not empty:
 class MyModel
   #...
   def validate
-    if first_name_column.defined? && first_name != "ABCD" #< See below why `defined?` must be called.
+    if first_name_column.defined? && first_name != "ABCD" # < See below why `defined?` must be called.
       add_error("first_name", "must be ABCD!")
     end
   end
@@ -535,7 +593,7 @@ class MyModel
   end
 end
 
-MyModel.new.save! #< Raise unexpected exception, not validation failure :(
+MyModel.new.save! # < Raise unexpected exception, not validation failure :(
 ```
 
 This validator will raise an exception, because first_name has never been initialized.
@@ -543,9 +601,8 @@ To avoid this, we have many way:
 
 ```crystal
 # 1. Check presence:
-
 def validate
-  if first_name_column.defined? #Ensure we have a value here.
+  if first_name_column.defined? # Ensure we have a value here.
     add_error("first_name", "should not be empty") if first_name == ""
   end
 end
@@ -562,12 +619,12 @@ def validate
   end
 end
 
-#4. Use the helper macro `ensure_than`
+# 4. Use the helper macro `ensure_than`
 def validate
   ensure_than(first_name, "should not be empty", &.!=(""))
 end
 
-#5. Use the `ensure_than` helper (but with block notation) !
+# 5. Use the `ensure_than` helper (but with block notation) !
 def validate
   ensure_than(first_name, "should not be empty") do |column|
     column != ""
@@ -646,29 +703,6 @@ t.references to: "users", on_delete: "cascade", null: false
 There's no plan to offer on Crystal level the `on_delete` feature, like
 `dependent` in ActiveRecord. That's a standard PG feature, just set it
 up in migration
-
-## Performances
-
-Models add a layer of computation. Below is a sample with a very simple model
-(two integer column), with fetching of 100k rows over 1M rows database, using --release flag:
-
-|                     Method |       | Total time           |        Speed |
-| -------------------------: | ----: | -------------------- | -----------: |
-|           Simple load 100k | 12.04 | ( 83.03ms) (± 3.87%) | 2.28× slower |
-|                With cursor |  8.26 | ( 121.0ms) (± 1.25%) | 3.32× slower |
-|            With attributes | 10.30 | ( 97.12ms) (± 4.07%) | 2.67× slower |
-| With attributes and cursor |  7.55 | (132.52ms) (± 2.39%) | 3.64× slower |
-|                   SQL only | 27.46 | ( 36.42ms) (± 5.05%) |      fastest |
-
-- `Simple load 100k` is using an array to fetch the 100k rows.
-- `With cursor` is querying 1000 rows at a time
-- `With attribute` setup a hash to deal with unknown attributes in the model (e.g. aggregates)
-- `With attribute and cursor` is doing cursored fetch with hash attributes created
-- `SQL only` build and execute SQL using SQL::Builder
-
-As you can see, it takes around 100ms to fetch 100k rows for this simple model (SQL included).
-If for more complex model, it would take a bit more of time, I think the performances
-are quite reasonable, and tenfold or plus faster than Rails's ActiveRecord.
 
 ## Licensing
 
