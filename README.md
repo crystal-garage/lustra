@@ -65,6 +65,7 @@ ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear!
 - Transaction, rollback & savepoint
 - Access to CTE, locks, cursors, scope, pagination, join, window, multi-connection and many others features
 - Model lifecycle/hooks
+- Counter cache with automatic updates and reset functionality
 - JSONB, UUID, FullTextSearch
 
 ### Installation
