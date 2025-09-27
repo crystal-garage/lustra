@@ -217,14 +217,14 @@ This approach offers more flexibility:
 
 ```crystal
 User.query.select("last_name").each do |usr|
-  puts usr.first_name #Will raise an exception, as first_name hasn't been fetched.
+  puts usr.first_name # Will raise an exception, as first_name hasn't been fetched.
 end
 
 u = User.new
-u.first_name_column.defined? #Return false
+u.first_name_column.defined? # Return false
 u.first_name_column.value("") # Call the value or empty string if not defined :-)
 u.first_name = "bonjour"
-u.first_name_column.defined? #Return true now !
+u.first_name_column.defined? # Return true now !
 ```
 
 Wrapper give also some pretty useful features:
@@ -276,10 +276,10 @@ To fetch one model:
 
 ```crystal
 # 1. Get the first user
-User.query.first #Get the first user, ordered by primary key
+User.query.first # Get the first user, ordered by primary key
 
 # Get a specific user
-User.find!(1) #Get the first user, or throw exception if not found.
+User.find!(1) # Get the first user, or throw exception if not found.
 
 # Usage of query provides a `find_by` kind of method:
 u : User? = User.query.find { email =~ /yacine/i }
@@ -335,7 +335,7 @@ and keep the model query for _fetching_ models only
 
 ```crystal
 # count
-user_on_gmail = User.query.where { email.ilike "@gmail.com%" }.count #Note: count return is Int64
+user_on_gmail = User.query.where { email.ilike "@gmail.com%" }.count # Note: count return is Int64
 # min/max
 max_id = User.query.where { email.ilike "@gmail.com%" }.max("id", Int32)
 # your own aggregate
@@ -350,7 +350,7 @@ To access to an association, just call it !
 ```crystal
 User.query.each do |user|
   puts "User #{user.id} posts:"
-  user.posts.each do |post| #Works, but will trigger a request for each user.
+  user.posts.each do |post| # Works, but will trigger a request for each user.
     puts "• #{post.id}"
   end
 end
@@ -439,8 +439,8 @@ In case you want columns computed by postgres, or stored in another table, you c
 By default, for performance reasons, `fetch_columns` option is set to false.
 
 ```crystal
-users = User.query.select(email: "users.email",
-  remark: "infos.remark").join("infos"){ infos.user_id == users.id }.to_a(fetch_columns: true)
+users = User.query.select(email: "users.email", remark: "infos.remark")
+  .join("infos") { infos.user_id == users.id }.to_a(fetch_columns: true)
 
 # Now the column "remark" will be fetched into each user object.
 # Access can be made using `[]` operator on the model.
@@ -497,7 +497,7 @@ Object can be persisted, saved, updated:
 ```crystal
 u = User.new
 u.email = "test@example.com"
-u.save! #Save or throw if unsavable (validation failed).
+u.save! # Save or throw if unsavable (validation failed).
 ```
 
 Columns can be checked & reverted:
@@ -535,7 +535,7 @@ In this case, you can write:
 
 ```crystal
 class User
-    column id : Int64, primary: true, presence: false #id will be set using pg serial !
+  column id : Int64, primary: true, presence: false # id will be set using pg serial !
 end
 ```
 
@@ -554,7 +554,7 @@ the `validate` method:
 
 ```crystal
 class MyModel
-#...
+  #...
   def validate
     # Your code goes here
   end
@@ -567,7 +567,7 @@ Validation fails if `model#errors` is not empty:
 class MyModel
   #...
   def validate
-    if first_name_column.defined? && first_name != "ABCD" #< See below why `defined?` must be called.
+    if first_name_column.defined? && first_name != "ABCD" # < See below why `defined?` must be called.
       add_error("first_name", "must be ABCD!")
     end
   end
@@ -594,7 +594,7 @@ class MyModel
   end
 end
 
-MyModel.new.save! #< Raise unexpected exception, not validation failure :(
+MyModel.new.save! # < Raise unexpected exception, not validation failure :(
 ```
 
 This validator will raise an exception, because first_name has never been initialized.
@@ -602,9 +602,8 @@ To avoid this, we have many way:
 
 ```crystal
 # 1. Check presence:
-
 def validate
-  if first_name_column.defined? #Ensure we have a value here.
+  if first_name_column.defined? # Ensure we have a value here.
     add_error("first_name", "should not be empty") if first_name == ""
   end
 end
@@ -621,12 +620,12 @@ def validate
   end
 end
 
-#4. Use the helper macro `ensure_than`
+# 4. Use the helper macro `ensure_than`
 def validate
   ensure_than(first_name, "should not be empty", &.!=(""))
 end
 
-#5. Use the `ensure_than` helper (but with block notation) !
+# 5. Use the `ensure_than` helper (but with block notation) !
 def validate
   ensure_than(first_name, "should not be empty") do |column|
     column != ""
