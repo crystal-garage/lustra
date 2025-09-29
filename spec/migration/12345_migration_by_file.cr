@@ -1,6 +1,6 @@
 # Just to test the naming convention
 class MigrationByFile
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     # Nothing

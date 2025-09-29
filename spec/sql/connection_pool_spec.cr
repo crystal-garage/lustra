@@ -9,16 +9,16 @@ module ConnectionPoolSpec
     reinit_migration_manager
   end
 
-  describe "Clear::SQL" do
+  describe "Lustra::SQL" do
     describe "ConnectionPool" do
       it "handle multiple fibers" do
         begin
-          Clear::SQL.execute("CREATE TABLE tests (id serial PRIMARY KEY)")
+          Lustra::SQL.execute("CREATE TABLE tests (id serial PRIMARY KEY)")
 
           init = true
           spawn do
-            Clear::SQL.transaction do
-              Clear::SQL.insert("tests", {id: 1}).execute
+            Lustra::SQL.transaction do
+              Lustra::SQL.insert("tests", {id: 1}).execute
               sleep 200.milliseconds # < The transaction is not yet commited
             end
           end
@@ -28,7 +28,7 @@ module ConnectionPoolSpec
           spawn do
             # Not inside the transaction so count must be zero since the transaction is not finished:
             sleep 100.milliseconds
-            @@count = Clear::SQL.select.from("tests").count
+            @@count = Lustra::SQL.select.from("tests").count
           end
 
           sleep 300.milliseconds # Let the 2 spawn finish...
@@ -36,10 +36,10 @@ module ConnectionPoolSpec
           @@count.should eq 0 # < If one, the connection pool got wrong with the fiber.
 
           # Now the transaction is over, count should be 1
-          count = Clear::SQL.select.from("tests").count
+          count = Lustra::SQL.select.from("tests").count
           count.should eq 1
         ensure
-          Clear::SQL.execute("DROP TABLE tests;") unless init
+          Lustra::SQL.execute("DROP TABLE tests;") unless init
         end
       end
     end

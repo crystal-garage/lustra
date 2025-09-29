@@ -1,8 +1,8 @@
-require "../src/clear/sql"
+require "../src/lustra/sql"
 require "benchmark"
 
 def complex_query
-  Clear::SQL.select.from(:users)
+  Lustra::SQL.select.from(:users)
     .join(:role_users) { role_users.user_id == users.id }
     .join(:roles) { role_users.role_id == roles.id }
     .where({role: ["admin", "superadmin"]})

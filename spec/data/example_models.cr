@@ -1,4 +1,4 @@
-Clear.enum GenderType, "male", "female", "other" do
+Lustra.enum GenderType, "male", "female", "other" do
   def male?
     self == Male
   end
@@ -13,7 +13,7 @@ Clear.enum GenderType, "male", "female", "other" do
 end
 
 class User
-  include Clear::Model
+  include Lustra::Model
 
   primary_key
 
@@ -51,7 +51,7 @@ class User
 end
 
 class Post
-  include Clear::Model
+  include Lustra::Model
 
   primary_key
 
@@ -80,7 +80,7 @@ class Post
 end
 
 class PostWithTouch
-  include Clear::Model
+  include Lustra::Model
 
   self.table = "posts_with_touch"
 
@@ -94,7 +94,7 @@ class PostWithTouch
 end
 
 class Tag
-  include Clear::Model
+  include Lustra::Model
 
   column id : Int32, primary: true, presence: false
 
@@ -104,7 +104,7 @@ class Tag
 end
 
 class PostTag
-  include Clear::Model
+  include Lustra::Model
 
   primary_key
 
@@ -113,7 +113,7 @@ class PostTag
 end
 
 class UserInfo
-  include Clear::Model
+  include Lustra::Model
 
   column id : Int32, primary: true, presence: false
 
@@ -122,7 +122,7 @@ class UserInfo
 end
 
 class Category
-  include Clear::Model
+  include Lustra::Model
 
   column id : Int32, primary: true, presence: false
 
@@ -135,7 +135,7 @@ class Category
 end
 
 class Comment
-  include Clear::Model
+  include Lustra::Model
 
   primary_key
 
@@ -147,7 +147,7 @@ class Comment
 end
 
 class Relationship
-  include Clear::Model
+  include Lustra::Model
 
   primary_key
 
@@ -156,7 +156,7 @@ class Relationship
 end
 
 class ModelWithUUID
-  include Clear::Model
+  include Lustra::Model
 
   primary_key :id, type: :uuid
 
@@ -164,7 +164,7 @@ class ModelWithUUID
 end
 
 class BigDecimalData
-  include Clear::Model
+  include Lustra::Model
 
   column id : Int32, primary: true, presence: false
   column num1 : BigDecimal?
@@ -174,7 +174,7 @@ class BigDecimalData
 end
 
 class ModelWithinAnotherSchema
-  include Clear::Model
+  include Lustra::Model
 
   self.schema = "another_schema"
   self.table = "model_within_another_schemas"
@@ -185,7 +185,7 @@ class ModelWithinAnotherSchema
 end
 
 class ModelSpecMigration123
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     create_enum(:gender_type, GenderType)

@@ -6,10 +6,10 @@ module InsertSpec
   extend self
 
   def insert_request
-    Clear::SQL::InsertQuery.new(:users)
+    Lustra::SQL::InsertQuery.new(:users)
   end
 
-  describe "Clear::SQL" do
+  describe "Lustra::SQL" do
     describe "InsertQuery" do
       it "build an insert" do
         insert_request.values({a: "c", b: 12}).to_sql.should eq(
@@ -19,7 +19,7 @@ module InsertSpec
 
       it "build an insert from sql" do
         insert_request.values(
-          Clear::SQL.select.from(:old_users)
+          Lustra::SQL.select.from(:old_users)
             .where { old_users.id > 100 }
         ).to_sql.should eq(
           "INSERT INTO \"users\" (SELECT * FROM \"old_users\" WHERE (\"old_users\".\"id\" > 100))"
@@ -56,7 +56,7 @@ module InsertSpec
       end
 
       it "insert unsafe values" do
-        insert_request.values({created_at: Clear::Expression.unsafe("NOW()")})
+        insert_request.values({created_at: Lustra::Expression.unsafe("NOW()")})
           .to_sql
           .should eq "INSERT INTO \"users\" (\"created_at\") VALUES (NOW())"
       end

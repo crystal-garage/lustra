@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module FullTextSearchableSpec
   class Series
-    include Clear::Model
+    include Lustra::Model
 
     primary_key
 
@@ -15,7 +15,7 @@ module FullTextSearchableSpec
   end
 
   class CreateSeriesMigration5312354
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "series" do |t|
@@ -33,16 +33,16 @@ module FullTextSearchableSpec
 
   describe "test tsv searchable" do
     it "translate client query to ts_query" do
-      Clear::Model::FullTextSearchable.to_tsq("rick & morty").should eq("'rick' & '&' & 'morty'")
-      Clear::Model::FullTextSearchable.to_tsq("rick+morty").should eq("'rick' & 'morty'")
-      Clear::Model::FullTextSearchable.to_tsq("\"rick morty\"").should eq("'rick morty'")
-      Clear::Model::FullTextSearchable.to_tsq("'rick morty'").should eq("'rick morty'")
-      Clear::Model::FullTextSearchable.to_tsq("rick morty").should eq("'rick' & 'morty'")
-      Clear::Model::FullTextSearchable.to_tsq("rick -morty").should eq("'rick' & !'morty'")
-      Clear::Model::FullTextSearchable.to_tsq("rick -'rick hunter'").should eq("'rick' & !'rick hunter'")
-      Clear::Model::FullTextSearchable.to_tsq("l'esplanade").should eq("'l''esplanade'")
-      Clear::Model::FullTextSearchable.to_tsq("'l''usine'").should eq("'l' & 'usine'")
-      Clear::Model::FullTextSearchable.to_tsq("'l'usine").should eq("'l' & 'usine'")
+      Lustra::Model::FullTextSearchable.to_tsq("rick & morty").should eq("'rick' & '&' & 'morty'")
+      Lustra::Model::FullTextSearchable.to_tsq("rick+morty").should eq("'rick' & 'morty'")
+      Lustra::Model::FullTextSearchable.to_tsq("\"rick morty\"").should eq("'rick morty'")
+      Lustra::Model::FullTextSearchable.to_tsq("'rick morty'").should eq("'rick morty'")
+      Lustra::Model::FullTextSearchable.to_tsq("rick morty").should eq("'rick' & 'morty'")
+      Lustra::Model::FullTextSearchable.to_tsq("rick -morty").should eq("'rick' & !'morty'")
+      Lustra::Model::FullTextSearchable.to_tsq("rick -'rick hunter'").should eq("'rick' & !'rick hunter'")
+      Lustra::Model::FullTextSearchable.to_tsq("l'esplanade").should eq("'l''esplanade'")
+      Lustra::Model::FullTextSearchable.to_tsq("'l''usine'").should eq("'l' & 'usine'")
+      Lustra::Model::FullTextSearchable.to_tsq("'l'usine").should eq("'l' & 'usine'")
     end
 
     it "search through tsvector" do
@@ -84,7 +84,7 @@ module FullTextSearchableSpec
     end
   end
 
-  describe "Clear::TSVector" do
+  describe "Lustra::TSVector" do
     it "be encoded/decoded" do
       data = ("\u0000\u0000\u0000\tbad\u0000\u0000\u0001@\fbetter\u0000\u0000\u0001" +
               "\xC0\u0001break\u0000\u0000\u0001@\vcall\u0000\u0000\u0001\xC0\u0002" +
@@ -92,7 +92,7 @@ module FullTextSearchableSpec
               "\u0000\u0000\u0001@\tsaul\u0000\u0000\u0002\xC0\u0003@\u0005sketchi" +
               "\u0000\u0000\u0001@\b").bytes
       # Example specs
-      tsvec = Clear::TSVector.decode(
+      tsvec = Lustra::TSVector.decode(
         Slice(UInt8).new(data.to_unsafe, data.size)
       )
 

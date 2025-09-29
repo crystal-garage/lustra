@@ -2,7 +2,7 @@ require "../spec_helper"
 require "../data/example_models"
 
 module ColumnSpec
-  describe "Clear::Model" do
+  describe "Lustra::Model" do
     context "columns" do
       it "handles persistance flag" do
         temporary do

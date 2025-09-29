@@ -3,7 +3,7 @@ require "../spec_helper"
 module PolymorphismSpec
   # MODELS POLYMORPHISM
   abstract class AbstractClass
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "polymorphs"
 
@@ -16,7 +16,7 @@ module PolymorphismSpec
 
   # Non-polymorphic model
   class OtherModel
-    include Clear::Model
+    include Lustra::Model
   end
 
   class ConcreteClass1 < AbstractClass
@@ -36,7 +36,7 @@ module PolymorphismSpec
   end
 
   class PolymorphicMigration4321
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "polymorphs" do |t|
@@ -53,7 +53,7 @@ module PolymorphismSpec
     PolymorphicMigration4321.new.apply
   end
 
-  describe "Clear::Model::IsPolymorphic" do
+  describe "Lustra::Model::IsPolymorphic" do
     it "has a field telling you if the model class is polymorphic" do
       AbstractClass.polymorphic?.should be_true
       ConcreteClass1.polymorphic?.should be_true

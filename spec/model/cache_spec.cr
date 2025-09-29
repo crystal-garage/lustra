@@ -4,7 +4,7 @@ require "../data/example_models"
 # Monkey patch of QueryCache
 # For adding statistics
 # during spec
-class Clear::Model::QueryCache
+class Lustra::Model::QueryCache
   class_getter cache_hitted : Int32 = 0
 
   def hit(relation_name, relation_value, klass : T.class) : Array(T) forall T
@@ -33,18 +33,18 @@ module CacheSpec
     Post.create! id: 304, title: "post 304", published: true, user_id: 101, category_id: 202, content: "Lorem ipsum"
   end
 
-  describe "Clear::Model" do
+  describe "Lustra::Model" do
     context "cache system" do
       it "manage has_many relations" do
         temporary do
           reinit
-          Clear::Model::QueryCache.reset_counter
+          Lustra::Model::QueryCache.reset_counter
           # relations has_many
           User.query.first!.posts.count.should eq(2)
           User.query.with_posts(&.published.with_category).each do |user|
-            Clear::Model::QueryCache.reset_counter
+            Lustra::Model::QueryCache.reset_counter
             user.posts.count.should eq(2)
-            Clear::Model::QueryCache.cache_hitted.should eq(1)
+            Lustra::Model::QueryCache.cache_hitted.should eq(1)
           end
         end
       end
@@ -52,7 +52,7 @@ module CacheSpec
       it "be chained" do
         temporary do
           reinit
-          Clear::Model::QueryCache.reset_counter
+          Lustra::Model::QueryCache.reset_counter
           User.query.with_posts(&.with_category).each do |user|
             user.posts.each do |p|
               case p.id
@@ -70,11 +70,11 @@ module CacheSpec
         temporary do
           reinit
           # Relation belongs_to
-          Clear::Model::QueryCache.reset_counter
+          Lustra::Model::QueryCache.reset_counter
           Post.query.with_user.each do |post|
             post.user.should_not be_nil
           end
-          Clear::Model::QueryCache.cache_hitted.should eq(4) # Number of posts
+          Lustra::Model::QueryCache.cache_hitted.should eq(4) # Number of posts
 
           Category.query.with_users(&.order_by("users.id", :asc)).order_by("id", :asc).each do |c|
             c.id.should_not be_nil

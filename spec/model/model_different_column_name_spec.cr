@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module ModelDifferentColumnNameSpec
   class Brand
-    include Clear::Model
+    include Lustra::Model
 
     primary_key
     column name : String, column_name: "brand_name"
@@ -10,7 +10,7 @@ module ModelDifferentColumnNameSpec
   end
 
   class ModelDifferentColumnNameSpecMigration8273
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "brands" do |t|
@@ -26,7 +26,7 @@ module ModelDifferentColumnNameSpec
     ModelDifferentColumnNameSpecMigration8273.new.apply
   end
 
-  describe "Clear::Model" do
+  describe "Lustra::Model" do
     context "Column definition" do
       it "define properties in the model with a name different of the column name in PG" do
         # Here the column "name" is linked to "brand_name" in postgreSQL

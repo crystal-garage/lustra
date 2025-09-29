@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module ValidationSpec
   class User
-    include Clear::Model
+    include Lustra::Model
 
     primary_key
 
@@ -19,7 +19,7 @@ module ValidationSpec
   end
 
   class ValidateNotEmpty
-    include Clear::Model
+    include Lustra::Model
 
     column a : String # Must be present
 
@@ -29,7 +29,7 @@ module ValidationSpec
   end
 
   class MultiValidation
-    include Clear::Model
+    include Lustra::Model
 
     column email : String
 
@@ -47,7 +47,7 @@ module ValidationSpec
     end
   end
 
-  describe "Clear::Model Validation" do
+  describe "Lustra::Model Validation" do
     it "validate presence using the type of the column" do
       u = User.new
       u.valid?.should be_false
@@ -57,9 +57,9 @@ module ValidationSpec
       u.errors.size.should eq(0)
     end
 
-    it "raises Clear::Model::InvalidError when #valid! is called on an invalid model" do
+    it "raises Lustra::Model::InvalidError when #valid! is called on an invalid model" do
       u = User.new
-      expect_raises Clear::Model::InvalidError do
+      expect_raises Lustra::Model::InvalidError do
         u.valid!
       end
     end

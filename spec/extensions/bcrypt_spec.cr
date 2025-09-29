@@ -4,7 +4,7 @@ module BCryptSpec
   extend self
 
   class EncryptedPasswordMigration57632
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table(:bcrypt_users, id: :uuid) do |t|
@@ -14,7 +14,7 @@ module BCryptSpec
   end
 
   class User
-    include Clear::Model
+    include Lustra::Model
 
     primary_key :id, type: :uuid
 
@@ -29,7 +29,7 @@ module BCryptSpec
     EncryptedPasswordMigration57632.new.apply
   end
 
-  describe "Clear::Migration::CreateEnum" do
+  describe "Lustra::Migration::CreateEnum" do
     it "create bcrypt password" do
       temporary do
         reinit!

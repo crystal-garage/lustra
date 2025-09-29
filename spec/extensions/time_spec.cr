@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module IntervalSpec
   class IntervalMigration78392
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table(:interval_table) do |t|
@@ -20,17 +20,17 @@ module IntervalSpec
   end
 
   class IntervalModel
-    include Clear::Model
+    include Lustra::Model
 
     primary_key
 
     self.table = "interval_table"
 
-    column interval : Clear::Interval?
-    column time_in_date : Clear::TimeInDay?
+    column interval : Lustra::Interval?
+    column time_in_date : Lustra::TimeInDay?
   end
 
-  describe Clear::Interval do
+  describe Lustra::Interval do
     it "be saved into database (and converted to pg interval type)" do
       temporary do
         reinit!
@@ -40,7 +40,7 @@ module IntervalSpec
           days = Random.rand(-1000..1000)
           microseconds = Random.rand(-10_000_000..10_000_000)
 
-          interval = Clear::Interval.new(months: months, days: days, microseconds: microseconds)
+          interval = Lustra::Interval.new(months: months, days: days, microseconds: microseconds)
           IntervalModel.create! id: id, interval: interval
 
           record = IntervalModel.find! id
@@ -58,14 +58,14 @@ module IntervalSpec
     it "be added and substracted to a date" do
       # TimeSpan
       [1.month, 1.day, 1.hour, 1.minute, 1.second].each do |span|
-        i = Clear::Interval.new(span)
+        i = Lustra::Interval.new(span)
         now = Time.local
 
         (now + i).to_unix.should eq((now + span).to_unix)
         (now - i).to_unix.should eq((now - span).to_unix)
       end
 
-      i = Clear::Interval.new(months: 1, days: -1, minutes: 12)
+      i = Lustra::Interval.new(months: 1, days: -1, minutes: 12)
       now = Time.local
 
       (now + i).to_unix.should eq((now + 1.month - 1.day + 12.minute).to_unix)
@@ -74,26 +74,26 @@ module IntervalSpec
 
     it "be used in expression engine" do
       IntervalModel.query.where do
-        (created_at - Clear::Interval.new(months: 1)) > updated_at
+        (created_at - Lustra::Interval.new(months: 1)) > updated_at
       end.to_sql.should eq %(SELECT * FROM "interval_table" WHERE (("created_at" - INTERVAL '1 months') > "updated_at"))
     end
 
     it "be casted into string" do
-      Clear::Interval.new(months: 1, days: 1).to_sql.to_s.should eq("INTERVAL '1 months 1 days'")
+      Lustra::Interval.new(months: 1, days: 1).to_sql.to_s.should eq("INTERVAL '1 months 1 days'")
     end
   end
 
-  describe Clear::TimeInDay do
+  describe Lustra::TimeInDay do
     it "be parsed" do
       value = 12i64 * 3_600 + 50*60
-      Clear::TimeInDay.parse("12:50").microseconds.should eq(value * 1_000_000)
+      Lustra::TimeInDay.parse("12:50").microseconds.should eq(value * 1_000_000)
 
-      Clear::TimeInDay.parse("12:50:02").microseconds.should eq((value + 2) * 1_000_000)
+      Lustra::TimeInDay.parse("12:50:02").microseconds.should eq((value + 2) * 1_000_000)
 
       wrong_formats = {"a:21", ":32:54", "12345", "0:0:0"}
 
       wrong_formats.each do |format|
-        expect_raises(Exception, /wrong format/i) { Clear::TimeInDay.parse(format) }
+        expect_raises(Exception, /wrong format/i) { Lustra::TimeInDay.parse(format) }
       end
     end
 

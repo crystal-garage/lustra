@@ -1,0 +1,10 @@
+require "./node"
+
+#  A node managing the rendering of `value IN ( <SUBQUERY> )`
+class Lustra::Expression::Node::InSelect < Lustra::Expression::Node
+  def initialize(@target : Node, @select : Lustra::SQL::SelectBuilder); end
+
+  def resolve : String
+    {@target.resolve, " IN (", @select.to_sql, ")"}.join
+  end
+end

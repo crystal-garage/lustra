@@ -1,6 +1,6 @@
 require "spec"
 
-require "../src/clear"
+require "../src/lustra"
 
 class ::Crypto::Bcrypt::Password
   # Redefine the default cost to 4 (the minimum allowed) to accelerate greatly the tests.
@@ -20,21 +20,21 @@ def initdb
       SQL
   )
 
-  Clear::SQL.init("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_spec")
-  Clear::SQL.init("secondary", "postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_secondary_spec")
+  Lustra::SQL.init("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_spec")
+  Lustra::SQL.init("secondary", "postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_secondary_spec")
 
   {% if flag?(:quiet) %} Log.setup(:error) {% else %} Log.setup(:debug) {% end %}
 end
 
 def reinit_migration_manager
-  Clear::Migration::Manager.instance.reinit!
+  Lustra::Migration::Manager.instance.reinit!
 end
 
 def temporary(&)
-  Clear::SQL.with_savepoint do
+  Lustra::SQL.with_savepoint do
     yield
 
-    Clear::SQL.rollback
+    Lustra::SQL.rollback
   end
 end
 

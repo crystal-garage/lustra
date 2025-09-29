@@ -3,10 +3,10 @@
 `echo "CREATE DATABASE sample_for_wiki;" | psql -U postgres`
 
 # Unleash the kraken !!!
-require "../../src/clear"
+require "../../src/lustra"
 
 # Initialize the connection
-Clear::SQL.init("postgres://postgres@localhost/sample_for_wiki")
+Lustra::SQL.init("postgres://postgres@localhost/sample_for_wiki")
 
 # Because it's a step by step tutorial
 def pause
@@ -22,7 +22,7 @@ end
 # Here we are going to use the number into the class, to keep all the source of our application
 # into the same file
 class FirstMigration1
-  include Clear::Migration
+  include Lustra::Migration
 
   # Everything is included in `change` method
   def change(dir)               # < dir is the direction of the migration, up or down
@@ -48,7 +48,7 @@ end
 # we can write down our models now !
 
 class User
-  include Clear::Model
+  include Lustra::Model
   self.table = "users"
 
   # Adding a primary key is mandatory in models
@@ -64,7 +64,7 @@ class User
   end
 
   # Note here, because password_encrypted can be nullable in the database,
-  # you expect it to be nullable in Clear too.
+  # you expect it to be nullable in Lustra too.
   column password_encrypted : String?
 
   column email : String
@@ -74,7 +74,7 @@ class User
 end
 
 class Post
-  include Clear::Model
+  include Lustra::Model
   self.table = "posts"
 
   primary_key
@@ -93,17 +93,17 @@ end
 
 # Now we have a migration, it's time to migrate it !
 # Note if you launch your application again, the migration won't be applied again.
-Clear::Migration::Manager.instance.apply_all
+Lustra::Migration::Manager.instance.apply_all
 pause
 
 # Now it's time to put some data, but first, let's delete everything from our database.
 # There's multiple way to delete, but the simplest is to use the SQL builder
 # (Also like this I can show it to you !)
-# Clear offers a great query building interface.
+# Lustra offers a great query building interface.
 
 # Ok, let's delete all the users!
 # Note: We cannot yet do any "TRUNCATE" operation :(, but soon, I hope !
-Clear::SQL.delete("users").execute
+Lustra::SQL.delete("users").execute
 pause
 
 # Since the posts have foreign constraints to users with cascaded delete (see migration)
@@ -142,7 +142,7 @@ end
 # Ok, let's see if I can count all the posts with `enim` (one of the lorem ipsum word!) into the title:
 puts Post.query.where { title =~ /(^| )enim( |$)/i }.count
 pause
-# It wasnt so hard :-). You can notice here I use the Clear's expression engine, idea
+# It wasnt so hard :-). You can notice here I use the Lustra's expression engine, idea
 # completely stolen to the famous Sequel ORM !
 # We also use the power of postgres to use regex straight to the database ! Yeah !
 
@@ -157,7 +157,7 @@ end
 pause
 
 # How wait... It's boring it calls, SQL query for each user !
-# The solution is here ! Let's tell Clear we want the posts of the user!
+# The solution is here ! Let's tell Lustra we want the posts of the user!
 User.query.with_posts.limit(5).each do |user|
   puts "Post of user: #{user.full_name}"
   user.posts.each do |p|

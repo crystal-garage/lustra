@@ -2,7 +2,7 @@ require "../spec_helper"
 require "../data/example_models"
 
 module EnumSpec
-  describe "Clear.enum" do
+  describe "Lustra.enum" do
     it "call custom member methods" do
       GenderType::Male.male?.should be_true
       GenderType::Female.male?.should be_false

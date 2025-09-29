@@ -2,7 +2,7 @@ require "../spec_helper"
 require "../data/example_models"
 
 module ModelSpec
-  describe "Clear::Model" do
+  describe "Lustra::Model" do
     context "fields management" do
       it "load from tuple" do
         temporary do
@@ -173,7 +173,7 @@ module ModelSpec
           user.posts_count.should eq(2)
 
           # Manually insert a post directly into database (bypassing counter cache)
-          Clear::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Direct Post', 'Direct Content', #{user.id})")
+          Lustra::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Direct Post', 'Direct Content', #{user.id})")
 
           # Counter is now out of sync
           user.reload
@@ -186,7 +186,7 @@ module ModelSpec
 
           # Test instance method version
           # Manually insert another post to make counter out of sync again
-          Clear::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Another Direct Post', 'Another Direct Content', #{user.id})")
+          Lustra::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Another Direct Post', 'Another Direct Content', #{user.id})")
 
           # Counter is out of sync again
           user.reload
@@ -559,7 +559,7 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.find!(1)
           end
         end
@@ -614,7 +614,7 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.first!
           end
         end
@@ -624,7 +624,7 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.last!
           end
         end
@@ -890,7 +890,7 @@ module ModelSpec
       end
     end
 
-    describe "Clear::Model::JSONDeserialize" do
+    describe "Lustra::Model::JSONDeserialize" do
       it "create a model json IO" do
         user_body = {first_name: "foo"}
         io = IO::Memory.new user_body.to_json
@@ -948,7 +948,7 @@ module ModelSpec
       end
     end
 
-    describe "Clear::Model::HasColumns mass_assign" do
+    describe "Lustra::Model::HasColumns mass_assign" do
       it "should do mass_assignment" do
         temporary do
           reinit_example_models
@@ -1010,10 +1010,10 @@ module ModelSpec
           data.num2.should eq(BigDecimal.new("42424224.01234568"))
           data.num3.should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40).trunc)
 
-          # Clear::SQL::Error:numeric field overflow
+          # Lustra::SQL::Error:numeric field overflow
           data.num4 = BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40)
 
-          expect_raises(Clear::SQL::Error) do
+          expect_raises(Lustra::SQL::Error) do
             data.save!
           end
         end

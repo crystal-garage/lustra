@@ -4,7 +4,7 @@ module DeleteSpec
   extend self
 
   def delete_request
-    Clear::SQL::DeleteQuery.new
+    Lustra::SQL::DeleteQuery.new
   end
 
   def one_request
@@ -14,7 +14,7 @@ module DeleteSpec
   end
 
   def complex_query
-    Clear::SQL.select.from(:users)
+    Lustra::SQL.select.from(:users)
       .join(:role_users) { role_users.user_id == users.id }
       .join(:roles) { role_users.role_id == roles.id }
       .where({role: ["admin", "superadmin"]})
@@ -22,7 +22,7 @@ module DeleteSpec
       .limit(1)
   end
 
-  describe "Clear::SQL" do
+  describe "Lustra::SQL" do
     describe "DeleteQuery" do
       it "create a simple delete" do
         r = delete_request.from("table")

@@ -1,9 +1,9 @@
 require "../../spec_helper"
 
 module BoolConverterSpec
-  describe "Clear::Model::Converter::BoolConverter" do
+  describe "Lustra::Model::Converter::BoolConverter" do
     it "converts from boolean" do
-      converter = Clear::Model::Converter::BoolConverter
+      converter = Lustra::Model::Converter::BoolConverter
       converter.to_column(1).should be_true
       converter.to_column(-1).should be_true
       converter.to_column(0).should be_false
@@ -26,7 +26,7 @@ module BoolConverterSpec
     end
 
     it "transform boolean to 't' and 'f'" do
-      converter = Clear::Model::Converter::BoolConverter
+      converter = Lustra::Model::Converter::BoolConverter
       converter.to_db(true).should eq("t")
       converter.to_db(false).should eq("f")
       # To ensure we can use the converter with Bool? type.

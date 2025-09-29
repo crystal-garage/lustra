@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module NestedQuerySpec
   class NestedQuerySpecMigration9991
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "topics" do |t|
@@ -32,7 +32,7 @@ module NestedQuerySpec
   end
 
   class Topic
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "topics"
 
@@ -45,7 +45,7 @@ module NestedQuerySpec
   end
 
   class Video
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "videos"
 
@@ -57,7 +57,7 @@ module NestedQuerySpec
   end
 
   class Release
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "releases"
 

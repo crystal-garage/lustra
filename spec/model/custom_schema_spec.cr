@@ -27,7 +27,7 @@ module CustomSchemaSpec
         model.delete                                                 # Ensure delete one works
 
         ModelWithinAnotherSchema.create! title: "Some title" # Ensure create works
-        Clear::SQL.truncate(ModelWithinAnotherSchema)        # ensure truncate works
+        Lustra::SQL.truncate(ModelWithinAnotherSchema)       # ensure truncate works
       end
     end
   end

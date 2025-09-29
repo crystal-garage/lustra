@@ -1,7 +1,7 @@
 require "../spec_helper"
 require "../data/example_models"
 
-describe Clear::Model::ClassMethods do
+describe Lustra::Model::ClassMethods do
   context "#build" do
     it "build empty model" do
       temporary do

@@ -12,7 +12,7 @@ Excluded:
 Lint/NotNil:
   Description: Identifies usage of `not_nil!` calls
   Excluded:
-  - src/clear/extensions/full_text_searchable/tsvector.cr
+  - src/lustra/extensions/full_text_searchable/tsvector.cr
   Enabled: true
   Severity: Warning
 

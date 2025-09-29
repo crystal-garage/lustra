@@ -1,13 +1,13 @@
-require "../../src/clear"
+require "../../src/lustra"
 
 def initdb
-  Clear::SQL.init("postgres://postgres@localhost/clear_spec")
+  Lustra::SQL.init("postgres://postgres@localhost/lustra_spec")
 end
 
 initdb
 
 class UpdatePasswordField3
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     dir.up { puts "3:up" }
@@ -16,7 +16,7 @@ class UpdatePasswordField3
 end
 
 class CreateDatabase1
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     dir.up { puts "1:up" }
@@ -25,7 +25,7 @@ class CreateDatabase1
 end
 
 class ApplyChange2
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     dir.up { puts "2:up" }
@@ -33,10 +33,10 @@ class ApplyChange2
   end
 end
 
-Clear.seed do
+Lustra.seed do
   puts "This is a seed"
 end
 
-Clear.with_cli do
-  puts "Usage: crystal sample/cli/cli.cr -- clear [args]"
+Lustra.with_cli do
+  puts "Usage: crystal sample/cli/cli.cr -- lustra [args]"
 end

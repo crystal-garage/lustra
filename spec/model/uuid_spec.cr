@@ -3,7 +3,7 @@ require "../data/example_models"
 
 module UUIDSpec
   class UUIDObjectMigration43293
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table(:dbobjects, id: :uuid) do |t|
@@ -17,7 +17,7 @@ module UUIDSpec
   end
 
   class DBObject
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "dbobjects"
 
@@ -28,7 +28,7 @@ module UUIDSpec
   end
 
   class DBObject2
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "dbobjects2"
 
@@ -42,7 +42,7 @@ module UUIDSpec
     UUIDObjectMigration43293.new.apply
   end
 
-  describe "Clear::Model::HasSerialPkey with uuid" do
+  describe "Lustra::Model::HasSerialPkey with uuid" do
     it "generate objects with UUID as primary keys" do
       temporary do
         reinit
