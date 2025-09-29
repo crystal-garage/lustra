@@ -55,7 +55,7 @@ Product.query.where { ( products.type == "Book" ) & ( products.metadata.jsonb("a
 User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
 
 # Or even...
-ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Lustra! :-)
+ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name
 ```
 
 ## Core ORM Features
