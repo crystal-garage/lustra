@@ -513,6 +513,30 @@ describe "Lustra::Model::Relations::HasMany" do
           posts2.first.title.should eq("Cached Post")
         end
       end
+
+      it "can use eager loading with custom block filtering" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!({first_name: "Test", last_name: "User"})
+
+          # Create posts with different published status
+          Post.create!({title: "Published Post", user_id: user.id, published: true})
+          Post.create!({title: "Draft Post", user_id: user.id, published: false})
+
+          # Load user with only published posts
+          loaded_users = User.query.with_posts do |posts_query|
+            posts_query.where({published: true})
+          end.to_a
+
+          loaded_users.size.should eq(1)
+          loaded_user = loaded_users.first.not_nil!
+
+          # Should only have published posts loaded
+          loaded_user.posts.count.should eq(1)
+          loaded_user.posts.first!.title.should eq("Published Post")
+        end
+      end
     end
   end
 end

@@ -609,6 +609,35 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           user3.categories.count.should eq(0)
         end
       end
+
+      it "can use eager loading with custom block filtering" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!({first_name: "Test", last_name: "User"})
+
+          categories = [
+            Category.create!({name: "Technology"}),
+            Category.create!({name: "Science"}),
+          ]
+
+          # Create posts connecting user to categories
+          Post.create!({title: "Tech Post", user_id: user.id, category_id: categories[0].id})
+          Post.create!({title: "Science Post", user_id: user.id, category_id: categories[1].id})
+
+          # Load user with only Technology category
+          loaded_users = User.query.with_categories do |categories_query|
+            categories_query.where({name: "Technology"})
+          end.to_a
+
+          loaded_users.size.should eq(1)
+          loaded_user = loaded_users.first.not_nil!
+
+          # Should only have Technology category loaded
+          loaded_user.categories.count.should eq(1)
+          loaded_user.categories.first!.name.should eq("Technology")
+        end
+      end
     end
   end
 end
