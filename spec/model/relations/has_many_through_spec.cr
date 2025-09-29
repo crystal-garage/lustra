@@ -596,16 +596,16 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           loaded_users.size.should eq(3)
 
           # Each user should have their categories loaded without additional queries
-          user1 = loaded_users.find { |u| u.first_name == "User1" }.not_nil!
+          user1 = loaded_users.find! { |u| u.first_name == "User1" }
           user1.categories.count.should eq(2)
           user1.categories.map(&.name).should contain("Cat1")
           user1.categories.map(&.name).should contain("Cat2")
 
-          user2 = loaded_users.find { |u| u.first_name == "User2" }.not_nil!
+          user2 = loaded_users.find! { |u| u.first_name == "User2" }
           user2.categories.count.should eq(1)
           user2.categories.first!.name.should eq("Cat1")
 
-          user3 = loaded_users.find { |u| u.first_name == "User3" }.not_nil!
+          user3 = loaded_users.find! { |u| u.first_name == "User3" }
           user3.categories.count.should eq(0)
         end
       end
