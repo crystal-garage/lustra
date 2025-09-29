@@ -235,8 +235,9 @@ module Lustra::ErrorMessages
 
   def query_building_error(message)
     Lustra::SQL::QueryBuildingError.new(
-      build_error_message({"You're trying to construct an invalid SQL request:\n",
-                           message}.join)
+      build_error_message(
+        {"You're trying to construct an invalid SQL request:\n", message}.join
+      )
     )
   end
 
