@@ -530,7 +530,7 @@ describe "Lustra::Model::Relations::HasMany" do
           end.to_a
 
           loaded_users.size.should eq(1)
-          loaded_user = loaded_users.first.not_nil!
+          loaded_user = loaded_users.first
 
           # Should only have published posts loaded
           loaded_user.posts.count.should eq(1)

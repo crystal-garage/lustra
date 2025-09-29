@@ -631,7 +631,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           end.to_a
 
           loaded_users.size.should eq(1)
-          loaded_user = loaded_users.first.not_nil!
+          loaded_user = loaded_users.first
 
           # Should only have Technology category loaded
           loaded_user.categories.count.should eq(1)
