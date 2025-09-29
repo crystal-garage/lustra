@@ -84,7 +84,7 @@ require "../sql/select_query"
 #
 # ## Refining your query
 #
-# A collection query offers a lot of functionalities. You can read the [API](https://anykeyh.github.io/lustra/Lustra/Model/CollectionBase.html) for more informations.
+# A collection query offers a lot of functionalities.
 #
 # ## Column type
 #

@@ -60,7 +60,7 @@ module Lustra::ErrorMessages
         build_tips(ways_to_resolve),
         (
           "You may also have encountered a bug. \n" +
-          "Feel free to submit an issue: \n#{build_url("https://github.com/anykeyh/lustra/issues/new")}"
+          "Feel free to submit an issue: \n#{build_url("https://github.com/crystal-garage/lustra/issues/new")}"
         ),
         "\n\nStack trace:\n",
       }.join)
