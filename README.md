@@ -21,7 +21,7 @@ code readability and minimal setup.
 
 The project is quite active and well maintened, too !
 
-Lustra started as a fork of [Clear](https://github.com/anykeyh/clear), but over time it evolved into an independent project. To keep it compatible with newer Crystal versions, I continued development, added missing features, improved existing ones, and expanded test coverage. Today Lustra is far beyond its upstream origins — a distinct, mature project in its own right.
+Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version 0.8, and it is not compatible with later Clear releases. Over time it evolved into an independent project. To keep it compatible with newer Crystal versions, I continued development, added missing features, improved existing ones, and expanded test coverage. Today Lustra is far beyond its upstream origins — a distinct, mature project in its own right.
 
 ## Why to use Lustra ?
 
