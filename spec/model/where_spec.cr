@@ -344,7 +344,7 @@ module WhereSpec
         end
       end
 
-      it "WHERE with LEFT JOIN and NULL handling" do
+      it "WHERE with INNER JOIN and NULL handling" do
         temporary do
           reinit_example_models
 
@@ -354,7 +354,7 @@ module WhereSpec
           post1 = Post.create!(title: "John's Post", user_id: user1.id)
           post2 = Post.create!(title: "Jane's Post", user_id: user2.id)
 
-          # Test WHERE with LEFT JOIN and NULL conditions
+          # Test WHERE with INNER JOIN and NULL conditions
           results = Post.query
             .inner_join(:users) { users.id == posts.user_id }
             .where { users.last_name == nil }
