@@ -16,6 +16,12 @@ Lint/NotNil:
   Enabled: true
   Severity: Warning
 
+Performance/AnyInsteadOfEmpty:
+  Excluded:
+  - spec/model/relations/has_many_spec.cr
+  Enabled: true
+  Severity: Warning
+
 Lint/UselessAssign:
   Enabled: false
 
