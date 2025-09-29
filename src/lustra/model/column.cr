@@ -136,8 +136,8 @@ class Lustra::Model::Column(T, C)
       !has_db_default?
   end
 
-  # Completely lustra the column, remove both `value` and `old_value` and turning the column in a non-defined state.
-  def lustra
+  # Completely clear the column, remove both `value` and `old_value` and turning the column in a non-defined state.
+  def clear
     self.value = UNKNOWN
     @old_value = UNKNOWN
 
