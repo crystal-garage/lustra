@@ -508,10 +508,10 @@ module WhereSpec
           # Test complex nested WHERE conditions in JOINed tables
           results = Post.query
             .inner_join(:users) { users.id == posts.user_id }
-            .where {
+            .where do
               ((users.first_name.ilike("%@gmail.com")) & (users.active == true)) |
                 ((posts.published == true) & (users.first_name.ilike("%@company.org")))
-            }
+            end.to_a
 
           results.size.should eq(2)
           results.map(&.title).should contain("John's Tech Post") # gmail + active
