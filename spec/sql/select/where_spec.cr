@@ -253,54 +253,6 @@ module WhereSpec
       end
     end
 
-    describe "where_not" do
-      it "accepts simple string as parameter" do
-        r = Lustra::SQL.select.from(:users).where_not("a = b")
-        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT a = b)
-      end
-
-      it "accepts NamedTuple argument" do
-        q = Lustra::SQL.select.from(:users).where_not({user_id: 1})
-        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("user_id" = 1))
-
-        q = Lustra::SQL.select.from(:users).where_not(user_id: 2)
-        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("user_id" = 2))
-      end
-
-      it "transforms Nil to NULL" do
-        q = Lustra::SQL.select.from(:users).where_not({user_id: nil})
-        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("user_id" IS NULL))
-      end
-
-      it "uses NOT IN operator if an array is found" do
-        q = Lustra::SQL.select.from(:users).where_not({user_id: [1, 2, 3, 4, "hello"]})
-        q.to_sql.should eq %(SELECT * FROM "users" WHERE NOT "user_id" IN (1, 2, 3, 4, 'hello'))
-      end
-
-      it "accepts ranges as tuple value and transform them" do
-        Lustra::SQL.select.from(:users).where_not({x: 1..4}).to_sql
-          .should eq %(SELECT * FROM "users" WHERE NOT ("x" >= 1 AND "x" <= 4))
-        Lustra::SQL.select.from(:users).where_not({x: 1...4}).to_sql
-          .should eq %(SELECT * FROM "users" WHERE NOT ("x" >= 1 AND "x" < 4))
-      end
-
-      it "allows prepared query" do
-        r = Lustra::SQL.select.from(:users).where_not("a LIKE ?", "hello")
-        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT a LIKE 'hello'"
-
-        r = Lustra::SQL.select.from(:users).where_not("a LIKE :hello", hello: "world")
-        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT a LIKE 'world'"
-      end
-
-      it "works with expression engine" do
-        r = Lustra::SQL.select.from(:users).where_not { users.id == 1 }
-        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT (\"users\".\"id\" = 1)"
-
-        r = Lustra::SQL.select.from(:users).where_not { users.active == true }
-        r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT (\"users\".\"active\" = TRUE)"
-      end
-    end
-
     describe "like and ilike operators" do
       it "supports like operator in DSL" do
         r = Lustra::SQL.select.from(:users).where { users.email.like("%@gmail.com") }
@@ -374,6 +326,38 @@ module WhereSpec
       it "supports unary NOT with complex expressions" do
         r = Lustra::SQL.select.from(:users).where { ~(users.id > 100) }
         r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("users"."id" > 100))
+      end
+    end
+
+    describe "where.not syntax" do
+      it "supports where.not with block syntax" do
+        r = Lustra::SQL.select.from(:users).where.not { users.id == 1 }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("users"."id" = 1))
+      end
+
+      it "supports where.not with named tuple" do
+        r = Lustra::SQL.select.from(:users).where.not({active: true})
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("active" = TRUE))
+      end
+
+      it "supports where.not with template string" do
+        r = Lustra::SQL.select.from(:users).where.not("id = ?", 1)
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT id = 1)
+      end
+
+      it "supports where.not with template string and named parameters" do
+        r = Lustra::SQL.select.from(:users).where.not("id = :id", id: 1)
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT id = 1)
+      end
+
+      it "supports where.not with array conditions" do
+        r = Lustra::SQL.select.from(:users).where.not({id: [1, 2, 3]})
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT "id" IN (1, 2, 3))
+      end
+
+      it "supports where.not with NULL conditions" do
+        r = Lustra::SQL.select.from(:users).where.not({email: nil})
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("email" IS NULL))
       end
     end
   end

@@ -67,27 +67,27 @@ module ModelSpec
           User.create!(id: 3, first_name: "Bob", active: true)
 
           # Test with expression engine
-          users = User.query.where_not { active == false }.to_a
+          users = User.query.where.not { active == false }.to_a
           users.size.should eq(2)
           users.map(&.first_name).should contain("John")
           users.map(&.first_name).should contain("Bob")
           users.map(&.first_name).should_not contain("Jane")
 
           # Test with NamedTuple
-          users = User.query.where_not(active: false).to_a
+          users = User.query.where.not(active: false).to_a
           users.size.should eq(2)
           users.map(&.first_name).should contain("John")
           users.map(&.first_name).should contain("Bob")
           users.map(&.first_name).should_not contain("Jane")
 
           # Test with array (NOT IN)
-          users = User.query.where_not(id: [1, 2]).to_a
+          users = User.query.where.not(id: [1, 2]).to_a
           users.size.should eq(1)
           users.first.first_name.should eq("Bob")
 
           # Test with nil (NOT NULL)
           User.create!(id: 4, first_name: "Alice", active: nil)
-          users = User.query.where_not(active: nil).to_a
+          users = User.query.where.not(active: nil).to_a
           users.size.should eq(3)
           users.map(&.first_name).should contain("John")
           users.map(&.first_name).should contain("Jane")
@@ -96,7 +96,7 @@ module ModelSpec
         end
       end
 
-      it "where and where_not chaining" do
+      it "where and where.not chaining" do
         temporary do
           reinit_example_models
           User.create!(id: 1, first_name: "John", active: true)
@@ -104,11 +104,11 @@ module ModelSpec
           User.create!(id: 3, first_name: "Bob", active: true)
           User.create!(id: 4, first_name: "Alice", active: nil)
 
-          # Test chaining where and where_not
+          # Test chaining where and where.not
           users = User.query
             .where { id > 1 }
-            .where_not { active == false }
-            .where_not(id: [4])
+            .where.not { active == false }
+            .where.not(id: [4])
             .to_a
 
           users.size.should eq(1)
@@ -116,8 +116,8 @@ module ModelSpec
 
           # Test another chaining combination
           users = User.query
-            .where_not(id: [1, 2])
-            .where_not { active == nil }
+            .where.not(id: [1, 2])
+            .where.not { active == nil }
             .to_a
 
           users.size.should eq(1)
