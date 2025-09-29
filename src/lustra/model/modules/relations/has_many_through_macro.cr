@@ -6,12 +6,7 @@ module Lustra::Model::Relations::HasManyThroughMacro
       %final_table = {{relation_type}}.table
       %final_pkey = {{relation_type}}.__pkey__
 
-      %through_table =
-        {% if through.is_a?(Path) %}
-          {{through}}.table
-        {% else %}
-          {{through.id.stringify}}
-        {% end %}
+      %through_table = {{through}}.table
 
       %through_key =
         {% if foreign_key %}
@@ -48,33 +43,20 @@ module Lustra::Model::Relations::HasManyThroughMacro
       qry.append_operation = -> (x : {{relation_type}}) {
         x.save! unless x.persisted?
 
-        {% if through.is_a?(Path) %}
-          through_model = {{through}}.new
+        through_model = {{through}}.new
 
-          through_model.reset({
-            "#{%own_key}" => current_model_id,
-            "#{%through_key}" => x.__pkey__
-          })
+        through_model.reset({
+          "#{%own_key}" => current_model_id,
+          "#{%through_key}" => x.__pkey__
+        })
 
-          through_model.save!
-        {% else %}
-          Lustra::SQL.insert({{through.id.stringify}}).values({
-            "#{%own_key}" => current_model_id,
-            "#{%through_key}" => x.__pkey__
-          }).execute
-        {% end %}
+        through_model.save!
 
         x
       }
 
       qry.unlink_operation = -> (x : {{relation_type}}) {
-        {% if through.is_a?(Path) %}
-          table = {{through}}.table
-        {% else %}
-          table = {{through.id.stringify}}
-        {% end %}
-
-        Lustra::SQL.delete(table).where({
+        Lustra::SQL.delete({{through}}.table).where({
           "#{%own_key}" => current_model_id,
           "#{%through_key}" => x.__pkey__
         }).execute

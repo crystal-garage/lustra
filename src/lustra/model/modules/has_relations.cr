@@ -72,8 +72,6 @@ module Lustra::Model::HasRelations
   macro has_many(name, through = nil, foreign_key = nil, own_key = nil, primary_key = nil, no_cache = false, polymorphic = false, foreign_key_type = nil)
     {%
       if through != nil
-        through = through.id if through.is_a?(SymbolLiteral) || through.is_a?(StringLiteral)
-
         own_key = own_key.id if own_key.is_a?(SymbolLiteral) || own_key.is_a?(StringLiteral)
         foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
         foreign_key_type = foreign_key_type.id if foreign_key_type.is_a?(SymbolLiteral) || foreign_key_type.is_a?(StringLiteral)
