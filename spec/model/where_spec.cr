@@ -292,5 +292,234 @@ module WhereSpec
         users.map(&.first_name).should contain("charlie@gmail.com") # 25 * 2 = 50 > 20
       end
     end
+
+    describe "WHERE clauses with JOINs" do
+      it "WHERE with INNER JOIN" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "John", active: true)
+          user2 = User.create!(first_name: "Jane", active: false)
+          user3 = User.create!(first_name: "Bob", active: true)
+
+          post1 = Post.create!(title: "John's Post", user_id: user1.id, published: true)
+          post2 = Post.create!(title: "Jane's Post", user_id: user2.id, published: true)
+          post3 = Post.create!(title: "Bob's Draft", user_id: user3.id, published: false)
+
+          # Test WHERE with INNER JOIN - only posts from active users
+          active_user_posts = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where { users.active == true }
+
+          active_user_posts.size.should eq(2)
+          active_user_posts.map(&.title).should contain("John's Post")
+          active_user_posts.map(&.title).should contain("Bob's Draft")
+          active_user_posts.map(&.title).should_not contain("Jane's Post")
+        end
+      end
+
+      it "WHERE with multiple conditions across JOINed tables" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "John", active: true)
+          user2 = User.create!(first_name: "Jane", active: true)
+          user3 = User.create!(first_name: "Bob", active: false)
+
+          post1 = Post.create!(title: "John's Published Post", user_id: user1.id, published: true)
+          post2 = Post.create!(title: "John's Draft", user_id: user1.id, published: false)
+          post3 = Post.create!(title: "Jane's Published Post", user_id: user2.id, published: true)
+          post4 = Post.create!(title: "Bob's Post", user_id: user3.id, published: true)
+
+          # Test multiple WHERE conditions across JOINed tables
+          published_active_posts = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where { (users.active == true) & (posts.published == true) }
+
+          published_active_posts.size.should eq(2)
+          published_active_posts.map(&.title).should contain("John's Published Post")
+          published_active_posts.map(&.title).should contain("Jane's Published Post")
+          published_active_posts.map(&.title).should_not contain("John's Draft")
+          published_active_posts.map(&.title).should_not contain("Bob's Post")
+        end
+      end
+
+      it "WHERE with LEFT JOIN and NULL handling" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "John", last_name: "Doe")
+          user2 = User.create!(first_name: "Jane", last_name: nil) # NULL last_name
+
+          post1 = Post.create!(title: "John's Post", user_id: user1.id)
+          post2 = Post.create!(title: "Jane's Post", user_id: user2.id)
+
+          # Test WHERE with LEFT JOIN and NULL conditions
+          results = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where { users.last_name == nil }
+
+          results.size.should eq(1)
+          results.first!.title.should eq("Jane's Post")
+        end
+      end
+
+      it "WHERE with complex JOIN conditions" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "John", active: true)
+          user2 = User.create!(first_name: "Jane", active: true)
+
+          category1 = Category.create!(name: "Technology")
+          category2 = Category.create!(name: "Science")
+
+          post1 = Post.create!(title: "Tech Post", user_id: user1.id, category_id: category1.id, published: true)
+          post2 = Post.create!(title: "Science Post", user_id: user1.id, category_id: category2.id, published: true)
+          post3 = Post.create!(title: "Another Tech Post", user_id: user2.id, category_id: category1.id, published: false)
+
+          # Test complex JOIN with WHERE conditions
+          results = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .inner_join(:categories) { categories.id == posts.category_id }
+            .where do
+              (users.active == true) &
+                (categories.name == "Technology") &
+                (posts.published == true)
+            end
+
+          results.size.should eq(1)
+          results.first!.title.should eq("Tech Post")
+        end
+      end
+
+      it "WHERE with pattern matching in JOINed tables" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "john@gmail.com", active: true)
+          user2 = User.create!(first_name: "jane@yahoo.com", active: true)
+          user3 = User.create!(first_name: "bob@company.org", active: false)
+
+          post1 = Post.create!(title: "Gmail User's Post", user_id: user1.id)
+          post2 = Post.create!(title: "Yahoo User's Post", user_id: user2.id)
+          post3 = Post.create!(title: "Company User's Post", user_id: user3.id)
+
+          # Test WHERE with pattern matching in JOINed tables
+          results = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where { (users.first_name.ilike("%@gmail.com")) & (users.active == true) }
+
+          results.size.should eq(1)
+          results.first!.title.should eq("Gmail User's Post")
+        end
+      end
+
+      it "WHERE with regex in JOINed tables" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "john123@gmail.com", active: true)
+          user2 = User.create!(first_name: "jane456@yahoo.com", active: true)
+          user3 = User.create!(first_name: "bob@company.org", active: true)
+
+          post1 = Post.create!(title: "Gmail User's Post", user_id: user1.id)
+          post2 = Post.create!(title: "Yahoo User's Post", user_id: user2.id)
+          post3 = Post.create!(title: "Company User's Post", user_id: user3.id)
+
+          # Test WHERE with regex in JOINed tables
+          results = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where { (users.first_name =~ /^[a-z0-9]+@gmail\.com$/i) & (users.active == true) }
+
+          results.size.should eq(1)
+          results.first!.title.should eq("Gmail User's Post")
+        end
+      end
+
+      it "WHERE with membership operators in JOINed tables" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "John", active: true)
+          user2 = User.create!(first_name: "Jane", active: false)
+          user3 = User.create!(first_name: "Bob", active: true)
+          user4 = User.create!(first_name: "Alice", active: false)
+
+          post1 = Post.create!(title: "John's Post", user_id: user1.id)
+          post2 = Post.create!(title: "Jane's Post", user_id: user2.id)
+          post3 = Post.create!(title: "Bob's Post", user_id: user3.id)
+          post4 = Post.create!(title: "Alice's Post", user_id: user4.id)
+
+          # Test WHERE with membership operators in JOINed tables
+          results = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where { users.active.in?([true, nil]) }
+
+          results.size.should eq(2)
+          results.map(&.title).should contain("John's Post")      # active: true
+          results.map(&.title).should contain("Bob's Post")       # active: true
+          results.map(&.title).should_not contain("Jane's Post")  # active: false
+          results.map(&.title).should_not contain("Alice's Post") # active: false
+        end
+      end
+
+      it "WHERE with between operator in JOINed tables" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "John")
+          user2 = User.create!(first_name: "Jane")
+          user3 = User.create!(first_name: "Bob")
+          user4 = User.create!(first_name: "Alice")
+
+          post1 = Post.create!(title: "John's Post", user_id: user1.id)
+          post2 = Post.create!(title: "Jane's Post", user_id: user2.id)
+          post3 = Post.create!(title: "Bob's Post", user_id: user3.id)
+          post4 = Post.create!(title: "Alice's Post", user_id: user4.id)
+
+          # Test WHERE with between operator in JOINed tables using user IDs
+          results = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where { users.id.between(user2.id, user3.id) }
+
+          results.size.should eq(2)
+          results.map(&.title).should contain("Jane's Post")      # user2.id
+          results.map(&.title).should contain("Bob's Post")       # user3.id
+          results.map(&.title).should_not contain("John's Post")  # user1.id (outside range)
+          results.map(&.title).should_not contain("Alice's Post") # user4.id (outside range)
+        end
+      end
+
+      it "WHERE with complex nested conditions in JOINed tables" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!(first_name: "john@gmail.com", active: true)
+          user2 = User.create!(first_name: "jane@yahoo.com", active: true)
+          user3 = User.create!(first_name: "bob@gmail.com", active: false)
+          user4 = User.create!(first_name: "alice@company.org", active: true)
+
+          post1 = Post.create!(title: "John's Tech Post", user_id: user1.id, published: true)
+          post2 = Post.create!(title: "Jane's Post", user_id: user2.id, published: true)
+          post3 = Post.create!(title: "Bob's Draft", user_id: user3.id, published: false)
+          post4 = Post.create!(title: "Alice's Post", user_id: user4.id, published: true)
+
+          # Test complex nested WHERE conditions in JOINed tables
+          results = Post.query
+            .inner_join(:users) { users.id == posts.user_id }
+            .where do
+              ((users.first_name.ilike("%@gmail.com")) & (users.active == true)) |
+                ((posts.published == true) & (users.first_name.ilike("%@company.org")))
+            end.to_a
+
+          results.size.should eq(2)
+          results.map(&.title).should contain("John's Tech Post") # gmail + active
+          results.map(&.title).should contain("Alice's Post")     # company.org + published
+          results.map(&.title).should_not contain("Jane's Post")  # doesn't match either condition
+          results.map(&.title).should_not contain("Bob's Draft")  # gmail but inactive + not published
+        end
+      end
+    end
   end
 end
