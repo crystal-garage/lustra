@@ -300,5 +300,81 @@ module WhereSpec
         r.to_sql.should eq "SELECT * FROM \"users\" WHERE NOT (\"users\".\"active\" = TRUE)"
       end
     end
+
+    describe "like and ilike operators" do
+      it "supports like operator in DSL" do
+        r = Lustra::SQL.select.from(:users).where { users.email.like("%@gmail.com") }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" LIKE '%@gmail.com'))
+      end
+
+      it "supports ilike operator in DSL" do
+        r = Lustra::SQL.select.from(:users).where { users.email.ilike("%@gmail.com") }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" ILIKE '%@gmail.com'))
+      end
+
+      it "supports like with case sensitive pattern" do
+        r = Lustra::SQL.select.from(:users).where { users.name.like("John%") }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."name" LIKE 'John%'))
+      end
+
+      it "supports ilike with case insensitive pattern" do
+        r = Lustra::SQL.select.from(:users).where { users.name.ilike("john%") }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."name" ILIKE 'john%'))
+      end
+
+      it "supports like with complex patterns" do
+        r = Lustra::SQL.select.from(:users).where { users.email.like("user%@%.com") }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" LIKE 'user%@%.com'))
+      end
+
+      it "supports ilike with complex patterns" do
+        r = Lustra::SQL.select.from(:users).where { users.email.ilike("user%@%.com") }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" ILIKE 'user%@%.com'))
+      end
+    end
+
+    describe "regex operators" do
+      it "supports =~ operator with Node" do
+        r = Lustra::SQL.select.from(:users).where { users.email =~ users.pattern }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" ~ "users"."pattern"))
+      end
+
+      it "supports !~ operator with Node" do
+        r = Lustra::SQL.select.from(:users).where { users.email !~ users.pattern }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" !~ "users"."pattern"))
+      end
+
+      it "supports =~ operator with Regex (case sensitive)" do
+        r = Lustra::SQL.select.from(:users).where { users.email =~ /^[a-z]+@/ }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" ~ '^[a-z]+@'))
+      end
+
+      it "supports =~ operator with Regex (case insensitive)" do
+        r = Lustra::SQL.select.from(:users).where { users.email =~ /^[a-z]+@/i }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" ~* '^[a-z]+@'))
+      end
+
+      it "supports !~ operator with Regex (case sensitive)" do
+        r = Lustra::SQL.select.from(:users).where { users.email !~ /^[a-z]+@/ }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" !~ '^[a-z]+@'))
+      end
+
+      it "supports !~ operator with Regex (case insensitive)" do
+        r = Lustra::SQL.select.from(:users).where { users.email !~ /^[a-z]+@/i }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."email" !~* '^[a-z]+@'))
+      end
+    end
+
+    describe "unary operators" do
+      it "supports unary NOT operator" do
+        r = Lustra::SQL.select.from(:users).where { ~users.active }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT "users"."active")
+      end
+
+      it "supports unary NOT with complex expressions" do
+        r = Lustra::SQL.select.from(:users).where { ~(users.id > 100) }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("users"."id" > 100))
+      end
+    end
   end
 end
