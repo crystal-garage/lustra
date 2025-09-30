@@ -36,6 +36,10 @@ module Lustra::Model::Relations::HasManyMacro
         x
       }
 
+      # Set parent model context for autosave functionality
+      query.parent_model = self
+      query.association_name = "{{method_name}}"
+
       query
     end
 

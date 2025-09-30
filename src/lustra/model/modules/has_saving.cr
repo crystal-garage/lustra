@@ -107,20 +107,14 @@ module Lustra::Model::HasSaving
       if valid?
         if persisted?
           h = update_h
-
           unless h.empty?
             with_triggers(:update) do
-              Lustra::SQL.update(self.class.full_table_name).set(update_h).where { var("#{self.class.__pkey__}") == __pkey__ }.execute(@@connection)
+              save_main_model(on_conflict)
             end
           end
         else
           with_triggers(:create) do
-            query = Lustra::SQL.insert_into(self.class.full_table_name, to_h).returning("*")
-            on_conflict.call(query) if on_conflict
-            hash = query.execute(@@connection)
-
-            reset(hash)
-            @persisted = true
+            save_main_model(on_conflict)
           end
         end
 
@@ -139,10 +133,15 @@ module Lustra::Model::HasSaving
 
   # Performs `save` call, but instead of returning `false` if validation failed,
   # raise `Lustra::Model::InvalidError` exception
+  # Automatically handles built associations
   def save!(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
     raise Lustra::Model::ReadOnlyError.new(self) if self.class.read_only?
 
-    raise Lustra::Model::InvalidError.new(self) unless save(on_conflict)
+    if has_built_associations?
+      raise Lustra::Model::InvalidError.new(self) unless save_with_associations(on_conflict)
+    else
+      raise Lustra::Model::InvalidError.new(self) unless save(on_conflict)
+    end
 
     self
   end
@@ -150,6 +149,39 @@ module Lustra::Model::HasSaving
   # Pass the `on_conflict` optional parameter via block.
   def save!(&block : Lustra::SQL::InsertQuery ->)
     save!(block)
+  end
+
+  # Save the model along with all built associations
+  def save_with_associations(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
+    return false if self.class.read_only?
+
+    with_triggers(:save) do
+      if valid?
+        save_built_associations
+
+        if persisted?
+          h = update_h
+          unless h.empty?
+            with_triggers(:update) do
+              save_main_model(on_conflict)
+            end
+          end
+        else
+          with_triggers(:create) do
+            save_main_model(on_conflict)
+          end
+        end
+
+        handle_through_associations
+
+        clear_change_flags
+        clear_built_associations
+
+        return true
+      else
+        return false
+      end
+    end
   end
 
   # Set the fields passed as argument and call `save` on the object
@@ -203,5 +235,41 @@ module Lustra::Model::HasSaving
     end
 
     true
+  end
+
+  private def save_built_associations
+    built_associations.each do |_, models|
+      models.each do |model|
+        model.save! unless model.persisted?
+      end
+    end
+  end
+
+  private def save_main_model(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
+    if persisted?
+      h = update_h
+
+      unless h.empty?
+        Lustra::SQL.update(self.class.full_table_name).set(update_h).where { var("#{self.class.__pkey__}") == __pkey__ }.execute(@@connection)
+      end
+    else
+      query = Lustra::SQL.insert_into(self.class.full_table_name, to_h).returning("*")
+      on_conflict.call(query) if on_conflict
+      hash = query.execute(@@connection)
+
+      reset(hash)
+      @persisted = true
+    end
+  end
+
+  private def handle_through_associations
+    # Handle has_many through relationships after main model is saved
+    # This avoids recursion because the main model is already persisted
+    built_associations.each do |association_name, models|
+      # Call the trigger method on the parent model (self) with the built models
+      if self.responds_to?(:__trigger_append_operation_for_association__)
+        self.__trigger_append_operation_for_association__(association_name, models)
+      end
+    end
   end
 end

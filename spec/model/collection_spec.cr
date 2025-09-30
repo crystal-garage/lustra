@@ -414,6 +414,31 @@ module CollectionSpec
           end
         end
 
+        it "build + save! method for has_many through works correctly" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+
+            # Create post first to get an ID
+            post = Post.create!(title: "Title", user: user)
+
+            # Build associations
+            tag1 = post.tags.build(name: "Tag1")
+            tag2 = post.tags.build(name: "Tag2")
+
+            # Save parent with all built associations
+            post.save!
+
+            Tag.query.count.should eq(2)
+            PostTag.query.count.should eq(2)
+
+            post.tags.count.should eq(2)
+            post.tags.map(&.name).should contain("Tag1")
+            post.tags.map(&.name).should contain("Tag2")
+          end
+        end
+
         it "raise exception if validation failed" do
           temporary do
             reinit_example_models

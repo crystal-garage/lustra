@@ -42,3 +42,6 @@ Naming/BlockParameterName:
 
 Naming/BinaryOperatorParameterName:
   Enabled: false
+
+Style/RedundantSelf:
+  Enabled: false
