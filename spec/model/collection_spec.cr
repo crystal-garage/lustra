@@ -375,11 +375,42 @@ module CollectionSpec
             tag = Tag.create!(name: "Tag1")
             post.tags << tag
 
-            # FIXME: these can be use instead above
-            # tag = post.tags.create!(name: "Tag1")
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1)
+          end
+        end
+
+        it "create! method for has_many through works correctly" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+
+            tag = post.tags.create!(name: "Tag1")
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
+
+            post.tags.count.should eq(1)
+            post.tags.first!.name.should eq("Tag1")
+          end
+        end
+
+        it "create method for has_many through works correctly" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+
+            tag = post.tags.create(name: "Tag1")
+
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1)
+
+            post.tags.count.should eq(1)
+            post.tags.first!.name.should eq("Tag1")
           end
         end
 
@@ -414,7 +445,7 @@ module CollectionSpec
           end
         end
 
-        it "create from has_many through relation" do
+        it "create with << operator from has_many through relation" do
           temporary do
             reinit_example_models
 
@@ -424,8 +455,19 @@ module CollectionSpec
             tag = Tag.create!(name: "Tag1")
             post.tags << tag
 
-            # FIXME: these can be use instead above
-            # tag = post.tags.find_or_create(name: "Tag1")
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1)
+          end
+        end
+
+        it "create from has_many through relation" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+
+            tag = post.tags.find_or_create(name: "Tag1")
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
