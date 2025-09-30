@@ -19,13 +19,13 @@ module HavingSpec
         tag2 = Tag.create!(name: "Tag 2")
 
         # User1 has multiple tags (through multiple posts)
-        user1_post1.tag_relations << tag1
-        user1_post2.tag_relations << tag1
-        user1_post2.tag_relations << tag2
+        user1_post1.tags << tag1
+        user1_post2.tags << tag1
+        user1_post2.tags << tag2
 
         # User2 has only one tag (through multiple posts)
-        user2_post1.tag_relations << tag1
-        user2_post2.tag_relations << tag1
+        user2_post1.tags << tag1
+        user2_post2.tags << tag1
 
         # Find users who have more than 2 tag
         users_with_multiple_tags = User.query

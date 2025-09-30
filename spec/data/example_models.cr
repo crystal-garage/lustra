@@ -57,7 +57,7 @@ class Post
 
   column title : String
 
-  column tags : Array(String), presence: false
+  column tags_list : Array(String), presence: false
   column flags : Array(Int64), presence: false, column_name: "flags_other_column_name"
 
   column content : String, presence: false
@@ -71,7 +71,7 @@ class Post
   end
 
   has_many post_tags : PostTag, foreign_key: "post_id"
-  has_many tag_relations : Tag, through: PostTag, foreign_key: :tag_id, own_key: :post_id
+  has_many tags : Tag, through: PostTag, foreign_key: :tag_id, own_key: :post_id
 
   # belongs_to user : User, counter_cache: :posts_count
   belongs_to user : User, counter_cache: true
@@ -228,7 +228,7 @@ class ModelSpecMigration123
     create_table "posts" do |t|
       t.column "title", "string", index: true
 
-      t.column "tags", "string", array: true, index: "gin", default: "ARRAY['post', 'arr 2']"
+      t.column "tags_list", "string", array: true, index: "gin", default: "ARRAY['post', 'arr 2']"
       t.column "flags_other_column_name", "bigint", array: true, index: "gin", default: "'{}'::bigint[]"
 
       t.column "published", "boolean", default: "true", null: false

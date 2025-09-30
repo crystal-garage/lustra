@@ -11,8 +11,8 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           user = User.create!({first_name: "John", last_name: "Doe"})
           post = Post.create!({title: "Test Post", user_id: user.id})
 
-          post.tag_relations.count.should eq(0)
-          post.tag_relations.empty?.should be_true
+          post.tags.count.should eq(0)
+          post.tags.empty?.should be_true
         end
       end
 
@@ -25,12 +25,12 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag1 = Tag.create!({name: "Ruby"})
           tag2 = Tag.create!({name: "Crystal"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
+          post.tags << tag1
+          post.tags << tag2
 
-          post.tag_relations.count.should eq(2)
-          post.tag_relations.map(&.name).should contain("Ruby")
-          post.tag_relations.map(&.name).should contain("Crystal")
+          post.tags.count.should eq(2)
+          post.tags.map(&.name).should contain("Ruby")
+          post.tags.map(&.name).should contain("Crystal")
         end
       end
 
@@ -44,14 +44,14 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag2 = Tag.create!({name: "Crystal"})
           tag3 = Tag.create!({name: "Programming"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
-          post.tag_relations << tag3
+          post.tags << tag1
+          post.tags << tag2
+          post.tags << tag3
 
-          post.tag_relations.count.should eq(3)
-          post.tag_relations.map(&.name).should contain("Ruby")
-          post.tag_relations.map(&.name).should contain("Crystal")
-          post.tag_relations.map(&.name).should contain("Programming")
+          post.tags.count.should eq(3)
+          post.tags.map(&.name).should contain("Ruby")
+          post.tags.map(&.name).should contain("Crystal")
+          post.tags.map(&.name).should contain("Programming")
         end
       end
 
@@ -64,8 +64,8 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag1 = Tag.create!({name: "Ruby"})
           tag2 = Tag.create!({name: "Crystal"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
+          post.tags << tag1
+          post.tags << tag2
 
           PostTag.query.count.should eq(2)
 
@@ -87,16 +87,16 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag2 = Tag.create!({name: "Crystal"})
           tag3 = Tag.create!({name: "Programming"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
-          post.tag_relations << tag3
+          post.tags << tag1
+          post.tags << tag2
+          post.tags << tag3
 
-          post.tag_relations.unlink(tag2)
+          post.tags.unlink(tag2)
 
-          post.tag_relations.count.should eq(2)
-          post.tag_relations.map(&.name).should contain("Ruby")
-          post.tag_relations.map(&.name).should contain("Programming")
-          post.tag_relations.map(&.name).should_not contain("Crystal")
+          post.tags.count.should eq(2)
+          post.tags.map(&.name).should contain("Ruby")
+          post.tags.map(&.name).should contain("Programming")
+          post.tags.map(&.name).should_not contain("Crystal")
         end
       end
 
@@ -109,10 +109,10 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag1 = Tag.create!({name: "Ruby"})
           tag2 = Tag.create!({name: "Crystal"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
+          post.tags << tag1
+          post.tags << tag2
 
-          post.tag_relations.unlink(tag1)
+          post.tags.unlink(tag1)
 
           PostTag.query.where({post_id: post.id}).count.should eq(1)
           PostTag.query.find({post_id: post.id, tag_id: tag1.id}).should be_nil
@@ -129,16 +129,16 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag2 = Tag.create!({name: "Crystal"})
           tag3 = Tag.create!({name: "Programming"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
-          post.tag_relations << tag3
+          post.tags << tag1
+          post.tags << tag2
+          post.tags << tag3
 
           # Unlink each tag individually (delete_all doesn't work correctly for has_many through)
-          post.tag_relations.each do |tag|
-            post.tag_relations.unlink(tag)
+          post.tags.each do |tag|
+            post.tags.unlink(tag)
           end
 
-          post.tag_relations.count.should eq(0)
+          post.tags.count.should eq(0)
           PostTag.query.where({post_id: post.id}).count.should eq(0)
         end
       end
@@ -155,11 +155,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag2 = Tag.create!({name: "Crystal"})
           tag3 = Tag.create!({name: "Programming"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
-          post.tag_relations << tag3
+          post.tags << tag1
+          post.tags << tag2
+          post.tags << tag3
 
-          ruby_tags = post.tag_relations.where { name == "Ruby" }
+          ruby_tags = post.tags.where { name == "Ruby" }
           ruby_tags.count.should eq(1)
           ruby_tags.first!.name.should eq("Ruby")
         end
@@ -175,12 +175,12 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag2 = Tag.create!({name: "Crystal"})
           tag3 = Tag.create!({name: "Programming"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
-          post.tag_relations << tag3
+          post.tags << tag1
+          post.tags << tag2
+          post.tags << tag3
 
-          first_tag = post.tag_relations.limit(1).first!
-          second_tag = post.tag_relations.offset(1).limit(1).first!
+          first_tag = post.tags.limit(1).first!
+          second_tag = post.tags.offset(1).limit(1).first!
 
           first_tag.should_not eq(second_tag)
         end
@@ -196,11 +196,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag2 = Tag.create!({name: "Crystal"})
           tag3 = Tag.create!({name: "Programming"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
-          post.tag_relations << tag3
+          post.tags << tag1
+          post.tags << tag2
+          post.tags << tag3
 
-          all_tags = post.tag_relations.to_a
+          all_tags = post.tags.to_a
           all_names = all_tags.map(&.name)
 
           all_names.should contain("Ruby")
@@ -219,11 +219,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag1 = Tag.create!({name: "Ruby"})
           tag2 = Tag.create!({name: "Crystal"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
+          post.tags << tag1
+          post.tags << tag2
 
-          post.tag_relations.where({name: "Ruby"}).count.should eq(1)
-          post.tag_relations.where({name: "NonExistent"}).count.should eq(0)
+          post.tags.where({name: "Ruby"}).count.should eq(1)
+          post.tags.where({name: "NonExistent"}).count.should eq(0)
         end
       end
 
@@ -236,14 +236,14 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag1 = Tag.create!({name: "Ruby"})
           tag2 = Tag.create!({name: "Crystal"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
+          post.tags << tag1
+          post.tags << tag2
 
-          ruby_tag = post.tag_relations.find!({name: "Ruby"})
+          ruby_tag = post.tags.find!({name: "Ruby"})
           ruby_tag.name.should eq("Ruby")
 
           expect_raises(Lustra::SQL::RecordNotFoundError) do
-            post.tag_relations.find!({name: "NonExistent"})
+            post.tags.find!({name: "NonExistent"})
           end
         end
       end
@@ -262,20 +262,20 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag3 = Tag.create!({name: "Programming"})
           tag4 = Tag.create!({name: "Database"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag2
-          post2.tag_relations << tag2
-          post2.tag_relations << tag3
-          post2.tag_relations << tag4
+          post.tags << tag1
+          post.tags << tag2
+          post2.tags << tag2
+          post2.tags << tag3
+          post2.tags << tag4
 
-          post.tag_relations.count.should eq(2)
-          post2.tag_relations.count.should eq(3)
+          post.tags.count.should eq(2)
+          post2.tags.count.should eq(3)
 
-          post.tag_relations.map(&.name).should contain("Ruby")
-          post.tag_relations.map(&.name).should contain("Crystal")
-          post2.tag_relations.map(&.name).should contain("Crystal")
-          post2.tag_relations.map(&.name).should contain("Programming")
-          post2.tag_relations.map(&.name).should contain("Database")
+          post.tags.map(&.name).should contain("Ruby")
+          post.tags.map(&.name).should contain("Crystal")
+          post2.tags.map(&.name).should contain("Crystal")
+          post2.tags.map(&.name).should contain("Programming")
+          post2.tags.map(&.name).should contain("Database")
         end
       end
 
@@ -288,11 +288,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post2 = Post.create!({title: "Another Post", user_id: user.id})
           tag2 = Tag.create!({name: "Crystal"})
 
-          post.tag_relations << tag2
-          post2.tag_relations << tag2
+          post.tags << tag2
+          post2.tags << tag2
 
           # Both posts should have the same tag (by ID)
-          post.tag_relations.find!({name: "Crystal"}).id.should eq(post2.tag_relations.find!({name: "Crystal"}).id)
+          post.tags.find!({name: "Crystal"}).id.should eq(post2.tags.find!({name: "Crystal"}).id)
 
           # But PostTag records should be separate
           PostTag.query.count.should eq(2)
@@ -309,7 +309,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post = Post.create!({title: "Test Post", user_id: user.id})
           tag1 = Tag.create!({name: "Ruby"})
 
-          post.tag_relations << tag1
+          post.tags << tag1
 
           tag1.posts.count.should eq(1)
           tag1.posts.first!.title.should eq("Test Post")
@@ -324,7 +324,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post = Post.create!({title: "Test Post", user_id: user.id})
           tag1 = Tag.create!({name: "Ruby"})
 
-          post.tag_relations << tag1
+          post.tags << tag1
 
           post2 = Post.create!({title: "Second Post", user_id: user.id})
 
@@ -346,11 +346,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post = Post.create!({title: "Test Post", user_id: user.id})
           tag1 = Tag.create!({name: "Ruby"})
 
-          post.tag_relations << tag1
-          post.tag_relations << tag1 # Add same tag again
+          post.tags << tag1
+          post.tags << tag1 # Add same tag again
 
           # Should still only have one instance in the collection
-          post.tag_relations.count.should eq(1)
+          post.tags.count.should eq(1)
           # But creates duplicate PostTag records (this is current behavior)
           PostTag.query.where({post_id: post.id, tag_id: tag1.id}).count.should eq(2)
         end
@@ -365,14 +365,14 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag1 = Tag.create!({name: "Ruby"})
           tag2 = Tag.create!({name: "Crystal"})
 
-          post.tag_relations << tag1
+          post.tags << tag1
 
           # Try to unlink a tag that's not associated
-          post.tag_relations.unlink(tag2)
+          post.tags.unlink(tag2)
 
           # Should still have the original tag
-          post.tag_relations.count.should eq(1)
-          post.tag_relations.first!.name.should eq("Ruby")
+          post.tags.count.should eq(1)
+          post.tags.first!.name.should eq("Ruby")
         end
       end
 
@@ -385,12 +385,12 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag1 = Tag.create!({name: "Ruby"})
           new_tag = Tag.new({name: "New Tag"})
 
-          post.tag_relations << tag1
-          post.tag_relations << new_tag
+          post.tags << tag1
+          post.tags << new_tag
 
-          post.tag_relations.count.should eq(2)
-          post.tag_relations.map(&.name).should contain("Ruby")
-          post.tag_relations.map(&.name).should contain("New Tag")
+          post.tags.count.should eq(2)
+          post.tags.map(&.name).should contain("Ruby")
+          post.tags.map(&.name).should contain("New Tag")
 
           # New tag should be persisted
           new_tag.persisted?.should be_true
@@ -399,7 +399,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
     end
 
     describe "SQL generation" do
-      it "generates correct SQL for tag_relations query" do
+      it "generates correct SQL for tags query" do
         temporary do
           reinit_example_models
 
@@ -412,7 +412,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
                          "(\"post_tags\".\"tag_id\" = \"tags\".\"id\") " +
                          "WHERE (\"post_tags\".\"post_id\" = #{post.id})"
 
-          post.tag_relations.to_sql.should eq(expected_sql)
+          post.tags.to_sql.should eq(expected_sql)
         end
       end
 

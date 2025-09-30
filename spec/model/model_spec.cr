@@ -669,16 +669,16 @@ module ModelSpec
         u = User.create!({first_name: "John"})
         p = Post.create!({title: "A post", user_id: u.id})
 
-        p.tags = ["a", "b", "c"]
+        p.tags_list = ["a", "b", "c"]
         p.flags = [11_234_212_343_543_i64, 11_234_212_343_543_i64, -12_928_394_059_603_i64, 12_038_493_029_484_i64]
         p.save!
 
         p = Post.query.first!
-        p.tags.should eq ["a", "b", "c"]
+        p.tags_list.should eq ["a", "b", "c"]
         p.flags.should eq [11_234_212_343_543_i64, 11_234_212_343_543_i64, -12_928_394_059_603_i64, 12_038_493_029_484_i64]
 
         # Test insertion of empty array
-        Post.create!({title: "A post", user_id: u.id, tags: [] of String})
+        Post.create!({title: "A post", user_id: u.id, tags_list: [] of String})
       end
     end
 
@@ -766,14 +766,14 @@ module ModelSpec
           # Test addition in has_many through relation
           p = Post.query.first!
 
-          p.tag_relations.count.should eq(0)
+          p.tags.count.should eq(0)
 
-          p.tag_relations << Tag.new({name: "Awesome"})
-          p.tag_relations << Tag.new({name: "Why not"})
+          p.tags << Tag.new({name: "Awesome"})
+          p.tags << Tag.new({name: "Why not"})
 
-          p.tag_relations.count.should eq(2)
-          p.tag_relations.first!.name.should eq("Awesome")
-          p.tag_relations.offset(1).first!.name.should eq("Why not")
+          p.tags.count.should eq(2)
+          p.tags.first!.name.should eq("Awesome")
+          p.tags.offset(1).first!.name.should eq("Why not")
         end
       end
 
@@ -785,12 +785,12 @@ module ModelSpec
           c = Category.create!({name: "Nature"})
           p = Post.create!({title: "Post about Poneys", user_id: u.id, category_id: c.id})
 
-          p.tag_relations << Tag.new({name: "Awesome"})
-          p.tag_relations << Tag.new({name: "Why not"})
+          p.tags << Tag.new({name: "Awesome"})
+          p.tags << Tag.new({name: "Why not"})
 
-          p.tag_relations.count.should eq(2)
-          p.tag_relations.unlink(Tag.query.find!({name: "Awesome"}))
-          p.tag_relations.count.should eq(1)
+          p.tags.count.should eq(2)
+          p.tags.unlink(Tag.query.find!({name: "Awesome"}))
+          p.tags.count.should eq(1)
         end
       end
     end

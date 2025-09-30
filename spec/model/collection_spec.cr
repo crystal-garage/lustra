@@ -373,10 +373,10 @@ module CollectionSpec
             post = Post.create!(title: "Title", user: user)
 
             tag = Tag.create!(name: "Tag1")
-            post.tag_relations << tag
+            post.tags << tag
 
             # FIXME: these can be use instead above
-            # tag = post.tag_relations.create!(name: "Tag1")
+            # tag = post.tags.create!(name: "Tag1")
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
@@ -422,10 +422,10 @@ module CollectionSpec
             post = Post.create!(title: "Title", user: user)
 
             tag = Tag.create!(name: "Tag1")
-            post.tag_relations << tag
+            post.tags << tag
 
             # FIXME: these can be use instead above
-            # tag = post.tag_relations.find_or_create(name: "Tag1")
+            # tag = post.tags.find_or_create(name: "Tag1")
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
