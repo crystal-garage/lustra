@@ -412,7 +412,9 @@ module Lustra::Model
     def create(**tuple, & : T -> Nil) : T
       r = build(**tuple) { |mdl| yield(mdl) }
 
-      r.save
+      if r.save
+        handle_append_operation(r)
+      end
 
       r
     end
@@ -608,6 +610,7 @@ module Lustra::Model
       tuple.map { |k, v| str_hash[k.to_s] = v }
 
       r = Lustra::Model::Factory.build(T, str_hash)
+
       yield(r)
 
       r

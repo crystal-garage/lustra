@@ -397,6 +397,23 @@ module CollectionSpec
           end
         end
 
+        it "create method for has_many through works correctly" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+
+            tag = post.tags.create(name: "Tag1")
+
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1)
+
+            post.tags.count.should eq(1)
+            post.tags.first!.name.should eq("Tag1")
+          end
+        end
+
         it "raise exception if validation failed" do
           temporary do
             reinit_example_models
