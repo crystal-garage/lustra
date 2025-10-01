@@ -1,4 +1,4 @@
-<p align="center"><img src="design/logo1.png" alt="clear" height="200px"></p>
+<p align="center"><img src="design/logo1.png" alt="lustra" height="200px"></p>
 
 # Lustra
 
@@ -135,9 +135,10 @@ In `shards.yml`
 
 ```yml
 dependencies:
-  clear:
-    github: crystal-garage/clear
+  lustra:
+    github: crystal-garage/lustra
     branch: develop
+    version: ">= 0.9.0"
 ```
 
 Then:
@@ -148,7 +149,7 @@ require "lustra"
 
 ### Model definition
 
-Lustra offers some mixins, just include them in your classes to _clear_ them:
+Lustra offers some mixins, just include them in your classes:
 
 #### Column mapping
 
@@ -486,7 +487,7 @@ Lustra is offering SQL logging tools, with SQL syntax colorizing in your termina
 For activation, simply setup the logger to `DEBUG` level !
 
 ```crystal
-Log.builder.bind "clear.*", :debug, Log::IOBackend.new(STDOUT)
+Log.builder.bind "lustra.*", :debug, Log::IOBackend.new(STDOUT)
 ```
 
 ### Save & validation

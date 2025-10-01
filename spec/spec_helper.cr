@@ -8,20 +8,20 @@ class ::Crypto::Bcrypt::Password
 end
 
 def initdb
-  pg.exec("DROP DATABASE IF EXISTS clear_spec;")
-  pg.exec("CREATE DATABASE clear_spec;")
+  pg.exec("DROP DATABASE IF EXISTS lustra_spec;")
+  pg.exec("CREATE DATABASE lustra_spec;")
 
-  pg.exec("DROP DATABASE IF EXISTS clear_secondary_spec;")
-  pg.exec("CREATE DATABASE clear_secondary_spec;")
+  pg.exec("DROP DATABASE IF EXISTS lustra_secondary_spec;")
+  pg.exec("CREATE DATABASE lustra_secondary_spec;")
 
-  clear_secondary_spec_db.exec(
+  lustra_secondary_spec_db.exec(
     <<-SQL
       CREATE TABLE models_post_stats (id serial PRIMARY KEY, post_id INTEGER);
       SQL
   )
 
-  Lustra::SQL.init("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_spec")
-  Lustra::SQL.init("secondary", "postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_secondary_spec")
+  Lustra::SQL.init("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/lustra_spec")
+  Lustra::SQL.init("secondary", "postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/lustra_secondary_spec")
 
   {% if flag?(:quiet) %} Log.setup(:error) {% else %} Log.setup(:debug) {% end %}
 end
@@ -58,8 +58,8 @@ def pg
   DB.open("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/#{postgres_db}")
 end
 
-def clear_secondary_spec_db
-  DB.open("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/clear_secondary_spec")
+def lustra_secondary_spec_db
+  DB.open("postgres://#{postgres_user}:#{postgres_password}@#{postgres_host}/lustra_secondary_spec")
 end
 
 initdb
