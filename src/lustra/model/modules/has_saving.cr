@@ -125,6 +125,7 @@ module Lustra::Model::HasSaving
         end
 
         clear_change_flags
+
         return true
       else
         return false

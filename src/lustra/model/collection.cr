@@ -412,7 +412,9 @@ module Lustra::Model
     def create(**tuple, & : T -> Nil) : T
       r = build(**tuple) { |mdl| yield(mdl) }
 
-      r.save
+      if r.save
+        handle_append_operation(r)
+      end
 
       r
     end
@@ -441,6 +443,8 @@ module Lustra::Model
       r = build(**tuple) { |mdl| yield(mdl) }
 
       r.save!
+
+      handle_append_operation(r)
 
       r
     end
@@ -505,6 +509,15 @@ module Lustra::Model
     # Alias for `Collection#<<`
     def add(item : T)
       self << item
+    end
+
+    # Handle append_operation for has_many through relationships
+    private def handle_append_operation(item : T)
+      append_operation = self.append_operation
+      if append_operation
+        append_operation.call(item)
+        @cached_result.try &.<<(item)
+      end
     end
 
     # Unlink the model currently referenced through a relation `has_many through`
@@ -597,6 +610,7 @@ module Lustra::Model
       tuple.map { |k, v| str_hash[k.to_s] = v }
 
       r = Lustra::Model::Factory.build(T, str_hash)
+
       yield(r)
 
       r
@@ -623,6 +637,8 @@ module Lustra::Model
       r = find_or_build(**tuple) { |mdl| yield(mdl) }
 
       r.save!
+
+      handle_append_operation(r)
 
       r
     end
