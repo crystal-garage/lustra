@@ -2,7 +2,7 @@ require "../spec_helper"
 require "../data/example_models"
 
 module CollectionSpec
-  describe Clear::Model::CollectionBase do
+  describe Lustra::Model::CollectionBase do
     describe "with query" do
       context "#build" do
         it "build empty model" do
@@ -373,10 +373,10 @@ module CollectionSpec
             post = Post.create!(title: "Title", user: user)
 
             tag = Tag.create!(name: "Tag1")
-            post.tag_relations << tag
+            post.tags << tag
 
             # FIXME: these can be use instead above
-            # tag = post.tag_relations.create!(name: "Tag1")
+            # tag = post.tags.create!(name: "Tag1")
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
@@ -389,7 +389,7 @@ module CollectionSpec
 
             user = User.create!(first_name: "name")
 
-            expect_raises(Clear::Model::InvalidError) do
+            expect_raises(Lustra::Model::InvalidError) do
               user.posts.create!(title: "")
             end
           end
@@ -422,10 +422,10 @@ module CollectionSpec
             post = Post.create!(title: "Title", user: user)
 
             tag = Tag.create!(name: "Tag1")
-            post.tag_relations << tag
+            post.tags << tag
 
             # FIXME: these can be use instead above
-            # tag = post.tag_relations.find_or_create(name: "Tag1")
+            # tag = post.tags.find_or_create(name: "Tag1")
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
@@ -510,7 +510,7 @@ module CollectionSpec
         qry[2].first_name.should eq("user 2")
         qry[10]?.should be_nil
 
-        expect_raises(Clear::SQL::RecordNotFoundError) { qry[11] }
+        expect_raises(Lustra::SQL::RecordNotFoundError) { qry[11] }
       end
     end
 
@@ -526,7 +526,7 @@ module CollectionSpec
           User.query.find! { first_name == "user 2" }.first_name.should eq("user 2")
           User.query.find { first_name == "not_exists" }.should be_nil
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.find! { first_name == "not_exists" }
           end
         end
@@ -543,7 +543,7 @@ module CollectionSpec
           User.query.find!({first_name: "user 2"}).first_name.should eq("user 2")
           User.query.find({first_name: "not_exists"}).should be_nil
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.find!({first_name: "not_exists"})
           end
         end
@@ -560,7 +560,7 @@ module CollectionSpec
           User.query.find!(first_name: "first 2", last_name: "last 2").first_name.should eq("first 2")
           User.query.find(first_name: "not_exists").should be_nil
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.find!(first_name: "not_exists")
           end
         end
@@ -599,9 +599,9 @@ module CollectionSpec
         User.query.first!.first_name.should eq("user 0")
         User.query.order_by({id: :desc}).first!.first_name.should eq("user 9")
 
-        Clear::SQL.truncate("users", cascade: true)
+        Lustra::SQL.truncate("users", cascade: true)
 
-        expect_raises(Clear::SQL::RecordNotFoundError) do
+        expect_raises(Lustra::SQL::RecordNotFoundError) do
           User.query.first!
         end
 
@@ -620,9 +620,9 @@ module CollectionSpec
         User.query.last!.first_name.should eq("user 9")
         User.query.order_by({id: :desc}).last!.first_name.should eq("user 0")
 
-        Clear::SQL.truncate(User, cascade: true)
+        Lustra::SQL.truncate(User, cascade: true)
 
-        expect_raises(Clear::SQL::RecordNotFoundError) do
+        expect_raises(Lustra::SQL::RecordNotFoundError) do
           User.query.last!
         end
 

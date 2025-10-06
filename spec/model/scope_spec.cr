@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module ScopeSpec
   class ScopeModel
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "scope_models"
 
@@ -19,7 +19,7 @@ module ScopeSpec
   end
 
   class ScopeSpecMigration621253
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "scope_models" do |t|
@@ -33,7 +33,7 @@ module ScopeSpec
     ScopeSpecMigration621253.new.apply
   end
 
-  describe "Clear::Model::HasScope" do
+  describe "Lustra::Model::HasScope" do
     it "access to scope with different arguments " do
       temporary do
         reinit

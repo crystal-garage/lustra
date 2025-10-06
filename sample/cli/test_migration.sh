@@ -1,7 +1,7 @@
 #!/bin/sh
 
-echo "DROP DATABASE IF EXISTS clear_spec;" | psql -U postgres
-echo "CREATE DATABASE clear_spec;" | psql -U postgres
+echo "DROP DATABASE IF EXISTS lustra_spec;" | psql -U postgres
+echo "CREATE DATABASE lustra_spec;" | psql -U postgres
 
 CMD="sample/cli/cli.cr -- --verbose"
 

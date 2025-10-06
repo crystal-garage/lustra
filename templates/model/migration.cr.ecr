@@ -1,5 +1,5 @@
 class Create<%= opts["model_class"] %><%= opts["migration_uid"] %>
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     create_table :<%= opts["model_table"] %> do |t|

@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module MultipleConnectionsSpec
   class Post
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "models_posts_two"
 
@@ -11,7 +11,7 @@ module MultipleConnectionsSpec
   end
 
   class PostStat
-    include Clear::Model
+    include Lustra::Model
 
     self.connection = "secondary"
     self.table = "models_post_stats"
@@ -21,7 +21,7 @@ module MultipleConnectionsSpec
   end
 
   class ModelSpecMigration1234
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "models_posts_two" do |t|
@@ -35,7 +35,7 @@ module MultipleConnectionsSpec
     ModelSpecMigration1234.new.apply
   end
 
-  describe "Clear::Model" do
+  describe "Lustra::Model" do
     context "multiple connections" do
       it "know about the different connections on models" do
         Post.connection.should eq "default"

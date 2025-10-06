@@ -5,20 +5,20 @@ require "../spec_helper"
 module TransactionSpec
   extend self
 
-  describe "Clear::SQL::Transaction#transaction" do
+  describe "Lustra::SQL::Transaction#transaction" do
     it "create transactional block" do
-      Clear::SQL.transaction { Clear::SQL.select("1").execute }
-      Clear::SQL.transaction(level: Clear::SQL::Transaction::Level::ReadCommitted) { Clear::SQL.select("1").execute }
-      Clear::SQL.transaction(level: Clear::SQL::Transaction::Level::RepeatableRead) { Clear::SQL.select("1").execute }
+      Lustra::SQL.transaction { Lustra::SQL.select("1").execute }
+      Lustra::SQL.transaction(level: Lustra::SQL::Transaction::Level::ReadCommitted) { Lustra::SQL.select("1").execute }
+      Lustra::SQL.transaction(level: Lustra::SQL::Transaction::Level::RepeatableRead) { Lustra::SQL.select("1").execute }
     end
   end
 
-  describe "Clear::SQL::Transaction#after_commit" do
+  describe "Lustra::SQL::Transaction#after_commit" do
     it "executes the callback code when transaction is commited" do
       is_called = false
 
-      Clear::SQL.transaction do
-        Clear::SQL.after_commit { is_called = true }
+      Lustra::SQL.transaction do
+        Lustra::SQL.after_commit { is_called = true }
         is_called.should be_false
       end
 
@@ -28,22 +28,22 @@ module TransactionSpec
     it "does not execute the callback code when transaction is rollback" do
       is_called = false
 
-      Clear::SQL.transaction do
-        Clear::SQL.after_commit do
+      Lustra::SQL.transaction do
+        Lustra::SQL.after_commit do
           is_called = true
         end
 
         is_called.should be_false
-        Clear::SQL.rollback
+        Lustra::SQL.rollback
       end
 
       channel = Channel(Nil).new
 
       5.times do
-        # Ensure the list is clear after this block
+        # Ensure the list is lustra after this block
         # Using all the connections
         spawn do
-          Clear::SQL.transaction do
+          Lustra::SQL.transaction do
             channel.send(nil)
           end
 
@@ -59,21 +59,21 @@ module TransactionSpec
     it "doesn't call twice the callback" do
       is_called = 0
 
-      Clear::SQL.transaction do
-        Clear::SQL.after_commit { is_called += 1 }
+      Lustra::SQL.transaction do
+        Lustra::SQL.after_commit { is_called += 1 }
         is_called.should eq(0)
       end
 
       is_called.should eq(1)
-      Clear::SQL.transaction { is_called.should eq(1) }
+      Lustra::SQL.transaction { is_called.should eq(1) }
       is_called.should eq(1)
     end
 
     # Because after_commit is related to a specific transaction, it should raise
     # and error if we're not currently in transaction.
     it "raises an error if not yet in transaction" do
-      expect_raises(Clear::SQL::Error, /in transaction/) do
-        Clear::SQL.after_commit { puts "Do something" }
+      expect_raises(Lustra::SQL::Error, /in transaction/) do
+        Lustra::SQL.after_commit { puts "Do something" }
       end
     end
 
@@ -85,12 +85,12 @@ module TransactionSpec
       channel = Channel(Nil).new
       called = "nope"
 
-      Clear::SQL.transaction do
-        Clear::SQL.after_commit { called = "last" }
+      Lustra::SQL.transaction do
+        Lustra::SQL.after_commit { called = "last" }
 
         spawn do
-          Clear::SQL.transaction do
-            Clear::SQL.after_commit { called = "first" }
+          Lustra::SQL.transaction do
+            Lustra::SQL.after_commit { called = "first" }
             channel.receive # Wait for the message to commit.
           end
           channel.send nil # We have now commited

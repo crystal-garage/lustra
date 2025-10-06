@@ -5,7 +5,7 @@ module EventSpec
   ACCUMULATOR = [] of String
 
   abstract class ModelA
-    include Clear::Model
+    include Lustra::Model
 
     polymorphic through: "type"
 
@@ -30,7 +30,7 @@ module EventSpec
 
   # Test model for create/save callbacks
   class CallbackTestModel
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "callback_test_models"
 
@@ -44,7 +44,7 @@ module EventSpec
     after(:delete) { |_| ACCUMULATOR << "delete_callback" }
   end
 
-  describe "Clear::Model" do
+  describe "Lustra::Model" do
     context "EventManager" do
       it "call the events in the good direction" do
         ModelB.new.valid?

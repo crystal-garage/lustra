@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module SeedSpec
   class SeedModel
-    include Clear::Model
+    include Lustra::Model
 
     self.table = "seed_models"
 
@@ -12,7 +12,7 @@ module SeedSpec
   end
 
   class SeedModelMigration96842
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "seed_models" do |t|
@@ -26,20 +26,20 @@ module SeedSpec
     SeedModelMigration96842.new.apply
   end
 
-  Clear.seed do
+  Lustra.seed do
     SeedModel.create!({value: "val_a"})
   end
 
-  Clear.seed do
+  Lustra.seed do
     SeedModel.create!({value: "val_b"})
   end
 
-  describe "Clear::Model::HasScope" do
+  describe "Lustra::Model::HasScope" do
     it "access to scope with different arguments " do
       temporary do
         reinit
 
-        Clear.apply_seeds
+        Lustra.apply_seeds
 
         SeedModel.query.count.should eq 2
         SeedModel.query.last!.value.should eq "val_b"

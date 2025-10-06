@@ -1,10 +1,10 @@
-require "../../src/clear"
+require "../../src/lustra"
 require "benchmark"
 
 # Initialize the connection
-`echo "DROP DATABASE IF EXISTS benchmark_clear;" | psql -U postgres`
-`echo "CREATE DATABASE benchmark_clear;" | psql -U postgres`
-Clear::SQL.init("postgres://postgres@localhost/benchmark_clear")
+`echo "DROP DATABASE IF EXISTS benchmark_lustra;" | psql -U postgres`
+`echo "CREATE DATABASE benchmark_lustra;" | psql -U postgres`
+Lustra::SQL.init("postgres://postgres@localhost/benchmark_lustra")
 
 init = <<-SQL
     CREATE TABLE benchmark (id serial PRIMARY KEY NOT NULL, y int);
@@ -16,10 +16,10 @@ init = <<-SQL
   end
   SQL
 
-init.split(";").each { |sql| Clear::SQL.execute(sql) }
+init.split(";").each { |sql| Lustra::SQL.execute(sql) }
 
 class BenchmarkModel
-  include Clear::Model
+  include Lustra::Model
 
   self.table = "benchmark"
 
@@ -36,5 +36,5 @@ Benchmark.ips(warmup: 2, calculation: 5) do |x|
   x.report("With Model: With attributes") { BenchmarkModel.query.limit(100_000).to_a(fetch_columns: true) }
   x.report("With Model: With attributes and cursor") { a = [] of BenchmarkModel; BenchmarkModel.query.limit(100_000).each_with_cursor(fetch_columns: true) { |h| a << h } }
   x.report("Using: Pluck") { BenchmarkModel.query.limit(100_000).pluck("y") }
-  x.report("Hash from SQL only") { a = [] of Hash(String, ::Clear::SQL::Any); BenchmarkModel.query.limit(100_000).fetch { |h| a << h } }
+  x.report("Hash from SQL only") { a = [] of Hash(String, ::Lustra::SQL::Any); BenchmarkModel.query.limit(100_000).fetch { |h| a << h } }
 end

@@ -1,13 +1,13 @@
-<p align="center"><img src="design/logo1.png" alt="clear" height="200px"></p>
+<p align="center"><img src="design/logo.png" alt="lustra" height="200px"></p>
 
-# Clear
+# Lustra
 
-![Crystal CI](https://github.com/crystal-garage/clear/workflows/Crystal%20CI/badge.svg)
-[![GitHub release](https://img.shields.io/github/release/crystal-garage/clear.svg)](https://github.com/crystal-garage/clear/releases)
-[![License](https://img.shields.io/github/license/crystal-garage/clear.svg)](https://github.com/crystal-garage/clear/blob/master/LICENSE)
+![Crystal CI](https://github.com/crystal-garage/lustra/workflows/Crystal%20CI/badge.svg)
+[![GitHub release](https://img.shields.io/github/release/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/releases)
+[![License](https://img.shields.io/github/license/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/blob/master/LICENSE)
 
 
-Clear is an ORM built specifically for PostgreSQL in Crystal.
+Lustra is an ORM built specifically for PostgreSQL in Crystal.
 
 It's probably the most advanced ORM for PG on Crystal in term of features offered.
 It features Active Record pattern models, and low-level SQL builder.
@@ -21,20 +21,22 @@ code readability and minimal setup.
 
 The project is quite active and well maintened, too !
 
-## Why to use Clear ?
+Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version 0.8, and it is not compatible with later Clear releases. Over time it evolved into an independent project. To keep it compatible with newer Crystal versions, I continued development, added missing features, improved existing ones, and expanded test coverage. Today Lustra is far beyond its upstream origins — a distinct, mature project in its own right.
 
-In few seconds, you want to use Clear if:
+## Why to use Lustra ?
+
+In few seconds, you want to use Lustra if:
 
 - [x] You want an expressive ORM. Put straight your thought to your code !
 - [x] You'd like to use advanced Postgres features without hassle
 - [x] You are at aware of the pro and cons of Active Records pattern
 
-You don't want to use Clear if:
+You don't want to use Lustra if:
 
 - [ ] You're not willing to use on PostgreSQL
 - [ ] You look for a minimalist ORM / Data Mapper
 - [ ] You need something which doesn't evolve, with breaking changes.
-      Clear is still in alpha but starting to mature !
+      Lustra is still in alpha but starting to mature !
 
 ## Features
 
@@ -53,7 +55,7 @@ Product.query.where { ( products.type == "Book" ) & ( products.metadata.jsonb("a
 User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
 
 # Or even...
-ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name # Clear! :-)
+ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name
 ```
 
 ## Core ORM Features
@@ -133,26 +135,27 @@ In `shards.yml`
 
 ```yml
 dependencies:
-  clear:
-    github: crystal-garage/clear
+  lustra:
+    github: crystal-garage/lustra
     branch: develop
+    version: ">= 0.9.0"
 ```
 
 Then:
 
 ```crystal
-require "clear"
+require "lustra"
 ```
 
 ### Model definition
 
-Clear offers some mixins, just include them in your classes to _clear_ them:
+Lustra offers some mixins, just include them in your classes:
 
 #### Column mapping
 
 ```crystal
 class User
-  include Clear::Model
+  include Lustra::Model
 
   column id : Int64, primary: true
 
@@ -177,7 +180,7 @@ end
   For other type of data, just create your own converter !
 
 ```crystal
-class Clear::Model::Converter::MyClassConversion
+class Lustra::Model::Converter::MyClassConversion
   def self.to_column(x) : MyClass?
     case x
     when String
@@ -194,7 +197,7 @@ class Clear::Model::Converter::MyClassConversion
   end
 end
 
-Clear::Model::Converter.add_converter("MyClass", Clear::Model::Converter::MyClassConversion)
+Lustra::Model::Converter.add_converter("MyClass", Lustra::Model::Converter::MyClassConversion)
 ```
 
 ##### Column presence
@@ -211,7 +214,7 @@ Therefore, we choose to throw exception whenever a column is accessed before
 it has been initialized and to enforce presence through the union system of
 Crystal.
 
-Clear offers this through the use of column wrapper.
+Lustra offers this through the use of column wrapper.
 Wrapper can be of the type of the column as in postgres, or in `UNKNOWN` state.
 This approach offers more flexibility:
 
@@ -239,7 +242,7 @@ u.email_column.defined? # No more
 
 #### Associations
 
-Clear offers `has_many`, `has_one`, `belongs_to` and `has_many through` associations:
+Lustra offers `has_many`, `has_one`, `belongs_to` and `has_many through` associations:
 
 ```crystal
 class Security::Action
@@ -251,7 +254,7 @@ class Security::Role
 end
 
 class User
-  include Clear::Model
+  include Lustra::Model
 
   has_one user_info : UserInfo
   has_many posts : Post
@@ -265,8 +268,8 @@ end
 
 ### Querying
 
-Clear offers a collection system for your models. The collection system
-takes origin to the lower API `Clear::SQL`, used to build requests.
+Lustra offers a collection system for your models. The collection system
+takes origin to the lower API `Lustra::SQL`, used to build requests.
 
 #### Simple query
 
@@ -358,7 +361,7 @@ end
 
 ###### Caching association for N+1 request
 
-For every association, you can tell Clear to encache the results to avoid
+For every association, you can tell Lustra to encache the results to avoid
 N+1 queries, using `with_XXX` on the collection:
 
 ```crystal
@@ -371,7 +374,7 @@ User.query.with_posts.each do |user|
 end
 ```
 
-Note: For association eager loading (like `with_posts`), Clear uses separate queries with the `IN` operator rather than JOINs for optimal performance.
+Note: For association eager loading (like `with_posts`), Lustra uses separate queries with the `IN` operator rather than JOINs for optimal performance.
 
 In the case above:
 
@@ -459,7 +462,7 @@ end
 p # => #<Post:0x10c5f6720
         @attributes={},
         @cache=
-         #<Clear::Model::QueryCache:0x10c6e8100
+         #<Lustra::Model::QueryCache:0x10c6e8100
           @cache={},
           @cache_activation=Set{}>,
         @content_column=
@@ -479,12 +482,12 @@ In this case, the `*` means a column is changed and the object is dirty and dive
 
 One thing very important for a good ORM is to offer vision of the SQL
 called under the hood.
-Clear is offering SQL logging tools, with SQL syntax colorizing in your terminal.
+Lustra is offering SQL logging tools, with SQL syntax colorizing in your terminal.
 
 For activation, simply setup the logger to `DEBUG` level !
 
 ```crystal
-Log.builder.bind "clear.*", :debug, Log::IOBackend.new(STDOUT)
+Log.builder.bind "lustra.*", :debug, Log::IOBackend.new(STDOUT)
 ```
 
 ### Save & validation
@@ -516,7 +519,7 @@ Presence validator is done using the type of the column:
 
 ```crystal
 class User
-  include Clear::Model
+  include Lustra::Model
 
   column first_name : String # Must be present
   column last_name : String? # Can be null
@@ -547,7 +550,7 @@ u.id # raise error
 
 ##### Other validators
 
-When you save your model, Clear will call first the presence validators, then
+When you save your model, Lustra will call first the presence validators, then
 call your custom made validators. All you have to do is to reimplement
 the `validate` method:
 
@@ -582,7 +585,7 @@ It's an anti-pattern and must be avoided at any cost.
 ##### The validation and the presence system
 
 In the case you try validation on a column which has not been initialized,
-Clear will complain, telling you you cannot access to the column.
+Lustra will complain, telling you you cannot access to the column.
 Let's see an example here:
 
 ```crystal
@@ -638,14 +641,14 @@ Simple to write and easy to read !
 
 ### Migration
 
-Clear offers of course a migration system.
+Lustra offers of course a migration system.
 
 Migration should have an `order` column set.
 This number can be wrote at the end of the class itself:
 
 ```crystal
 class Migration1
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     #...
@@ -662,7 +665,7 @@ In this case, the migration class name doesn't need to have a number at the end 
 ```crystal
 # in src/db/migrations/1234_create_table.cr
 class CreateTable
-  include Clear::Migration
+  include Lustra::Migration
 
   def change(dir)
     #...

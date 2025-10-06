@@ -85,7 +85,7 @@ module JSONConverterSpec
   end
 
   class JsonConverterSpec14
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table "json_models" do |t|
@@ -95,7 +95,7 @@ module JSONConverterSpec
   end
 
   class JsonModel
-    include ::Clear::Model
+    include ::Lustra::Model
 
     self.table = "json_models"
 
@@ -104,10 +104,10 @@ module JSONConverterSpec
     column actor : Actor
   end
 
-  describe "Clear::Model::Converter::JSON::AnyConverter" do
+  describe "Lustra::Model::Converter::JSON::AnyConverter" do
     it "converts from JSON::Any" do
       json_any = JSON.parse(JSON_DATA_SAMPLE)
-      converter = Clear::Model::Converter::JSON::AnyConverter
+      converter = Lustra::Model::Converter::JSON::AnyConverter
 
       converter.to_column(JSON_DATA_SAMPLE).should eq(json_any)
     end
@@ -137,4 +137,4 @@ module JSONConverterSpec
   end
 end
 
-Clear.json_serializable_converter(JSONConverterSpec::Actor)
+Lustra.json_serializable_converter(JSONConverterSpec::Actor)

@@ -2,7 +2,7 @@ require "../spec_helper"
 require "../data/example_models"
 
 module ModelSpec
-  describe "Clear::Model" do
+  describe "Lustra::Model" do
     context "fields management" do
       it "load from tuple" do
         temporary do
@@ -67,27 +67,27 @@ module ModelSpec
           User.create!(id: 3, first_name: "Bob", active: true)
 
           # Test with expression engine
-          users = User.query.where_not { active == false }.to_a
+          users = User.query.where.not { active == false }.to_a
           users.size.should eq(2)
           users.map(&.first_name).should contain("John")
           users.map(&.first_name).should contain("Bob")
           users.map(&.first_name).should_not contain("Jane")
 
           # Test with NamedTuple
-          users = User.query.where_not(active: false).to_a
+          users = User.query.where.not(active: false).to_a
           users.size.should eq(2)
           users.map(&.first_name).should contain("John")
           users.map(&.first_name).should contain("Bob")
           users.map(&.first_name).should_not contain("Jane")
 
           # Test with array (NOT IN)
-          users = User.query.where_not(id: [1, 2]).to_a
+          users = User.query.where.not(id: [1, 2]).to_a
           users.size.should eq(1)
           users.first.first_name.should eq("Bob")
 
           # Test with nil (NOT NULL)
           User.create!(id: 4, first_name: "Alice", active: nil)
-          users = User.query.where_not(active: nil).to_a
+          users = User.query.where.not(active: nil).to_a
           users.size.should eq(3)
           users.map(&.first_name).should contain("John")
           users.map(&.first_name).should contain("Jane")
@@ -96,7 +96,7 @@ module ModelSpec
         end
       end
 
-      it "where and where_not chaining" do
+      it "where and where.not chaining" do
         temporary do
           reinit_example_models
           User.create!(id: 1, first_name: "John", active: true)
@@ -104,11 +104,11 @@ module ModelSpec
           User.create!(id: 3, first_name: "Bob", active: true)
           User.create!(id: 4, first_name: "Alice", active: nil)
 
-          # Test chaining where and where_not
+          # Test chaining where and where.not
           users = User.query
             .where { id > 1 }
-            .where_not { active == false }
-            .where_not(id: [4])
+            .where.not { active == false }
+            .where.not(id: [4])
             .to_a
 
           users.size.should eq(1)
@@ -116,8 +116,8 @@ module ModelSpec
 
           # Test another chaining combination
           users = User.query
-            .where_not(id: [1, 2])
-            .where_not { active == nil }
+            .where.not(id: [1, 2])
+            .where.not { active == nil }
             .to_a
 
           users.size.should eq(1)
@@ -173,7 +173,7 @@ module ModelSpec
           user.posts_count.should eq(2)
 
           # Manually insert a post directly into database (bypassing counter cache)
-          Clear::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Direct Post', 'Direct Content', #{user.id})")
+          Lustra::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Direct Post', 'Direct Content', #{user.id})")
 
           # Counter is now out of sync
           user.reload
@@ -186,7 +186,7 @@ module ModelSpec
 
           # Test instance method version
           # Manually insert another post to make counter out of sync again
-          Clear::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Another Direct Post', 'Another Direct Content', #{user.id})")
+          Lustra::SQL.execute("INSERT INTO posts (title, content, user_id) VALUES ('Another Direct Post', 'Another Direct Content', #{user.id})")
 
           # Counter is out of sync again
           user.reload
@@ -559,7 +559,7 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.find!(1)
           end
         end
@@ -614,7 +614,7 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.first!
           end
         end
@@ -624,7 +624,7 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Clear::SQL::RecordNotFoundError) do
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.last!
           end
         end
@@ -669,16 +669,16 @@ module ModelSpec
         u = User.create!({first_name: "John"})
         p = Post.create!({title: "A post", user_id: u.id})
 
-        p.tags = ["a", "b", "c"]
+        p.tags_list = ["a", "b", "c"]
         p.flags = [11_234_212_343_543_i64, 11_234_212_343_543_i64, -12_928_394_059_603_i64, 12_038_493_029_484_i64]
         p.save!
 
         p = Post.query.first!
-        p.tags.should eq ["a", "b", "c"]
+        p.tags_list.should eq ["a", "b", "c"]
         p.flags.should eq [11_234_212_343_543_i64, 11_234_212_343_543_i64, -12_928_394_059_603_i64, 12_038_493_029_484_i64]
 
         # Test insertion of empty array
-        Post.create!({title: "A post", user_id: u.id, tags: [] of String})
+        Post.create!({title: "A post", user_id: u.id, tags_list: [] of String})
       end
     end
 
@@ -766,14 +766,14 @@ module ModelSpec
           # Test addition in has_many through relation
           p = Post.query.first!
 
-          p.tag_relations.count.should eq(0)
+          p.tags.count.should eq(0)
 
-          p.tag_relations << Tag.new({name: "Awesome"})
-          p.tag_relations << Tag.new({name: "Why not"})
+          p.tags << Tag.new({name: "Awesome"})
+          p.tags << Tag.new({name: "Why not"})
 
-          p.tag_relations.count.should eq(2)
-          p.tag_relations.first!.name.should eq("Awesome")
-          p.tag_relations.offset(1).first!.name.should eq("Why not")
+          p.tags.count.should eq(2)
+          p.tags.first!.name.should eq("Awesome")
+          p.tags.offset(1).first!.name.should eq("Why not")
         end
       end
 
@@ -785,12 +785,12 @@ module ModelSpec
           c = Category.create!({name: "Nature"})
           p = Post.create!({title: "Post about Poneys", user_id: u.id, category_id: c.id})
 
-          p.tag_relations << Tag.new({name: "Awesome"})
-          p.tag_relations << Tag.new({name: "Why not"})
+          p.tags << Tag.new({name: "Awesome"})
+          p.tags << Tag.new({name: "Why not"})
 
-          p.tag_relations.count.should eq(2)
-          p.tag_relations.unlink(Tag.query.find!({name: "Awesome"}))
-          p.tag_relations.count.should eq(1)
+          p.tags.count.should eq(2)
+          p.tags.unlink(Tag.query.find!({name: "Awesome"}))
+          p.tags.count.should eq(1)
         end
       end
     end
@@ -890,7 +890,7 @@ module ModelSpec
       end
     end
 
-    describe "Clear::Model::JSONDeserialize" do
+    describe "Lustra::Model::JSONDeserialize" do
       it "create a model json IO" do
         user_body = {first_name: "foo"}
         io = IO::Memory.new user_body.to_json
@@ -948,7 +948,7 @@ module ModelSpec
       end
     end
 
-    describe "Clear::Model::HasColumns mass_assign" do
+    describe "Lustra::Model::HasColumns mass_assign" do
       it "should do mass_assignment" do
         temporary do
           reinit_example_models
@@ -1010,10 +1010,10 @@ module ModelSpec
           data.num2.should eq(BigDecimal.new("42424224.01234568"))
           data.num3.should eq(BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40).trunc)
 
-          # Clear::SQL::Error:numeric field overflow
+          # Lustra::SQL::Error:numeric field overflow
           data.num4 = BigDecimal.new(BigInt.new("-1029387192083710928371092837019283701982370918237".to_big_i), 40)
 
-          expect_raises(Clear::SQL::Error) do
+          expect_raises(Lustra::SQL::Error) do
             data.save!
           end
         end

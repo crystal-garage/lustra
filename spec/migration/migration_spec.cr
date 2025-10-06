@@ -5,7 +5,7 @@ module MigrationSpec
   extend self
 
   class Migration1
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       create_table(:test) do |t|
@@ -22,7 +22,7 @@ module MigrationSpec
   end
 
   class Migration2
-    include Clear::Migration
+    include Lustra::Migration
 
     def change(dir)
       add_column "test", "middle_name", "text"
@@ -42,12 +42,12 @@ module MigrationSpec
 
       it "apply migration" do
         temporary do
-          Clear::Migration::Manager.instance.reinit!
+          Lustra::Migration::Manager.instance.reinit!
           Migration1.new.apply
 
-          Clear::Reflection::Table.public.where { table_name == "test" }.empty?.should be_false
+          Lustra::Reflection::Table.public.where { table_name == "test" }.empty?.should be_false
 
-          table = Clear::Reflection::Table.public.find! { table_name == "test" }
+          table = Lustra::Reflection::Table.public.find! { table_name == "test" }
           columns = table.columns
 
           columns.dup.where { column_name == "first_name" }.empty?.should be_false
@@ -61,14 +61,14 @@ module MigrationSpec
           table.indexes.size.should eq 7
 
           # Revert the last migration
-          Migration2.new.apply(Clear::Migration::Direction::Down)
+          Migration2.new.apply(Lustra::Migration::Direction::Down)
           columns = table.columns
           columns.dup.where { column_name == "middle_name" }.empty?.should be_true
           table.indexes.size.should eq 6
 
           # Revert the table migration
-          Migration1.new.apply(Clear::Migration::Direction::Down)
-          Clear::Reflection::Table.public.where { table_name == "test" }.empty?.should be_true
+          Migration1.new.apply(Lustra::Migration::Direction::Down)
+          Lustra::Reflection::Table.public.where { table_name == "test" }.empty?.should be_true
         end
       end
     end
@@ -77,9 +77,9 @@ module MigrationSpec
   describe "Migration" do
     it "run migrations apply_all multiple times" do
       temporary do
-        Clear::Migration::Manager.instance.reinit!
+        Lustra::Migration::Manager.instance.reinit!
         # Ensure that multiple migration apply_all's can run without issue
-        2.times { Clear::Migration::Manager.instance.apply_all }
+        2.times { Lustra::Migration::Manager.instance.apply_all }
       end
     end
   end
