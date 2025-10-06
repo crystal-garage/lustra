@@ -35,8 +35,6 @@ You don't want to use Lustra if:
 
 - [ ] You're not willing to use on PostgreSQL
 - [ ] You look for a minimalist ORM / Data Mapper
-- [ ] You need something which doesn't evolve, with breaking changes.
-      Lustra is still in alpha but starting to mature !
 
 ## Features
 
