@@ -75,8 +75,8 @@ module Lustra
     # This provide a fast way to create SQL fragment while escaping items, both with `?` and `:key` system:
     #
     # ```
-    # query = Model.query.select(Lustra::SQL.raw("CASE WHEN x=:x THEN 1 ELSE 0 END as check", x: "blabla"))
-    # query = Model.query.select(Lustra::SQL.raw("CASE WHEN x=? THEN 1 ELSE 0 END as check", "blabla"))
+    # query = Model.query.select(Lustra::SQL.raw("CASE WHEN x=:x THEN 1 ELSE 0 END AS check", x: "blabla"))
+    # query = Model.query.select(Lustra::SQL.raw("CASE WHEN x=? THEN 1 ELSE 0 END AS check", "blabla"))
     # ```
     def raw(x, *params)
       Lustra::Expression.raw(x, *params)

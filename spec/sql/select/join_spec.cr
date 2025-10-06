@@ -113,9 +113,9 @@ module JoinSpec
     end
 
     it "constructs LATERAL JOIN with complex subquery" do
-      lateral_subquery = Lustra::SQL.select("user_id, COUNT(*) as post_count").from("posts").where { posts.user_id == users.id }.group_by("user_id")
+      lateral_subquery = Lustra::SQL.select("user_id, COUNT(*) AS post_count").from("posts").where { posts.user_id == users.id }.group_by("user_id")
       Lustra::SQL.select.from(:users).left_join(lateral_subquery, lateral: true)
-        .to_sql.should eq(%(SELECT * FROM "users" LEFT JOIN LATERAL (SELECT user_id, COUNT(*) as post_count FROM posts WHERE ("posts"."user_id" = "users"."id") GROUP BY user_id) ON (true)))
+        .to_sql.should eq(%(SELECT * FROM "users" LEFT JOIN LATERAL (SELECT user_id, COUNT(*) AS post_count FROM posts WHERE ("posts"."user_id" = "users"."id") GROUP BY user_id) ON (true)))
     end
 
     it "constructs JOIN without condition (implicit true)" do
@@ -280,7 +280,7 @@ module JoinSpec
         # Test LATERAL JOIN - count posts per user
         results = User.query
           .left_join(
-            Lustra::SQL.select("user_id, COUNT(*) as post_count")
+            Lustra::SQL.select("user_id, COUNT(*) AS post_count")
               .from(:posts)
               .where { posts.user_id == users.id }
               .group_by("user_id"),
