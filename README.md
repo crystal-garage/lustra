@@ -4,7 +4,7 @@
 
 ![Crystal CI](https://github.com/crystal-garage/lustra/workflows/Crystal%20CI/badge.svg)
 [![GitHub release](https://img.shields.io/github/release/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/releases)
-[![License](https://img.shields.io/github/license/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/blob/develop/LICENSE)
 
 
 Lustra is an ORM built specifically for PostgreSQL in Crystal.
