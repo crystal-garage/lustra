@@ -29,10 +29,10 @@ class User
   column notification_preferences : JSON::Any, presence: false
   column last_comment_at : Time?
 
-  has_many posts : Post, foreign_key: "user_id"
-  has_many comments : Comment, foreign_key: "user_id"
-  has_one info : UserInfo?, foreign_key: "user_id"
-  has_many categories : Category, through: Post, own_key: :user_id, foreign_key: :category_id
+  has_many posts : Post
+  has_many comments : Comment
+  has_one info : UserInfo?
+  has_many categories : Category, through: Post
 
   has_many relationships : Relationship, foreign_key: "master_id"
   has_many dependencies : User, through: Relationship, foreign_key: "dependency_id", own_key: "master_id"
@@ -70,8 +70,8 @@ class Post
     ensure_than(title, "title: is empty", &.size.>(0))
   end
 
-  has_many post_tags : PostTag, foreign_key: "post_id"
-  has_many tags : Tag, through: PostTag, foreign_key: :tag_id, own_key: :post_id
+  has_many post_tags : PostTag
+  has_many tags : Tag, through: PostTag
 
   # belongs_to user : User, counter_cache: :posts_count
   belongs_to user : User, counter_cache: true
@@ -100,7 +100,7 @@ class Tag
 
   column name : String
 
-  has_many posts : Post, through: PostTag, foreign_key: :post_id, own_key: :tag_id
+  has_many posts : Post, through: PostTag
 end
 
 class PostTag
@@ -129,7 +129,7 @@ class Category
   column name : String
 
   has_many posts : Post
-  has_many users : User, through: Post, foreign_key: :user_id, own_key: :category_id
+  has_many users : User, through: Post
 
   timestamps
 end
