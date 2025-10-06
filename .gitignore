@@ -10,7 +10,7 @@
 
 /bin/crystal-coverage*
 /bin/ameba
-/bin/clear-cli
+/bin/lustra-cli
 
 # deps of some tools
 /node_modules

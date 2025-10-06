@@ -75,8 +75,8 @@ class Lustra::TSVector
   module Converter
     def self.to_column(x) : Lustra::TSVector?
       case x
-      when Slice # < Here bug of the crystal compiler with Slice(UInt8), do not want to compile
-        Lustra::TSVector.decode(x.as(Slice(UInt8)))
+      when Slice(UInt8)
+        Lustra::TSVector.decode(x)
       when Lustra::TSVector
         x
       when Nil

@@ -344,11 +344,11 @@ class Lustra::Expression
   # :nodoc:
   # Used internally by the expression engine.
   macro method_missing(call)
-     {% if call.args.size > 0 %}
-       args = {{call.args}}.map { |x| Lustra::Expression[x] }
-       return Node::Function.new("{{call.name.id}}", args)
-     {% else %}
-       return Node::Variable.new({{call.name.id.stringify}})
-     {% end %}
+    {% if call.args.size > 0 %}
+      args = {{call.args}}.map { |x| Lustra::Expression[x] }
+      return Node::Function.new("{{call.name.id}}", args)
+    {% else %}
+      return Node::Variable.new({{call.name.id.stringify}})
+    {% end %}
   end
 end

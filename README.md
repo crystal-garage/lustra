@@ -1,10 +1,10 @@
-<p align="center"><img src="design/logo1.png" alt="clear" height="200px"></p>
+<p align="center"><img src="design/logo.png" alt="lustra" height="200px"></p>
 
 # Lustra
 
 ![Crystal CI](https://github.com/crystal-garage/lustra/workflows/Crystal%20CI/badge.svg)
 [![GitHub release](https://img.shields.io/github/release/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/releases)
-[![License](https://img.shields.io/github/license/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/blob/develop/LICENSE)
 
 
 Lustra is an ORM built specifically for PostgreSQL in Crystal.
@@ -35,8 +35,6 @@ You don't want to use Lustra if:
 
 - [ ] You're not willing to use on PostgreSQL
 - [ ] You look for a minimalist ORM / Data Mapper
-- [ ] You need something which doesn't evolve, with breaking changes.
-      Lustra is still in alpha but starting to mature !
 
 ## Features
 
@@ -135,9 +133,10 @@ In `shards.yml`
 
 ```yml
 dependencies:
-  clear:
-    github: crystal-garage/clear
+  lustra:
+    github: crystal-garage/lustra
     branch: develop
+    version: ">= 0.9.0"
 ```
 
 Then:
@@ -148,7 +147,7 @@ require "lustra"
 
 ### Model definition
 
-Lustra offers some mixins, just include them in your classes to _clear_ them:
+Lustra offers some mixins, just include them in your classes:
 
 #### Column mapping
 
@@ -486,7 +485,7 @@ Lustra is offering SQL logging tools, with SQL syntax colorizing in your termina
 For activation, simply setup the logger to `DEBUG` level !
 
 ```crystal
-Log.builder.bind "clear.*", :debug, Log::IOBackend.new(STDOUT)
+Log.builder.bind "lustra.*", :debug, Log::IOBackend.new(STDOUT)
 ```
 
 ### Save & validation
