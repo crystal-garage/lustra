@@ -1,4 +1,4 @@
-<p align="center"><img src="design/logo1.png" alt="lustra" height="200px"></p>
+<p align="center"><img src="design/logo.png" alt="lustra" height="200px"></p>
 
 # Lustra
 
