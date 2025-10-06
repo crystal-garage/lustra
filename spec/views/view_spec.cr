@@ -36,7 +36,7 @@ module ViewSpec
         Lustra::Migration::Manager.instance.apply_all
 
         # Ensure than the view is loaded and working properly
-        Lustra::SQL.select.from("room_per_days").agg("count(day)", Int64).should eq(4*365)
+        Lustra::SQL.select.from("room_per_days").agg("COUNT(day)", Int64).should eq(4*365)
         Lustra::View.clear
       end
     end
