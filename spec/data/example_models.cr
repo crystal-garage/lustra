@@ -29,7 +29,7 @@ class User
   column notification_preferences : JSON::Any, presence: false
   column last_comment_at : Time?
 
-  has_many posts : Post
+  has_many posts : Post, autosave: true
   has_many comments : Comment
   has_one info : UserInfo?
   has_many categories : Category, through: Post
