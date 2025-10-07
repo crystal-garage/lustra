@@ -365,21 +365,6 @@ module CollectionSpec
           end
         end
 
-        it "create from has_many through relation" do
-          temporary do
-            reinit_example_models
-
-            user = User.create!(first_name: "John")
-            post = Post.create!(title: "Title", user: user)
-
-            tag = Tag.create!(name: "Tag1")
-            post.tags << tag
-
-            Tag.query.count.should eq(1)
-            PostTag.query.count.should eq(1)
-          end
-        end
-
         it "create! method for has_many through works correctly" do
           temporary do
             reinit_example_models
@@ -445,21 +430,6 @@ module CollectionSpec
           end
         end
 
-        it "create with << operator from has_many through relation" do
-          temporary do
-            reinit_example_models
-
-            user = User.create!(first_name: "John")
-            post = Post.create!(title: "Title", user: user)
-
-            tag = Tag.create!(name: "Tag1")
-            post.tags << tag
-
-            Tag.query.count.should eq(1)
-            PostTag.query.count.should eq(1)
-          end
-        end
-
         it "create from has_many through relation" do
           temporary do
             reinit_example_models
@@ -471,6 +441,57 @@ module CollectionSpec
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
+          end
+        end
+      end
+
+      describe "#<< operator" do
+        it "works with has_many association (user.posts << post)" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.new({title: "Test Post"})
+
+            user.posts << post
+
+            post.persisted?.should be_true
+            post.user_id.should eq(user.id)
+            user.posts.count.should eq(1)
+          end
+        end
+
+        it "works with has_many through association (post.tags << tag)" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+            tag = Tag.create!(name: "Tag1")
+
+            post.tags << tag
+
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1)
+
+            post.tags.count.should eq(1)
+            post.tags.first!.name.should eq("Tag1")
+          end
+        end
+
+        it "prevents duplicate associations in has_many through" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+            tag = Tag.create!(name: "Tag1")
+
+            post.tags << tag
+            post.tags << tag # Add same tag again
+
+            Tag.query.count.should eq(1)
+            PostTag.query.count.should eq(1) # No duplicates!
           end
         end
       end
