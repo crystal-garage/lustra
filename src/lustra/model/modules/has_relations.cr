@@ -37,7 +37,14 @@ module Lustra::Model::HasRelations
   #   has_one owner : User # It assumes the table `users` have a column `passport_id`
   # end
   # ```
-  macro has_one(name, foreign_key = nil, primary_key = nil, no_cache = false, polymorphic = false, foreign_key_type = nil)
+  macro has_one(
+    name,
+    foreign_key = nil,
+    primary_key = nil,
+    no_cache = false,
+    polymorphic = false,
+    foreign_key_type = nil,
+  )
     {%
       foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
       primary_key = primary_key.id if primary_key.is_a?(SymbolLiteral) || primary_key.is_a?(StringLiteral)
@@ -69,7 +76,16 @@ module Lustra::Model::HasRelations
   #   has_many posts : Post, foreign_key: "author_id"
   # end
   # ```
-  macro has_many(name, through = nil, foreign_key = nil, own_key = nil, primary_key = nil, no_cache = false, polymorphic = false, foreign_key_type = nil)
+  macro has_many(
+    name,
+    through = nil,
+    foreign_key = nil,
+    own_key = nil,
+    primary_key = nil,
+    no_cache = false,
+    polymorphic = false,
+    foreign_key_type = nil,
+  )
     {%
       if through != nil
         own_key = own_key.id if own_key.is_a?(SymbolLiteral) || own_key.is_a?(StringLiteral)

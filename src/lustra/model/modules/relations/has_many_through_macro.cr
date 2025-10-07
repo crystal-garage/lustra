@@ -1,7 +1,14 @@
 # :nodoc:
 module Lustra::Model::Relations::HasManyThroughMacro
   # has_many through
-  macro generate(self_type, method_name, relation_type, through, own_key = nil, foreign_key = nil)
+  macro generate(
+    self_type,
+    method_name,
+    relation_type,
+    through,
+    own_key = nil,
+    foreign_key = nil,
+  )
     def {{method_name}} : {{relation_type}}::Collection
       %final_table = {{relation_type}}.table
       %final_pkey = {{relation_type}}.__pkey__

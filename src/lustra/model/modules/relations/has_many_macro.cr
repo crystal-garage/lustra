@@ -1,7 +1,13 @@
 # :nodoc:
 module Lustra::Model::Relations::HasManyMacro
   # has many
-  macro generate(self_type, method_name, relation_type, foreign_key = nil, primary_key = nil)
+  macro generate(
+    self_type,
+    method_name,
+    relation_type,
+    foreign_key = nil,
+    primary_key = nil,
+  )
     # The method {{method_name}} is a `has_many` relation to {{relation_type}}
     def {{method_name}} : {{relation_type}}::Collection
       %primary_key = {{(primary_key || "__pkey__").id}}
