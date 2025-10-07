@@ -511,10 +511,8 @@ module Lustra::Model
       self << item
     end
 
-    # Handle append_operation for has_many through relationships
     private def handle_append_operation(item : T)
-      append_operation = self.append_operation
-      if append_operation
+      if append_operation = self.append_operation
         append_operation.call(item)
         @cached_result.try &.<<(item)
       end
