@@ -198,7 +198,7 @@ module Lustra::Model
     # Parent model context for autosave functionality
     property parent_model : Lustra::Model?
     property association_name : String?
-    property autosave : Bool = false
+    property? autosave : Bool = false
 
     # :nodoc:
     def initialize(
@@ -394,7 +394,7 @@ module Lustra::Model
       yield(r)
 
       # Register with parent model for autosave functionality
-      if autosave && (pm = parent_model) && (an = association_name)
+      if autosave? && (pm = parent_model) && (an = association_name)
         pm.add_built_association(an, r)
       end
 
