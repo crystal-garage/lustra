@@ -2,7 +2,13 @@
 module Lustra::Model::Relations::HasOneMacro
   # :nodoc:
   # Write down the code for Has one relation
-  macro generate(self_type, method_name, relation_type, foreign_key, primary_key)
+  macro generate(
+    self_type,
+    method_name,
+    relation_type,
+    foreign_key,
+    primary_key,
+  )
     # Return the related model `{{method_name}}`.
     #
     # This relation is of type one to zero or one [1, 0..1]
