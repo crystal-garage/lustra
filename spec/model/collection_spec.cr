@@ -338,8 +338,8 @@ module CollectionSpec
         end
       end
 
-      describe "#create!" do
-        it "create from has_many relation" do
+      describe "#create / #create!" do
+        it "create! from has_many relation" do
           temporary do
             reinit_example_models
 
@@ -352,7 +352,7 @@ module CollectionSpec
           end
         end
 
-        it "create from has_many relation with block" do
+        it "create! from has_many relation with block" do
           temporary do
             reinit_example_models
 
@@ -365,7 +365,19 @@ module CollectionSpec
           end
         end
 
-        it "create! method for has_many through works correctly" do
+        it "create! raises exception if validation failed" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            expect_raises(Lustra::Model::InvalidError) do
+              user.posts.create!(title: "")
+            end
+          end
+        end
+
+        it "create! for has_many through" do
           temporary do
             reinit_example_models
 
@@ -382,7 +394,7 @@ module CollectionSpec
           end
         end
 
-        it "create method for has_many through works correctly" do
+        it "create for has_many through" do
           temporary do
             reinit_example_models
 
@@ -398,22 +410,10 @@ module CollectionSpec
             post.tags.first!.name.should eq("Tag1")
           end
         end
-
-        it "raise exception if validation failed" do
-          temporary do
-            reinit_example_models
-
-            user = User.create!(first_name: "name")
-
-            expect_raises(Lustra::Model::InvalidError) do
-              user.posts.create!(title: "")
-            end
-          end
-        end
       end
 
       describe "#find_or_create" do
-        it "create from has_many relation" do
+        it "from has_many relation" do
           temporary do
             reinit_example_models
 
@@ -430,7 +430,7 @@ module CollectionSpec
           end
         end
 
-        it "create from has_many through relation" do
+        it "from has_many through relation" do
           temporary do
             reinit_example_models
 
