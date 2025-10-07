@@ -349,10 +349,10 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post.tags << tag1
           post.tags << tag1 # Add same tag again
 
-          # Should still only have one instance in the collection
+          # Should prevent duplicate associations
           post.tags.count.should eq(1)
-          # But creates duplicate PostTag records (this is current behavior)
-          PostTag.query.where({post_id: post.id, tag_id: tag1.id}).count.should eq(2)
+          # Should only create one PostTag record (no duplicates)
+          PostTag.query.where({post_id: post.id, tag_id: tag1.id}).count.should eq(1)
         end
       end
 
