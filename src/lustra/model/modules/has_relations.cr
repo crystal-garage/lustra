@@ -37,7 +37,15 @@ module Lustra::Model::HasRelations
   #   has_one owner : User # It assumes the table `users` have a column `passport_id`
   # end
   # ```
-  macro has_one(name, foreign_key = nil, primary_key = nil, no_cache = false, polymorphic = false, foreign_key_type = nil)
+  macro has_one(
+    name,
+    foreign_key = nil,
+    primary_key = nil,
+    no_cache = false,
+    polymorphic = false,
+    foreign_key_type = nil,
+    autosave = false,
+  )
     {%
       foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
       primary_key = primary_key.id if primary_key.is_a?(SymbolLiteral) || primary_key.is_a?(StringLiteral)
@@ -69,7 +77,17 @@ module Lustra::Model::HasRelations
   #   has_many posts : Post, foreign_key: "author_id"
   # end
   # ```
-  macro has_many(name, through = nil, foreign_key = nil, own_key = nil, primary_key = nil, no_cache = false, polymorphic = false, foreign_key_type = nil)
+  macro has_many(
+    name,
+    through = nil,
+    foreign_key = nil,
+    own_key = nil,
+    primary_key = nil,
+    no_cache = false,
+    polymorphic = false,
+    foreign_key_type = nil,
+    autosave = false,
+  )
     {%
       if through != nil
         own_key = own_key.id if own_key.is_a?(SymbolLiteral) || own_key.is_a?(StringLiteral)
@@ -87,6 +105,7 @@ module Lustra::Model::HasRelations
           foreign_key_type: foreign_key_type,
 
           polymorphic: polymorphic,
+          autosave:    autosave,
         }
       else
         foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
@@ -103,6 +122,7 @@ module Lustra::Model::HasRelations
 
           no_cache:    no_cache,
           polymorphic: polymorphic,
+          autosave:    autosave,
         }
       end
     %}
@@ -185,7 +205,8 @@ module Lustra::Model::HasRelations
           {{name}},
           {{settings[:type]}},
           {{settings[:foreign_key]}},
-          {{settings[:primary_key]}}
+          {{settings[:primary_key]}},
+          {{settings[:autosave]}}
         )
       {% elsif settings[:relation_type] == :has_many_through %}
         Relations::HasManyThroughMacro.generate(
@@ -194,7 +215,8 @@ module Lustra::Model::HasRelations
           {{settings[:type]}},
           {{settings[:through]}},
           {{settings[:own_key]}},
-          {{settings[:foreign_key]}}
+          {{settings[:foreign_key]}},
+          {{settings[:autosave]}}
         )
       {% elsif settings[:relation_type] == :has_one %}
         Relations::HasOneMacro.generate(

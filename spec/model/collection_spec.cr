@@ -414,7 +414,7 @@ module CollectionSpec
           end
         end
 
-        it "build + save! method for has_many through works correctly" do
+        it "build + save! method for has_many through works correctly with autosave: true" do
           temporary do
             reinit_example_models
 
@@ -427,7 +427,7 @@ module CollectionSpec
             tag1 = post.tags.build(name: "Tag1")
             tag2 = post.tags.build(name: "Tag2")
 
-            # Save parent with all built associations
+            # Save parent with all built associations (autosave: true on Post.tags)
             post.save!
 
             Tag.query.count.should eq(2)
@@ -436,6 +436,24 @@ module CollectionSpec
             post.tags.count.should eq(2)
             post.tags.map(&.name).should contain("Tag1")
             post.tags.map(&.name).should contain("Tag2")
+          end
+        end
+
+        it "build + save! does NOT autosave when autosave: false (default)" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+
+            # Build posts without autosave (default is autosave: false)
+            post1 = user.posts.build(title: "Post 1")
+            post2 = user.posts.build(title: "Post 2")
+
+            # Save parent - should NOT save built posts (autosave: false)
+            user.save!
+
+            Post.query.count.should eq(0)
+            user.posts.count.should eq(0)
           end
         end
 

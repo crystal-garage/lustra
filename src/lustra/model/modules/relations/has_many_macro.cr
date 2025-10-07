@@ -1,7 +1,14 @@
 # :nodoc:
 module Lustra::Model::Relations::HasManyMacro
   # has many
-  macro generate(self_type, method_name, relation_type, foreign_key = nil, primary_key = nil)
+  macro generate(
+    self_type,
+    method_name,
+    relation_type,
+    foreign_key = nil,
+    primary_key = nil,
+    autosave = false,
+  )
     # The method {{method_name}} is a `has_many` relation to {{relation_type}}
     def {{method_name}} : {{relation_type}}::Collection
       %primary_key = {{(primary_key || "__pkey__").id}}
@@ -37,8 +44,11 @@ module Lustra::Model::Relations::HasManyMacro
       }
 
       # Set parent model context for autosave functionality
-      query.parent_model = self
-      query.association_name = "{{method_name}}"
+      {% if autosave %}
+        query.parent_model = self
+        query.association_name = "{{method_name}}"
+        query.autosave = true
+      {% end %}
 
       query
     end

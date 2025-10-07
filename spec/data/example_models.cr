@@ -71,7 +71,7 @@ class Post
   end
 
   has_many post_tags : PostTag
-  has_many tags : Tag, through: PostTag
+  has_many tags : Tag, through: PostTag, autosave: true
 
   # belongs_to user : User, counter_cache: :posts_count
   belongs_to user : User, counter_cache: true
