@@ -83,12 +83,6 @@ module Lustra::Model
       !built_associations.empty?
     end
 
-    # Trigger append operation for through associations (called by autosave system)
-    def __trigger_append_operation__(parent_model : Lustra::Model, association_name : String)
-      # This will be implemented by the has_many_through macro
-      # to create the through association records
-    end
-
     # Force to clean-up the caches for the relations
     # connected to this model.
     def invalidate_caching : self
