@@ -11,7 +11,7 @@ init = <<-SQL
     CREATE INDEX benchmark_y ON benchmark (y);
 
     INSERT INTO benchmark
-    SELECT i AS x, 2*i as y
+    SELECT i AS x, 2*i AS y
     FROM generate_series(1, 1000000) AS i;
   end
   SQL

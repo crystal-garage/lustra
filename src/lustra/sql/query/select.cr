@@ -48,7 +48,7 @@ module Lustra::SQL::Query::Select
   #
   # ```
   # select({user_id: "uid", updated_at: "updated_at"})
-  # # => Output "SELECT user_id as uid, updated_at as updated_at"
+  # # => Output "SELECT user_id AS uid, updated_at AS updated_at"
   # ```
   def select(*args)
     args.each do |arg|

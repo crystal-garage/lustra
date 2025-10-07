@@ -32,7 +32,7 @@ module CTESpec
           .join(:posts) { posts.user_id == users.id }
           .join(:post_tags) { post_tags.post_id == posts.id }
           .join(:tags) { tags.id == post_tags.tag_id }
-          .select("users.*, COUNT(DISTINCT tags.id) as tag_count")
+          .select("users.*, COUNT(DISTINCT tags.id) AS tag_count")
           .group_by("users.id")
 
         # Query users with multiple tags using the CTE - returns User instances

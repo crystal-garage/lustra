@@ -66,7 +66,7 @@ module Lustra::Model::HasColumns
   # Access is read only and updating the model columns will not apply change to theses columns.
   #
   # ```
-  # model = Model.query.select("MIN(id) as min_id").first(fetch_columns: true)
+  # model = Model.query.select("MIN(id) AS min_id").first(fetch_columns: true)
   # id = model["min_id"].to_i32
   # ```
   def [](x) : ::Lustra::SQL::Any

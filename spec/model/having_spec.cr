@@ -32,9 +32,9 @@ module HavingSpec
           .join(:posts) { posts.user_id == users.id }
           .join(:post_tags) { post_tags.post_id == posts.id }
           .join(:tags) { tags.id == post_tags.tag_id }
-          .select("users.*, count(distinct tags.id) as tag_count")
+          .select("users.*, COUNT(distinct tags.id) AS tag_count")
           .group_by("users.id")
-          .having { raw("count(distinct tags.id) > 1") }
+          .having { raw("COUNT(distinct tags.id) > 1") }
 
         users_with_multiple_tags.size.should eq(1)
         users_with_multiple_tags.first!.first_name.should eq("User 1")

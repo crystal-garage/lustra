@@ -51,14 +51,22 @@ module Lustra::Model::Relations::HasManyThroughMacro
       qry.append_operation = -> (x : {{relation_type}}) {
         x.save! unless x.persisted?
 
-        through_model = {{through}}.new
+        # Check if the association already exists to prevent duplicates
+        existing = {{through}}.query.where({
+          %own_key => current_model_id,
+          %through_key => x.__pkey__
+        }).first
 
-        through_model.reset({
-          "#{%own_key}" => current_model_id,
-          "#{%through_key}" => x.__pkey__
-        })
+        unless existing
+          through_model = {{through}}.new
 
-        through_model.save!
+          through_model.reset({
+            "#{%own_key}" => current_model_id,
+            "#{%through_key}" => x.__pkey__
+          })
+
+          through_model.save!
+        end
 
         x
       }
