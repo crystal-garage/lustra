@@ -36,9 +36,9 @@ module HavingSpec
           .group_by("users.id")
           .having { raw("COUNT(distinct tags.id) > 1") }
 
-          users_with_multiple_tags.to_sql.should eq(
-            "SELECT users.*, COUNT(distinct tags.id) AS tag_count FROM \"users\" INNER JOIN posts ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"post_tags\" ON (\"post_tags\".\"post_id\" = \"posts\".\"id\") INNER JOIN \"tags\" ON (\"tags\".\"id\" = \"post_tags\".\"tag_id\") GROUP BY users.id HAVING COUNT(distinct tags.id) > 1"
-          )
+        users_with_multiple_tags.to_sql.should eq(
+          "SELECT users.*, COUNT(distinct tags.id) AS tag_count FROM \"users\" INNER JOIN posts ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"post_tags\" ON (\"post_tags\".\"post_id\" = \"posts\".\"id\") INNER JOIN \"tags\" ON (\"tags\".\"id\" = \"post_tags\".\"tag_id\") GROUP BY users.id HAVING COUNT(distinct tags.id) > 1"
+        )
 
         users_with_multiple_tags.size.should eq(1)
         users_with_multiple_tags.first!.first_name.should eq("User 1")
