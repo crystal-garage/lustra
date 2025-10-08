@@ -24,7 +24,7 @@ module Lustra::SQL::Query::Join
   end
 
   def cross_join(name : Selectable, lateral = false)
-    join(name, :cross, lateral)
+    join_impl(name, :cross, lateral, nil)
   end
 
   {% for j in ["left", "right", "full_outer", "inner"] %}
