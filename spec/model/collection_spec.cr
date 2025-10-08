@@ -662,7 +662,7 @@ module CollectionSpec
 
           query = User.query.join(:posts).where { posts.title == "title 2" }
           query.to_sql.should eq(
-            "SELECT \"users\".* FROM \"users\" INNER JOIN posts ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
           )
 
           results = query.to_a
@@ -682,7 +682,7 @@ module CollectionSpec
 
           query = Post.query.join(:user).where { posts.title == "title 2" }
           query.to_sql.should eq(
-            "SELECT \"posts\".* FROM \"posts\" INNER JOIN users ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
+            "SELECT \"posts\".* FROM \"posts\" INNER JOIN \"users\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
           )
 
           if post = query.find { users.first_name == "user" }
@@ -701,7 +701,7 @@ module CollectionSpec
 
           query = User.query.left_join(:posts).group_by("users.id")
           query.to_sql.should eq(
-            "SELECT \"users\".* FROM \"users\" LEFT JOIN posts ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
+            "SELECT \"users\".* FROM \"users\" LEFT JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
           )
 
           results = query.to_a
@@ -719,7 +719,7 @@ module CollectionSpec
           # Should work with "posts" (String) as well as :posts (Symbol)
           query = User.query.join("posts")
           query.to_sql.should eq(
-            "SELECT \"users\".* FROM \"users\" INNER JOIN posts ON (\"posts\".\"user_id\" = \"users\".\"id\")"
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\")"
           )
 
           results = query.to_a
@@ -737,7 +737,31 @@ module CollectionSpec
           # has_one :info
           query = User.query.join(:info)
           query.to_sql.should eq(
-            "SELECT \"users\".* FROM \"users\" INNER JOIN user_infos ON (\"user_infos\".\"user_id\" = \"users\".\"id\")"
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"user_infos\" ON (\"user_infos\".\"user_id\" = \"users\".\"id\")"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user.id)
+        end
+      end
+
+      it "join with has_many through association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "title", user_id: user.id
+
+          category = Category.create! name: "Tech"
+          post.update!(category_id: category.id)
+
+          # User has_many :categories, through: Post
+          query = User.query.join(:categories)
+
+          # Should generate TWO joins: posts and categories
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"categories\" ON (\"categories\".\"id\" = \"posts\".\"category_id\")"
           )
 
           results = query.to_a
