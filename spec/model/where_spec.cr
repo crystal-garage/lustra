@@ -379,17 +379,32 @@ module WhereSpec
           post3 = Post.create!(title: "Another Tech Post", user_id: user2.id, category_id: category1.id, published: false)
 
           # Test complex JOIN with WHERE conditions
-          results = Post.query
-            .inner_join(:users) { users.id == posts.user_id }
-            .inner_join(:categories) { categories.id == posts.category_id }
+          results1 = Post.query
+            .inner_join(:users) { posts.user_id == users.id }
+            .inner_join(:categories) { posts.category_id == categories.id }
             .where do
               (users.active == true) &
                 (categories.name == "Technology") &
                 (posts.published == true)
             end
 
-          results.size.should eq(1)
-          results.first!.title.should eq("Tech Post")
+          results2 = Post.query
+            .inner_join(:user)
+            .inner_join(:category)
+            .where do
+              (users.active == true) &
+                (categories.name == "Technology") &
+                (posts.published == true)
+            end
+
+          results1.to_sql.should eq(results2.to_sql)
+
+          results1.to_sql.should eq(
+            "SELECT \"posts\".* FROM \"posts\" INNER JOIN \"users\" ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"categories\" ON (\"posts\".\"category_id\" = \"categories\".\"id\") WHERE (((\"users\".\"active\" = TRUE) AND (\"categories\".\"name\" = 'Technology')) AND (\"posts\".\"published\" = TRUE))"
+          )
+
+          results1.size.should eq(1)
+          results1.first!.title.should eq("Tech Post")
         end
       end
 

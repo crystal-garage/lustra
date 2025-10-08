@@ -731,6 +731,121 @@ module Lustra::Model
       super(name, type, lateral, clear_expr)
     end
 
+    # Join a relation using association name (auto-detects join conditions)
+    # Overrides the parent join to handle association names without blocks
+    def join(association : Lustra::SQL::Symbolic, type = :inner, lateral = false)
+      auto_join_association(association, type, lateral)
+    end
+
+    {% for j in ["left", "right", "full_outer", "inner"] %}
+      # {{j.id.upcase}} JOIN using association name (auto-detects join conditions)
+      def {{j.id}}_join(association : Lustra::SQL::Symbolic, lateral = false)
+        auto_join_association(association, :{{j.id}}, lateral)
+      end
+    {% end %}
+
+    # Helper to auto-detect join conditions from association metadata
+    private def auto_join_association(association : Lustra::SQL::Symbolic, type, lateral)
+      {% begin %}
+        case association.to_s
+        {% for name, settings in T::RELATIONS %}
+          when "{{name}}"
+            {% if settings[:relation_type] == :has_many %}
+              # has_many :posts => posts.user_id = users.id
+              %foreign_key =
+                {% if settings[:foreign_key] %}
+                  "{{settings[:foreign_key]}}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              %relation_table = {{settings[:type]}}.table
+
+              %primary_key =
+                {% if settings[:primary_key] %}
+                  "{{settings[:primary_key]}}"
+                {% else %}
+                  T.__pkey__
+                {% end %}
+
+              condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
+              join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+            {% elsif settings[:relation_type] == :has_one %}
+                # has_one :info => user_infos.user_id = users.id
+                %foreign_key =
+                  {% if settings[:foreign_key] %}
+                    "{{settings[:foreign_key]}}"
+                  {% else %}
+                    T.table.to_s.singularize + "_id"
+                  {% end %}
+
+                # Get the table name from the type (handling nilable like UserInfo?)
+                %relation_table = {{settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id}}.table
+
+                %primary_key =
+                  {% if settings[:primary_key] %}
+                    "{{settings[:primary_key]}}"
+                  {% else %}
+                    T.__pkey__
+                  {% end %}
+
+                condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
+                join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+            {% elsif settings[:relation_type] == :belongs_to %}
+              # belongs_to :user => posts.user_id = users.id
+              %foreign_key =
+                {% if settings[:foreign_key] %}
+                  "{{settings[:foreign_key]}}"
+                {% else %}
+                  "{{name}}_id"
+                {% end %}
+
+              %relation_table = {{settings[:type]}}.table
+              %primary_key = {{settings[:type]}}.__pkey__
+
+              condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+              join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+            {% elsif settings[:relation_type] == :has_many_through %}
+              # has_many through requires two joins
+              # Example: User has_many :categories, through: Post
+              # 1. JOIN posts ON posts.user_id = users.id
+              # 2. JOIN categories ON posts.category_id = categories.id
+
+              %through_table = {{settings[:through]}}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{settings[:own_key]}}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              %through_key =
+                {% if settings[:foreign_key] %}
+                  "{{settings[:foreign_key]}}"
+                {% else %}
+                  {{settings[:type]}}.table.to_s.singularize + "_id"
+                {% end %}
+
+              %final_table = {{settings[:type]}}.table
+              %final_pkey = {{settings[:type]}}.__pkey__
+
+              # First join: through table
+              through_condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
+              join(Lustra::SQL.escape(%through_table), type, through_condition, lateral)
+
+              # Second join: final table
+              final_condition = "#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)} = #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_key)}"
+              join(Lustra::SQL.escape(%final_table), type, final_condition, lateral)
+            {% end %}
+        {% end %}
+        else
+          # Unknown association - provide helpful error
+          raise "Unknown association '#{association}' for #{T}. Use join with a block for table names."
+        end
+      {% end %}
+    end
+
     # Delete all the rows which would have been returned by this collection.
     # Is equivalent to `collection.to_delete.execute`
     def delete_all : self

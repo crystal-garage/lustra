@@ -708,23 +708,163 @@ module CollectionSpec
       end
     end
 
-    it "find / find! with join" do
-      temporary do
-        reinit_example_models
+    context "join" do
+      it "find / find! with join using block syntax" do
+        temporary do
+          reinit_example_models
 
-        user = User.create! first_name: "user"
+          user = User.create! first_name: "user"
 
-        Post.create! title: "title 1", user_id: user.id
-        post2 = Post.create! title: "title 2", user_id: user.id
+          Post.create! title: "title 1", user_id: user.id
+          post2 = Post.create! title: "title 2", user_id: user.id
 
-        if post = Post
-             .query
-             .join("users") { users.id == posts.user_id }
-             .find do
-               (users.first_name == "user") &
-                 (posts.title == "title 2")
-             end
-          (post.id).should eq(post2.id)
+          if post = Post
+               .query
+               .join("users") { users.id == posts.user_id }
+               .find do
+                 (users.first_name == "user") &
+                   (posts.title == "title 2")
+               end
+            (post.id).should eq(post2.id)
+          end
+        end
+      end
+
+      it "join with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          Post.create! title: "title 1", user_id: user.id
+          post2 = Post.create! title: "title 2", user_id: user.id
+
+          query = User.query.join(:posts).where { posts.title == "title 2" }
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
+          )
+
+          results = query.to_a
+
+          results.size.should eq(1)
+          results.first.id.should eq(user.id)
+        end
+      end
+
+      it "join with belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          Post.create! title: "title 1", user_id: user.id
+          post2 = Post.create! title: "title 2", user_id: user.id
+
+          query = Post.query.join(:user).where { posts.title == "title 2" }
+          query.to_sql.should eq(
+            "SELECT \"posts\".* FROM \"posts\" INNER JOIN \"users\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
+          )
+
+          if post = query.find { users.first_name == "user" }
+            post.id.should eq(post2.id)
+          end
+        end
+      end
+
+      it "left_join with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user_with_posts = User.create! first_name: "With Posts"
+          user_without_posts = User.create! first_name: "Without Posts"
+          Post.create! title: "Post 1", user_id: user_with_posts.id
+
+          query = User.query.left_join(:posts).group_by("users.id")
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" LEFT JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
+          )
+
+          results = query.to_a
+          results.size.should eq(2)
+        end
+      end
+
+      it "join works with String association name" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          Post.create! title: "title 1", user_id: user.id
+
+          # Should work with "posts" (String) as well as :posts (Symbol)
+          query = User.query.join("posts")
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\")"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+        end
+      end
+
+      it "join with has_one association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          info = UserInfo.create! registration_number: 12345, user_id: user.id
+
+          # has_one :info
+          query1 = User.query.join(:info)
+          query2 = User.query.join(:user_infos) { user_infos.user_id == users.id }
+
+          query1.to_sql.should eq(query2.to_sql)
+
+          query1.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"user_infos\" ON (\"user_infos\".\"user_id\" = \"users\".\"id\")"
+          )
+
+          results = query1.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user.id)
+        end
+      end
+
+      it "join with has_many through association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "title", user_id: user.id
+
+          category = Category.create! name: "Tech"
+          post.update!(category_id: category.id)
+
+          # User has_many :categories, through: Post
+          query1 = User.query.join(:categories)
+
+          query2 = User.query
+            .join(:posts) { posts.user_id == users.id }
+            .join(:categories) { categories.id == posts.category_id }
+
+          query1.to_sql.should eq(query2.to_sql)
+
+          # Should generate TWO joins: posts and categories
+          query1.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"categories\" ON (\"categories\".\"id\" = \"posts\".\"category_id\")"
+          )
+
+          results = query1.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user.id)
+        end
+      end
+
+      it "join raises error for unknown association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Unknown association/) do
+            User.query.join(:unknown_association).to_a
+          end
         end
       end
     end

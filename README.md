@@ -328,6 +328,110 @@ User.query.where { (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |
 end
 ```
 
+##### JOIN operations
+
+Lustra supports automatic join detection from associations, as well as manual joins with custom conditions.
+
+```crystal
+class User
+  include Lustra::Model
+
+  has_many posts : Post
+  has_many categories : Category, through: Post
+  has_one info : UserInfo
+end
+
+class Post
+  include Lustra::Model
+
+  belongs_to user : User
+  belongs_to category : Category
+end
+
+class UserInfo
+  include Lustra::Model
+
+  belongs_to user : User
+end
+
+class Category
+  include Lustra::Model
+
+  has_many posts : Post
+  has_many users : User, through: Post
+end
+```
+
+###### Auto-joins
+
+Simply pass the association name and Lustra will auto-detect the join conditions:
+
+```crystal
+# has_many association
+User.query.join(:posts)
+# Equivalent to:
+User.query.join(:posts) { posts.user_id == users.id }
+# SQL: `INNER JOIN "posts" ON ("posts"."user_id" = "users"."id")`
+
+# belongs_to association
+Post.query.join(:user)
+# Equivalent to:
+Post.query.join(:users) { posts.user_id == users.id }
+# SQL: `INNER JOIN "users" ON ("posts"."user_id" = "users"."id")`
+
+# has_one association
+User.query.join(:info)
+# Equivalent to:
+User.query.join(:user_infos) { user_infos.user_id == users.id }
+# SQL: `INNER JOIN "user_infos" ON ("user_infos"."user_id" = "users"."id")`
+
+# has_many through (automatically generates TWO joins!)
+User.query.join(:categories)  # has_many :categories, through: Post
+# Equivalent to:
+User.query
+  .join(:posts) { posts.user_id == users.id }
+  .join(:categories) { categories.id == posts.category_id }
+# SQL: `INNER JOIN "posts" ON ("posts"."user_id" = "users"."id")
+#      INNER JOIN "categories" ON ("categories"."id" = "posts"."category_id")`
+
+# All join types supported
+User.query.left_join(:posts)
+User.query.right_join(:posts)
+User.query.full_outer_join(:posts)
+User.query.inner_join(:posts)
+
+# Chaining joins
+Post.query
+  .join(:user)
+  .join(:category)
+  .where { (users.active == true) & (categories.name == "Tech") }
+# Equivalent to:
+Post.query
+  .join(:user) { posts.user_id == users.id }
+  .join(:categories) { posts.category_id == categories.id }
+  .where { (users.active == true) & (categories.name == "Tech") }
+```
+
+###### Manual joins with custom conditions
+
+For complex joins or when you need custom conditions, use the block syntax:
+
+```crystal
+# Custom join condition
+User.query.join("infos") { infos.user_id == users.id }
+
+# Multiple joins with custom conditions
+Post.query
+  .join("users") { users.id == posts.user_id }
+  .join("categories") { categories.id == posts.category_id }
+  .where { users.active == true }
+
+# Mix auto-join and manual joins
+User.query
+  .join(:posts)
+  .join("custom_table") { custom_table.user_id == users.id }
+```
+
 ##### Aggregate functions
 
 Call aggregate functions from the query is possible. For complex aggregation,
