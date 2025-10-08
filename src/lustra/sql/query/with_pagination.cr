@@ -30,16 +30,16 @@ module Lustra::SQL::Query::WithPagination
   end
 
   # Return the current page
-  def current_page
+  def current_page : Int32 | Int64
     if offset.nil? || limit.nil?
       1
     else
-      (offset.as(Int64) / limit.as(Int64)) + 1
+      ((offset.as(Int64) / limit.as(Int64)) + 1).to_i
     end
   end
 
   # Return the total number of pages.
-  def total_pages
+  def total_pages : Int32 | Int64
     if limit.nil? || total_entries.nil?
       1
     else
