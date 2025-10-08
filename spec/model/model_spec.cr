@@ -860,6 +860,9 @@ module ModelSpec
           users = User.query.paginate(page: 2, per_page: 5)
           users.map(&.first_name).should eq ["user5", "user6", "user7", "user8", "user9"]
           users.total_entries.should eq 15
+          users.total_pages.should eq 3
+          users.current_page.should eq 2
+          users.per_page.should eq 5
         end
       end
 
