@@ -757,14 +757,20 @@ module CollectionSpec
           post.update!(category_id: category.id)
 
           # User has_many :categories, through: Post
-          query = User.query.join(:categories)
+          query1 = User.query.join(:categories)
+
+          query2 = User.query
+            .join(:posts) { posts.user_id == users.id }
+            .join(:categories) { categories.id == posts.category_id }
+
+          query1.to_sql.should eq(query2.to_sql)
 
           # Should generate TWO joins: posts and categories
-          query.to_sql.should eq(
+          query1.to_sql.should eq(
             "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"categories\" ON (\"categories\".\"id\" = \"posts\".\"category_id\")"
           )
 
-          results = query.to_a
+          results = query1.to_a
           results.size.should eq(1)
           results.first.id.should eq(user.id)
         end
