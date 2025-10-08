@@ -149,7 +149,8 @@ end
 class Relationship
   include Lustra::Model
 
-  primary_key
+  # No primary_key since the table is created with id: false
+  # The composite primary key is (master_id, dependency_id)
 
   belongs_to master : User, foreign_key: "master_id"
   belongs_to dependency : User, foreign_key: "dependency_id"
@@ -218,7 +219,7 @@ class ModelSpecMigration123
       t.timestamps
     end
 
-    create_table "relationships" do |t|
+    create_table "relationships", id: false do |t|
       t.references to: "users", name: "master_id", on_delete: "cascade", null: false, primary: true
       t.references to: "users", name: "dependency_id", on_delete: "cascade", null: false, primary: true
 
