@@ -332,6 +332,36 @@ end
 
 Lustra supports automatic join detection from associations, as well as manual joins with custom conditions.
 
+```crystal
+class User
+  include Lustra::Model
+
+  has_many posts : Post
+  has_many categories : Category, through: Post
+  has_one info : UserInfo
+end
+
+class Post
+  include Lustra::Model
+
+  belongs_to user : User
+  belongs_to category : Category
+end
+
+class UserInfo
+  include Lustra::Model
+
+  belongs_to user : User
+end
+
+class Category
+  include Lustra::Model
+
+  has_many posts : Post
+  has_many users : User, through: Post
+end
+```
+
 ###### Auto-joins
 
 Simply pass the association name and Lustra will auto-detect the join conditions:
@@ -378,7 +408,7 @@ Post.query
 # Equivalent to:
 Post.query
   .join(:user) { posts.user_id == users.id }
-  .join(:category) { posts.category_id == categories.id }
+  .join(:categories) { posts.category_id == categories.id }
   .where { (users.active == true) & (categories.name == "Tech") }
 ```
 
