@@ -249,9 +249,7 @@ module Lustra::Model::HasColumns
       super
 
       {% verbatim do %}
-
         {% for name, typ in T %}
-
           {% if settings = COLUMNS["#{name}"] %}
             @{{settings[:crystal_variable_name]}}_column.reset_convert(t[:{{name}}])
           {% else %}
@@ -262,6 +260,7 @@ module Lustra::Model::HasColumns
           {% end %}
         {% end %}
       {% end %}
+
       self
     end
 
@@ -279,6 +278,7 @@ module Lustra::Model::HasColumns
           @{{settings[:crystal_variable_name]}}_column.reset_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
         {% end %}
       {% end %}
+
       self
     end
 
@@ -425,11 +425,11 @@ module Lustra::Model::HasColumns
     def to_json(json, emit_nulls = false)
       json.object do
         {% for name, settings in COLUMNS %}
-        if emit_nulls || @{{settings[:crystal_variable_name]}}_column.defined?
-          json.field {{settings[:db_column_name]}} do
-            @{{settings[:crystal_variable_name]}}_column.value(nil).to_json(json)
+          if emit_nulls || @{{settings[:crystal_variable_name]}}_column.defined?
+            json.field {{settings[:db_column_name]}} do
+              @{{settings[:crystal_variable_name]}}_column.value(nil).to_json(json)
+            end
           end
-        end
         {% end %}
       end
     end
@@ -438,7 +438,7 @@ module Lustra::Model::HasColumns
     #   have been changed.). Return `false` otherwise.
     def changed?
       {% for name, settings in COLUMNS %}
-          return true if @{{settings[:crystal_variable_name]}}_column.changed?
+        return true if @{{settings[:crystal_variable_name]}}_column.changed?
       {% end %}
 
       return false
