@@ -752,7 +752,7 @@ module Lustra::Model
 
               # Build condition string and call parent join
               condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
-              join(%relation_table, type, condition, lateral)
+              join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :has_one %}
                 # has_one :info => user_infos.user_id = users.id
                 %foreign_key =
@@ -774,7 +774,7 @@ module Lustra::Model
 
                 # Build condition string and call parent join
                 condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
-                join(%relation_table, type, condition, lateral)
+                join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
               # belongs_to :user => posts.user_id = users.id
               %foreign_key =
@@ -788,9 +788,39 @@ module Lustra::Model
               %primary_key = {{settings[:type]}}.__pkey__
 
               condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
-              join(%relation_table, type, condition, lateral)
+              join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :has_many_through %}
-              raise "join(:{{name}}) - has_many through associations require explicit join conditions. Use join with a block instead."
+              # has_many through requires two joins
+              # Example: User has_many :categories, through: Post
+              # 1. JOIN posts ON posts.user_id = users.id
+              # 2. JOIN categories ON posts.category_id = categories.id
+
+              %through_table = {{settings[:through]}}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{settings[:own_key]}}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              %through_key =
+                {% if settings[:foreign_key] %}
+                  "{{settings[:foreign_key]}}"
+                {% else %}
+                  {{settings[:type]}}.table.to_s.singularize + "_id"
+                {% end %}
+
+              %final_table = {{settings[:type]}}.table
+              %final_pkey = {{settings[:type]}}.__pkey__
+
+              # First join: through table (escape table names)
+              through_condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
+              join(Lustra::SQL.escape(%through_table), type, through_condition, lateral)
+
+              # Second join: final table (escape table names)
+              final_condition = "#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)} = #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_key)}"
+              join(Lustra::SQL.escape(%final_table), type, final_condition, lateral)
             {% end %}
         {% end %}
         else
