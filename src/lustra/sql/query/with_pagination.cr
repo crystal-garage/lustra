@@ -25,14 +25,14 @@ module Lustra::SQL::Query::WithPagination
   end
 
   # Return the number of items maximum per page.
-  def per_page
-    limit
+  def per_page : Int32 | Int64
+    limit.try(&.to_i) || DEFAULT_LIMIT
   end
 
   # Return the current page
   def current_page : Int32 | Int64
     if offset.nil? || limit.nil?
-      1
+      DEFAULT_PAGE
     else
       ((offset.as(Int64) / limit.as(Int64)) + 1).to_i
     end
