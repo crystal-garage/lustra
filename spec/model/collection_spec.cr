@@ -410,6 +410,18 @@ module CollectionSpec
             post.tags.first!.name.should eq("Tag1")
           end
         end
+
+        it "raise exception if validation failed" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+
+            expect_raises(Lustra::Model::InvalidError) do
+              user.posts.create!(title: "")
+            end
+          end
+        end
       end
 
       describe "#find_or_create" do
@@ -492,6 +504,72 @@ module CollectionSpec
 
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1) # No duplicates!
+          end
+        end
+      end
+
+      context "autosave functionality" do
+        it "build + save! for has_many with autosave: true" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+
+            # Build posts with autosave (User.posts has autosave: true)
+            post1 = user.posts.build(title: "Post 1")
+            post2 = user.posts.build(title: "Post 2")
+
+            # Save parent with all built posts
+            user.save!
+
+            Post.query.count.should eq(2)
+            user.posts.count.should eq(2)
+
+            post1.persisted?.should be_true
+            post1.user_id.should eq(user.id)
+            post2.persisted?.should be_true
+            post2.user_id.should eq(user.id)
+          end
+        end
+
+        it "build + save! for has_many through with autosave: true" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+            post = Post.create!(title: "Title", user: user)
+
+            # Build associations (Post.tags has autosave: true)
+            tag1 = post.tags.build(name: "Tag1")
+            tag2 = post.tags.build(name: "Tag2")
+
+            # Save parent with all built associations
+            post.save!
+
+            Tag.query.count.should eq(2)
+            PostTag.query.count.should eq(2)
+
+            post.tags.count.should eq(2)
+            post.tags.map(&.name).should contain("Tag1")
+            post.tags.map(&.name).should contain("Tag2")
+          end
+        end
+
+        it "does NOT autosave when autosave: false (default)" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John")
+
+            # Build comments without autosave (User.comments has no autosave)
+            comment1 = user.comments.build(content: "Comment 1")
+            comment2 = user.comments.build(content: "Comment 2")
+
+            # Save parent - should NOT save built comments (autosave: false)
+            user.save!
+
+            Comment.query.count.should eq(0)
+            user.comments.count.should eq(0)
           end
         end
       end

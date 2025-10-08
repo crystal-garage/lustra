@@ -195,6 +195,11 @@ module Lustra::Model
     # :nodoc:
     property unlink_operation : Proc(T, T)?
 
+    # Parent model context for autosave functionality
+    property parent_model : Lustra::Model?
+    property association_name : String?
+    property? autosave : Bool = false
+
     # :nodoc:
     def initialize(
       @distinct_value = nil,
@@ -388,6 +393,11 @@ module Lustra::Model
 
       yield(r)
 
+      # Register with parent model for autosave functionality
+      if autosave? && (pm = parent_model) && (an = association_name)
+        pm.add_built_association(an, r)
+      end
+
       r
     end
 
@@ -516,6 +526,14 @@ module Lustra::Model
         append_operation.call(item)
         @cached_result.try &.<<(item)
       end
+    end
+
+    # Save a model and handle append_operation for has_many through relationships
+    # This allows the build + save pattern to work
+    def save!(item : T)
+      item.save!
+      handle_append_operation(item)
+      item
     end
 
     # Unlink the model currently referenced through a relation `has_many through`

@@ -29,7 +29,7 @@ class User
   column notification_preferences : JSON::Any, presence: false
   column last_comment_at : Time?
 
-  has_many posts : Post
+  has_many posts : Post, autosave: true
   has_many comments : Comment
   has_one info : UserInfo?
   has_many categories : Category, through: Post
@@ -71,7 +71,7 @@ class Post
   end
 
   has_many post_tags : PostTag
-  has_many tags : Tag, through: PostTag
+  has_many tags : Tag, through: PostTag, autosave: true
 
   # belongs_to user : User, counter_cache: :posts_count
   belongs_to user : User, counter_cache: true

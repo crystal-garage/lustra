@@ -44,6 +44,7 @@ module Lustra::Model::HasRelations
     no_cache = false,
     polymorphic = false,
     foreign_key_type = nil,
+    autosave = false,
   )
     {%
       foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
@@ -85,6 +86,7 @@ module Lustra::Model::HasRelations
     no_cache = false,
     polymorphic = false,
     foreign_key_type = nil,
+    autosave = false,
   )
     {%
       if through != nil
@@ -103,6 +105,7 @@ module Lustra::Model::HasRelations
           foreign_key_type: foreign_key_type,
 
           polymorphic: polymorphic,
+          autosave:    autosave,
         }
       else
         foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
@@ -119,6 +122,7 @@ module Lustra::Model::HasRelations
 
           no_cache:    no_cache,
           polymorphic: polymorphic,
+          autosave:    autosave,
         }
       end
     %}
@@ -201,7 +205,8 @@ module Lustra::Model::HasRelations
           {{name}},
           {{settings[:type]}},
           {{settings[:foreign_key]}},
-          {{settings[:primary_key]}}
+          {{settings[:primary_key]}},
+          {{settings[:autosave]}}
         )
       {% elsif settings[:relation_type] == :has_many_through %}
         Relations::HasManyThroughMacro.generate(
@@ -210,7 +215,8 @@ module Lustra::Model::HasRelations
           {{settings[:type]}},
           {{settings[:through]}},
           {{settings[:own_key]}},
-          {{settings[:foreign_key]}}
+          {{settings[:foreign_key]}},
+          {{settings[:autosave]}}
         )
       {% elsif settings[:relation_type] == :has_one %}
         Relations::HasOneMacro.generate(

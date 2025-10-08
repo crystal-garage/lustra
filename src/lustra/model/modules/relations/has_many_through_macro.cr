@@ -8,6 +8,7 @@ module Lustra::Model::Relations::HasManyThroughMacro
     through,
     own_key = nil,
     foreign_key = nil,
+    autosave = false,
   )
     def {{method_name}} : {{relation_type}}::Collection
       %final_table = {{relation_type}}.table
@@ -69,6 +70,13 @@ module Lustra::Model::Relations::HasManyThroughMacro
 
         x
       }
+
+      # Set parent model context for autosave functionality
+      {% if autosave %}
+        qry.parent_model = self
+        qry.association_name = "{{method_name}}"
+        qry.autosave = true
+      {% end %}
 
       qry.unlink_operation = -> (x : {{relation_type}}) {
         Lustra::SQL.delete({{through}}.table).where({
@@ -142,6 +150,36 @@ module Lustra::Model::Relations::HasManyThroughMacro
 
       def with_{{method_name}}
         with_{{method_name}} { }
+      end
+    end
+
+    # Handle append operation for through associations (called by autosave system)
+    def __trigger_append_operation_for_association__(association_name : String, models : Array(Lustra::Model))
+      if association_name == "{{method_name}}"
+        %own_key =
+          {% if own_key %}
+            "{{own_key}}"
+          {% else %}
+            {{self_type}}.table.to_s.singularize + "_id"
+          {% end %}
+
+        %through_key =
+          {% if foreign_key %}
+            "{{foreign_key}}"
+          {% else %}
+            {{relation_type}}.table.to_s.singularize + "_id"
+          {% end %}
+
+        models.each do |model|
+          through_model = {{through}}.new
+
+          through_model.reset({
+            %own_key => self.__pkey__,
+            %through_key => model.__pkey__
+          })
+
+          through_model.save!
+        end
       end
     end
   end

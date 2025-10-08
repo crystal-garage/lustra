@@ -64,6 +64,25 @@ module Lustra::Model
       reset(t)
     end
 
+    # Track built associations for autosave functionality
+    property built_associations : Hash(String, Array(Lustra::Model)) = {} of String => Array(Lustra::Model)
+
+    # Add a built association to track for autosave
+    def add_built_association(association_name : String, model : Lustra::Model)
+      built_associations[association_name] ||= [] of Lustra::Model
+      built_associations[association_name] << model
+    end
+
+    # Clear all built associations (called after successful save)
+    def clear_built_associations
+      built_associations.clear
+    end
+
+    # Check if there are any pending built associations
+    def has_built_associations? : Bool
+      !built_associations.empty?
+    end
+
     # Force to clean-up the caches for the relations
     # connected to this model.
     def invalidate_caching : self

@@ -7,6 +7,7 @@ module Lustra::Model::Relations::HasManyMacro
     relation_type,
     foreign_key = nil,
     primary_key = nil,
+    autosave = false,
   )
     # The method {{method_name}} is a `has_many` relation to {{relation_type}}
     def {{method_name}} : {{relation_type}}::Collection
@@ -41,6 +42,13 @@ module Lustra::Model::Relations::HasManyMacro
         x.save!
         x
       }
+
+      # Set parent model context for autosave functionality
+      {% if autosave %}
+        query.parent_model = self
+        query.association_name = "{{method_name}}"
+        query.autosave = true
+      {% end %}
 
       query
     end
