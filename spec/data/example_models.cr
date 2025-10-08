@@ -24,7 +24,7 @@ class User
   column gender : GenderType?
 
   column active : Bool?
-  column posts_count : Int32?
+  column posts_count : Int32, presence: false
 
   column notification_preferences : JSON::Any, presence: false
   column last_comment_at : Time?
