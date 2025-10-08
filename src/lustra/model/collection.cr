@@ -754,9 +754,27 @@ module Lustra::Model
               condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
               join(%relation_table, type, condition, lateral)
             {% elsif settings[:relation_type] == :has_one %}
-              # Skip has_one for now due to nilable type complexity
-              raise "join(:{{name}}) - has_one associations with nilable types not yet supported. Use join with a block instead."
+                # has_one :info => user_infos.user_id = users.id
+                %foreign_key =
+                  {% if settings[:foreign_key] %}
+                    "{{settings[:foreign_key]}}"
+                  {% else %}
+                    T.table.to_s.singularize + "_id"
+                  {% end %}
 
+                # Get the table name from the type (handling nilable like UserInfo?)
+                %relation_table = {{settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id}}.table
+
+                %primary_key =
+                  {% if settings[:primary_key] %}
+                    "{{settings[:primary_key]}}"
+                  {% else %}
+                    T.__pkey__
+                  {% end %}
+
+                # Build condition string and call parent join
+                condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
+                join(%relation_table, type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
               # belongs_to :user => posts.user_id = users.id
               %foreign_key =

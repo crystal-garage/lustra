@@ -727,6 +727,25 @@ module CollectionSpec
         end
       end
 
+      it "join with has_one association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          info = UserInfo.create! registration_number: 12345, user_id: user.id
+
+          # has_one :info
+          query = User.query.join(:info)
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN user_infos ON (\"user_infos\".\"user_id\" = \"users\".\"id\")"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user.id)
+        end
+      end
+
       it "join raises error for unknown association" do
         temporary do
           reinit_example_models
