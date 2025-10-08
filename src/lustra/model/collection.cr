@@ -750,7 +750,6 @@ module Lustra::Model
                   T.__pkey__
                 {% end %}
 
-              # Build condition string and call parent join
               condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
               join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :has_one %}
@@ -772,7 +771,6 @@ module Lustra::Model
                     T.__pkey__
                   {% end %}
 
-                # Build condition string and call parent join
                 condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
                 join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
@@ -814,11 +812,11 @@ module Lustra::Model
               %final_table = {{settings[:type]}}.table
               %final_pkey = {{settings[:type]}}.__pkey__
 
-              # First join: through table (escape table names)
+              # First join: through table
               through_condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
               join(Lustra::SQL.escape(%through_table), type, through_condition, lateral)
 
-              # Second join: final table (escape table names)
+              # Second join: final table
               final_condition = "#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)} = #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_key)}"
               join(Lustra::SQL.escape(%final_table), type, final_condition, lateral)
             {% end %}
