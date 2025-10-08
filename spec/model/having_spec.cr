@@ -28,7 +28,7 @@ module HavingSpec
         user2_post2.tags << tag1
 
         # Find users who have more than 2 tags
-        results1 = User.query
+        results = User.query
           .join(:posts)
           .join(:post_tags) { post_tags.post_id == posts.id }
           .join(:tags) { tags.id == post_tags.tag_id }
@@ -36,12 +36,12 @@ module HavingSpec
           .group_by("users.id")
           .having { raw("COUNT(distinct tags.id) > 1") }
 
-        results1.to_sql.should eq(
+        results.to_sql.should eq(
           "SELECT users.*, COUNT(distinct tags.id) AS tag_count FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"post_tags\" ON (\"post_tags\".\"post_id\" = \"posts\".\"id\") INNER JOIN \"tags\" ON (\"tags\".\"id\" = \"post_tags\".\"tag_id\") GROUP BY users.id HAVING COUNT(distinct tags.id) > 1"
         )
 
-        results1.size.should eq(1)
-        results1.first!.first_name.should eq("User 1")
+        results.size.should eq(1)
+        results.first!.first_name.should eq("User 1")
       end
     end
   end
