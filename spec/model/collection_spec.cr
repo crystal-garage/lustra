@@ -735,12 +735,16 @@ module CollectionSpec
           info = UserInfo.create! registration_number: 12345, user_id: user.id
 
           # has_one :info
-          query = User.query.join(:info)
-          query.to_sql.should eq(
+          query1 = User.query.join(:info)
+          query2 = User.query.join(:user_infos) { user_infos.user_id == users.id }
+
+          query1.to_sql.should eq(query2.to_sql)
+
+          query1.to_sql.should eq(
             "SELECT \"users\".* FROM \"users\" INNER JOIN \"user_infos\" ON (\"user_infos\".\"user_id\" = \"users\".\"id\")"
           )
 
-          results = query.to_a
+          results = query1.to_a
           results.size.should eq(1)
           results.first.id.should eq(user.id)
         end

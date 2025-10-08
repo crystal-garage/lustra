@@ -346,13 +346,13 @@ User.query.join(:posts) { posts.user_id == users.id }
 # belongs_to association
 Post.query.join(:user)
 # Equivalent to:
-Post.query.join(:user) { posts.user_id == users.id }
+Post.query.join(:users) { posts.user_id == users.id }
 # SQL: `INNER JOIN "users" ON ("posts"."user_id" = "users"."id")`
 
 # has_one association
 User.query.join(:info)
 # Equivalent to:
-User.query.join(:info) { user_infos.user_id == users.id }
+User.query.join(:user_infos) { user_infos.user_id == users.id }
 # SQL: `INNER JOIN "user_infos" ON ("user_infos"."user_id" = "users"."id")`
 
 # has_many through (automatically generates TWO joins!)
