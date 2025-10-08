@@ -55,7 +55,7 @@ module Lustra::Model::Relations::HasManyThroughMacro
         existing = {{through}}.query.where({
           %own_key => current_model_id,
           %through_key => x.__pkey__
-        }).first
+        }).exists?
 
         unless existing
           through_model = {{through}}.new
