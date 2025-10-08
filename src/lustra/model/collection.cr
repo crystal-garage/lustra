@@ -72,7 +72,7 @@ require "../sql/select_query"
 #
 # Whenever you want to fetch data from your database, you must create a new collection query:
 #
-# `MyModel.query #Will setup a vanilla 'SELECT * FROM my_models'`
+# `MyModel.query # Will setup a vanilla 'SELECT * FROM my_models'`
 #
 # Queries are fetchable using `each`:
 #
