@@ -614,6 +614,37 @@ module Lustra::Model
       where(tuple).first!
     end
 
+    # Find a model by column values. Returns `nil` if not found.
+    # This is an alias for `find(**tuple)` with better naming.
+    #
+    # ```
+    # user = User.query.find_by(email: "test@example.com")
+    # user = User.query.where { active == true }.find_by(role: "admin")
+    # ```
+    def find_by(**tuple) : T?
+      find(**tuple)
+    end
+
+    # :ditto:
+    def find_by(tuple : NamedTuple, fetch_columns = false) : T?
+      find(tuple, fetch_columns)
+    end
+
+    # Find a model by column values. Raises error if not found.
+    # This is an alias for `find!(**tuple)` with better naming.
+    #
+    # ```
+    # user = User.query.find_by!(email: "test@example.com")
+    # ```
+    def find_by!(**tuple) : T
+      find!(**tuple)
+    end
+
+    # :ditto:
+    def find_by!(tuple : NamedTuple, fetch_columns = false) : T
+      find!(tuple, fetch_columns)
+    end
+
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     def find_or_build(**tuple, & : T -> Nil) : T

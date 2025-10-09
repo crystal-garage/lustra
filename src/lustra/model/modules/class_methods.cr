@@ -110,6 +110,37 @@ module Lustra::Model::ClassMethods
         find(x) || raise Lustra::SQL::RecordNotFoundError.new
       end
 
+      # Find a model by column values. Returns `nil` if not found.
+      # This is an alias for `query.find(**tuple)` with better naming.
+      #
+      # ```
+      # user = User.find_by(email: "test@example.com")
+      # user = User.find_by(first_name: "John", last_name: "Doe")
+      # ```
+      def self.find_by(**tuple)
+        query.find(**tuple)
+      end
+
+      # :ditto:
+      def self.find_by(tuple : NamedTuple)
+        query.find(tuple)
+      end
+
+      # Find a model by column values. Raises error if not found.
+      # This is an alias for `query.find!(**tuple)` with better naming.
+      #
+      # ```
+      # user = User.find_by!(email: "test@example.com")
+      # ```
+      def self.find_by!(**tuple)
+        query.find!(**tuple)
+      end
+
+      # :ditto:
+      def self.find_by!(tuple : NamedTuple)
+        query.find!(tuple)
+      end
+
       # Build a new empty model and fill the columns using the NamedTuple in argument.
       #
       # Returns the new model

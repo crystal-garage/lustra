@@ -279,10 +279,18 @@ To fetch one model:
 # 1. Get the first user
 User.query.first # Get the first user, ordered by primary key
 
-# Get a specific user
-User.find!(1) # Get the first user, or throw exception if not found.
+# Get a specific user by primary key
+User.find!(1) # Returns user with id=1, or raises exception if not found
+User.find(1)  # Returns user with id=1, or nil if not found
 
-# Usage of query provides a `find_by` kind of method:
+# Find by other columns
+user = User.find_by(email: "test@example.com")  # Returns nil if not found
+user = User.find_by!(email: "test@example.com") # Raises error if not found
+
+# Find by multiple columns
+user = User.find_by(first_name: "John", last_name: "Doe")
+
+# Using query with expression engine
 u : User? = User.query.find { email =~ /yacine/i }
 ```
 

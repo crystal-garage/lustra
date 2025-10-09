@@ -59,6 +59,59 @@ module ModelSpec
         end
       end
 
+      it "find_by" do
+        temporary do
+          reinit_example_models
+
+          # Create test users
+          User.create!(id: 1, first_name: "John", last_name: "Doe", active: true)
+          User.create!(id: 2, first_name: "Jane", last_name: "Smith", active: false)
+          User.create!(id: 3, first_name: "Bob", last_name: "Doe", active: true)
+
+          # Test basic find_by with single condition
+          user = User.find_by(first_name: "John")
+          user.should_not be_nil
+          if u = user
+            u.id.should eq(1)
+            u.last_name.should eq("Doe")
+          end
+
+          # Test find_by with multiple conditions
+          user = User.find_by(first_name: "Bob", last_name: "Doe")
+          user.should_not be_nil
+          user.try(&.id).should eq(3)
+
+          # Test find_by returns nil when not found
+          user = User.find_by(first_name: "NonExistent")
+          user.should be_nil
+
+          # Test find_by! raises error when not found
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
+            User.find_by!(first_name: "NonExistent")
+          end
+
+          # Test find_by! returns model when found
+          user = User.find_by!(first_name: "Jane")
+          user.id.should eq(2)
+          user.last_name.should eq("Smith")
+
+          # Test find_by on collection (with chaining)
+          user = User.query.where { active == true }.find_by(last_name: "Doe")
+          user.should_not be_nil
+          # Should return John or Bob (both active with last_name Doe)
+          # find_by returns first match
+          if u = user
+            ["John", "Bob"].should contain(u.first_name)
+          end
+
+          # Test find_by with NamedTuple
+          tuple = {first_name: "Jane", active: false}
+          user = User.find_by(tuple)
+          user.should_not be_nil
+          user.try(&.id).should eq(2)
+        end
+      end
+
       it "update_all" do
         temporary do
           reinit_example_models
