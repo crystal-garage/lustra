@@ -743,6 +743,123 @@ end
 I recommend the 4th method in most of the cases you will faces.
 Simple to write and easy to read !
 
+#### Lifecycle Callbacks
+
+Lustra provides a comprehensive callback system to hook into model lifecycle events. Callbacks allow you to execute code at specific points during a model's lifecycle.
+
+##### Available Callback Events
+
+- `:validate` - Triggered during validation
+- `:save` - Triggered for any save operation (wraps create/update)
+- `:create` - Triggered when a new record is inserted
+- `:update` - Triggered when an existing record is updated
+- `:delete` - Triggered when a record is deleted
+
+##### Callback Directions
+
+- `before` - Executed before the event
+- `after` - Executed after the event
+
+##### Basic Usage
+
+```crystal
+class User
+  include Lustra::Model
+
+  column email : String
+  column name : String
+
+  # Block syntax
+  before(:validate) do |model|
+    model.email = model.email.downcase
+  end
+
+  after(:create) do |model|
+    puts "New user created: #{model.name}"
+  end
+
+  # Method syntax (cleaner for complex logic)
+  before(:save, :normalize_email)
+  after(:delete, :cleanup_user_data)
+
+  def normalize_email
+    self.email = email.strip.downcase
+  end
+
+  def cleanup_user_data
+    # Custom cleanup logic
+    puts "User #{id} deleted, cleaning up..."
+  end
+end
+```
+
+##### Callback Execution Order
+
+**Before callbacks:** Last defined → First defined (reverse order)
+```crystal
+before(:save) { puts "1" }
+before(:save) { puts "2" }
+before(:save) { puts "3" }
+# Execution order: 3, 2, 1
+```
+
+**After callbacks:** First defined → Last defined (normal order)
+```crystal
+after(:save) { puts "1" }
+after(:save) { puts "2" }
+after(:save) { puts "3" }
+# Execution order: 1, 2, 3
+```
+
+##### Common Patterns
+
+**Sanitizing data before validation:**
+```crystal
+before(:validate) do |model|
+  model.email = model.email.strip.downcase if model.email_column.defined?
+end
+```
+
+**Sending notifications after creation:**
+```crystal
+after(:create) do |model|
+  WelcomeMailer.send(model.email)
+end
+```
+
+**Cleanup after deletion:**
+```crystal
+after(:delete) do |model|
+  FileStorage.delete(model.avatar_path) if model.avatar_path
+end
+```
+
+**Auditing changes:**
+```crystal
+after(:update) do |model|
+  AuditLog.create!(
+    model_type: "User",
+    model_id: model.id,
+    action: "update"
+  )
+end
+```
+
+##### Callbacks with Associations
+
+Callbacks work seamlessly with associations like `counter_cache` and `touch`:
+
+```crystal
+class Post
+  include Lustra::Model
+
+  belongs_to user : User, counter_cache: true  # Uses after(:create) and after(:delete)
+  belongs_to category : Category, touch: true   # Uses after(:create) and after(:update)
+end
+```
+
+The `counter_cache` automatically registers `after(:create)` and `after(:delete)` callbacks to increment/decrement the counter on the parent model.
+
 ### Migration
 
 Lustra offers of course a migration system.
