@@ -237,6 +237,90 @@ module Lustra::Model::HasSaving
     true
   end
 
+  # Increment a numeric column by a specific amount (default 1) without running validations or callbacks.
+  # Updates the database directly and updates the in-memory value.
+  #
+  # ```
+  # user.increment!(:login_count)   # Increment by 1
+  # user.increment!(:score, 10)     # Increment by 10
+  # user.increment!(:balance, -5.5) # Can use negative values
+  # ```
+  #
+  # Returns `self` for chaining.
+  def increment!(column : Symbol | String, by = 1)
+    raise "Model must be persisted before incrementing" unless persisted?
+
+    column_name = column.to_s
+
+    # Update database atomically
+    sql = "UPDATE #{self.class.full_table_name} SET #{Lustra::SQL.escape(column_name)} = #{Lustra::SQL.escape(column_name)} + #{by} WHERE #{self.class.__pkey__} = #{__pkey__}"
+    Lustra::SQL.execute(@@connection, sql)
+
+    # Update in-memory value by reloading just this column
+    result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.fetch_first!
+    set({column_name => result[column_name]})
+    clear_change_flags
+
+    self
+  end
+
+  # Increment a numeric column without saving to the database.
+  # Only updates the in-memory value. Call `save!` to persist.
+  #
+  # ```
+  # user.increment(:login_count)
+  # user.save! # Persist the change
+  # ```
+  #
+  # Returns `self` for chaining.
+  def increment(column : Symbol | String, by = 1)
+    column_name = column.to_s
+
+    # Get current value from the column
+    result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.fetch_first!
+    current_value = result[column_name]
+
+    # Increment the value
+    new_value =
+      case current_value
+      when Int32   then current_value + by.to_i32
+      when Int64   then current_value + by.to_i64
+      when Float32 then current_value + by.to_f32
+      when Float64 then current_value + by.to_f64
+      else
+        raise "Column #{column_name} is not a numeric type"
+      end
+
+    set({column_name => new_value})
+    self
+  end
+
+  # Decrement a numeric column by a specific amount (default 1) without running validations or callbacks.
+  # Updates the database directly and updates the in-memory value.
+  #
+  # ```
+  # user.decrement!(:attempts_left) # Decrement by 1
+  # user.decrement!(:balance, 10.5) # Decrement by 10.5
+  # ```
+  #
+  # Returns `self` for chaining.
+  def decrement!(column : Symbol | String, by = 1)
+    increment!(column, -by)
+  end
+
+  # Decrement a numeric column without saving to the database.
+  # Only updates the in-memory value. Call `save!` to persist.
+  #
+  # ```
+  # user.decrement(:attempts_left)
+  # user.save! # Persist the change
+  # ```
+  #
+  # Returns `self` for chaining.
+  def decrement(column : Symbol | String, by = 1)
+    increment(column, -by)
+  end
+
   private def save_built_associations
     built_associations.each do |_, models|
       models.each do |model|
