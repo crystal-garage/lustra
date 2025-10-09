@@ -91,7 +91,7 @@ module WhereSpec
       end
 
       expect_raises Lustra::SQL::QueryBuildingError do
-        Lustra::SQL.select.from(:users).or_where("a LIKE :halo AND b LIKE :world", hello: "h", world: "w")
+        Lustra::SQL.select.from(:users).where.or("a LIKE :halo AND b LIKE :world", hello: "h", world: "w")
       end
     end
 
@@ -144,18 +144,20 @@ module WhereSpec
     describe "where expressions" do
       it "where.where" do
         now = Time.local
-        r = Lustra::SQL.select.from(:users).where { users.id == nil }.where do
-          var("users", "updated_at") >= now
-        end
+        r = Lustra::SQL.select.from(:users)
+          .where { users.id == nil }
+          .where { var("users", "updated_at") >= now }
+
         r.to_sql.should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" IS NULL) " +
                            "AND (\"users\".\"updated_at\" >= #{Lustra::Expression[now]})"
       end
 
-      it "where.or_where" do
+      it "where.or" do
         now = Time.local
-        r = Lustra::SQL.select.from(:users).where { users.id == nil }.or_where do
-          var("users", "updated_at") >= now
-        end
+        r = Lustra::SQL.select.from(:users)
+          .where { users.id == nil }
+          .or { var("users", "updated_at") >= now }
+
         r.to_sql.should eq "SELECT * FROM \"users\" WHERE ((\"users\".\"id\" IS NULL) " +
                            "OR (\"users\".\"updated_at\" >= #{Lustra::Expression[now]}))"
       end
@@ -358,6 +360,103 @@ module WhereSpec
       it "supports where.not with NULL conditions" do
         r = Lustra::SQL.select.from(:users).where.not({email: nil})
         r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT ("email" IS NULL))
+      end
+    end
+
+    describe "where.or syntax" do
+      it "supports where.or with block syntax" do
+        r = Lustra::SQL.select.from(:users).where { users.id == 1 }.or { users.id == 2 }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR ("users"."id" = 2)))
+      end
+
+      it "supports where.or with named tuple" do
+        r = Lustra::SQL.select.from(:users).where { users.id == 1 }.or(active: true)
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR ("active" = TRUE)))
+      end
+
+      it "supports where.or with template string" do
+        r = Lustra::SQL.select.from(:users).where { users.id == 1 }.or("status = ?", "active")
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR (status = 'active')))
+      end
+
+      it "supports where.or with template string and named parameters" do
+        r = Lustra::SQL.select.from(:users).where { users.id == 1 }.or("status = :status", status: "active")
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR (status = 'active')))
+      end
+
+      it "supports where.or with array conditions" do
+        r = Lustra::SQL.select.from(:users).where { users.active == true }.or({id: [1, 2, 3]})
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."active" = TRUE) OR "id" IN (1, 2, 3)))
+      end
+
+      it "supports where.or chaining multiple times" do
+        r = Lustra::SQL.select.from(:users).where { users.id == 1 }.or { users.id == 2 }.or { users.id == 3 }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR ("users"."id" = 2) OR ("users"."id" = 3)))
+      end
+
+      it "supports where.or when starting with empty where" do
+        r = Lustra::SQL.select.from(:users).where.or { users.id == 1 }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ("users"."id" = 1))
+      end
+
+      it "supports complex chaining with where and where.or" do
+        r = Lustra::SQL.select.from(:users)
+          .where { users.role == "admin" }
+          .or { users.role == "superadmin" }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."role" = 'admin') OR ("users"."role" = 'superadmin')))
+      end
+
+      it "supports where.or with multiple conditions in named tuple" do
+        r = Lustra::SQL.select.from(:users)
+          .where { users.id == 1 }
+          .or(active: true, verified: true)
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR (("active" = TRUE) AND ("verified" = TRUE))))
+      end
+
+      it "supports mixing where, where.or, and where again" do
+        r = Lustra::SQL.select.from(:users)
+          .where { users.active == true }
+          .or { users.verified == true }
+          .where { users.id > 100 }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."active" = TRUE) OR ("users"."verified" = TRUE)) AND ("users"."id" > 100))
+      end
+
+      it "supports where.or with range conditions" do
+        r = Lustra::SQL.select.from(:users)
+          .where { users.id == 1 }
+          .or(age: 18..65)
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR ("age" >= 18 AND "age" <= 65)))
+      end
+
+      it "supports where.or with NULL conditions" do
+        r = Lustra::SQL.select.from(:users)
+          .where { users.active == true }
+          .or(deleted_at: nil)
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."active" = TRUE) OR ("deleted_at" IS NULL)))
+      end
+
+      it "supports complex OR chains with different condition types" do
+        r = Lustra::SQL.select.from(:users)
+          .where { users.id == 1 }
+          .or(role: "admin")
+          .or { users.verified == true }
+          .or("status = ?", "premium")
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."id" = 1) OR ("role" = 'admin') OR ("users"."verified" = TRUE) OR (status = 'premium')))
+      end
+
+      it "supports where.or combining with where.not" do
+        r = Lustra::SQL.select.from(:users)
+          .where { users.active == true }
+          .or { users.verified == true }
+          .where.not(banned: true)
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE (("users"."active" = TRUE) OR ("users"."verified" = TRUE)) AND NOT ("banned" = TRUE))
+      end
+
+      it "supports nested OR conditions with AND" do
+        r = Lustra::SQL.select.from(:users)
+          .where { (users.active == true) & (users.verified == true) }
+          .or { (users.role == "admin") & (users.premium == true) }
+        r.to_sql.should eq %(SELECT * FROM "users" WHERE ((("users"."active" = TRUE) AND ("users"."verified" = TRUE)) OR (("users"."role" = 'admin') AND ("users"."premium" = TRUE))))
       end
     end
   end
