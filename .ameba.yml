@@ -22,6 +22,11 @@ Performance/AnyInsteadOfEmpty:
   Enabled: true
   Severity: Warning
 
+Performance/ChainedCallWithNoBang:
+  Excluded:
+  - spec/model/where_spec.cr
+  Enabled: true
+
 Lint/UselessAssign:
   Enabled: false
 

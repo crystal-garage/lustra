@@ -290,7 +290,7 @@ u : User? = User.query.find { email =~ /yacine/i }
 
 To prepare a collection, just use `Model#query`.
 Collections include `SQL::Select` object, so all the low level API
-(`where`, `where.not`, `or_where`, `join`, `group_by`, `lock`...) can be used in this context.
+(`where`, `where.not`, `where.or`, `join`, `group_by`, `lock`...) can be used in this context.
 
 ```crystal
 # Basic filtering with where

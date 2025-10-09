@@ -536,5 +536,238 @@ module WhereSpec
         end
       end
     end
+
+    context "where.not" do
+      it "supports basic where.not operations" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+
+          # Test with expression engine
+          users = User.query.where.not { active == false }.to_a
+          users.size.should eq(2)
+          users.map(&.first_name).should contain("John")
+          users.map(&.first_name).should contain("Bob")
+          users.map(&.first_name).should_not contain("Jane")
+
+          # Test with NamedTuple
+          users = User.query.where.not(active: false).to_a
+          users.size.should eq(2)
+          users.map(&.first_name).should contain("John")
+          users.map(&.first_name).should contain("Bob")
+          users.map(&.first_name).should_not contain("Jane")
+
+          # Test with array (NOT IN)
+          users = User.query.where.not(id: [1, 2]).to_a
+          users.size.should eq(1)
+          users.first.first_name.should eq("Bob")
+
+          # Test with nil (NOT NULL)
+          User.create!(id: 4, first_name: "Alice", active: nil)
+          users = User.query.where.not(active: nil).to_a
+          users.size.should eq(3)
+          users.map(&.first_name).should contain("John")
+          users.map(&.first_name).should contain("Jane")
+          users.map(&.first_name).should contain("Bob")
+          users.map(&.first_name).should_not contain("Alice")
+        end
+      end
+
+      it "supports chaining with where" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+          User.create!(id: 4, first_name: "Alice", active: nil)
+
+          # Test chaining where and where.not
+          users = User.query
+            .where { id > 1 }
+            .not { active == false }
+            .not(id: [4])
+            .to_a
+
+          users.size.should eq(1)
+          users.first.first_name.should eq("Bob")
+
+          # Test another chaining combination
+          users = User.query
+            .not(id: [1, 2])
+            .not { active == nil }
+            .to_a
+
+          users.size.should eq(1)
+          users.first.first_name.should eq("Bob")
+        end
+      end
+    end
+
+    context "where.or" do
+      it "supports basic where.or operations" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+          User.create!(id: 4, first_name: "Alice", active: nil)
+
+          # Test basic where.or with expression engine
+          users = User.query.where { id == 1 }.or { id == 3 }.to_a
+          users.size.should eq(2)
+          users.map(&.first_name).sort.should eq(["Bob", "John"])
+
+          # Test where.or with named tuple
+          users = User.query.where { id == 1 }.or(first_name: "Jane").to_a
+          users.size.should eq(2)
+          users.map(&.first_name).sort.should eq(["Jane", "John"])
+
+          # Test where.or with array conditions (IN)
+          users = User.query.where { active == true }.or({id: [2, 4]}).to_a
+          users.size.should eq(4) # John, Bob (active=true), Jane (id=2), Alice (id=4)
+          users.map(&.first_name).sort.should eq(["Alice", "Bob", "Jane", "John"])
+
+          # Test where.or with nil
+          users = User.query.where { id == 1 }.or(active: nil).to_a
+          users.size.should eq(2)
+          users.map(&.first_name).sort.should eq(["Alice", "John"])
+        end
+      end
+
+      it "supports chaining multiple times" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+          User.create!(id: 2, first_name: "Jane")
+          User.create!(id: 3, first_name: "Bob")
+          User.create!(id: 4, first_name: "Alice")
+          User.create!(id: 5, first_name: "Charlie")
+
+          # Chain multiple or conditions
+          users = User.query
+            .where { id == 1 }
+            .or { id == 2 }
+            .or { id == 3 }
+            .to_a
+          users.size.should eq(3)
+          users.map(&.first_name).sort.should eq(["Bob", "Jane", "John"])
+        end
+      end
+
+      it "supports complex chaining with where" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+          User.create!(id: 4, first_name: "Alice", active: false)
+          User.create!(id: 5, first_name: "Charlie", active: true)
+
+          # Mix where, or, and where
+          users = User.query
+            .where { active == true }
+            .or { first_name == "Jane" }
+            .where { id > 1 }
+            .to_a
+          users.size.should eq(3) # Bob, Jane, Charlie (active OR Jane, and id > 1)
+          users.map(&.first_name).sort.should eq(["Bob", "Charlie", "Jane"])
+        end
+      end
+
+      it "combines with where.not" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+          User.create!(id: 4, first_name: "Alice", active: false)
+
+          # Combine where.or with where.not
+          users = User.query
+            .where { id == 1 }
+            .or { id == 2 }
+            .where.not(active: false)
+            .to_a
+          users.size.should eq(1) # Only John (id=1 OR id=2, but NOT active=false)
+          users.first.first_name.should eq("John")
+        end
+      end
+
+      it "supports multiple conditions in named tuple" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true, last_name: "Doe")
+          User.create!(id: 2, first_name: "Jane", active: false, last_name: "Smith")
+          User.create!(id: 3, first_name: "Bob", active: true, last_name: "Johnson")
+          User.create!(id: 4, first_name: "Alice", active: false, last_name: "Doe")
+
+          # OR with multiple conditions (they are combined with AND within the OR)
+          users = User.query
+            .where { id == 1 }
+            .or(active: true, last_name: "Johnson")
+            .to_a
+          users.size.should eq(2) # John (id=1) OR Bob (active=true AND last_name=Johnson)
+          users.map(&.first_name).sort.should eq(["Bob", "John"])
+        end
+      end
+
+      it "works when starting with empty where" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+          User.create!(id: 2, first_name: "Jane")
+
+          # Start with empty where, then or
+          users = User.query.where.or { id == 1 }.to_a
+          users.size.should eq(1)
+          users.first.first_name.should eq("John")
+        end
+      end
+
+      it "supports template strings" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: true)
+
+          # Using template string with positional params
+          users = User.query
+            .where { id == 1 }
+            .or("first_name = ?", "Bob")
+            .to_a
+          users.size.should eq(2)
+          users.map(&.first_name).sort.should eq(["Bob", "John"])
+
+          # Using template string with named params
+          users = User.query
+            .where { active == true }
+            .or("first_name = :name", name: "Jane")
+            .to_a
+          users.size.should eq(3)
+          users.map(&.first_name).sort.should eq(["Bob", "Jane", "John"])
+        end
+      end
+
+      it "supports complex nested conditions" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", active: true, last_name: "Admin")
+          User.create!(id: 2, first_name: "Jane", active: false, last_name: "User")
+          User.create!(id: 3, first_name: "Bob", active: true, last_name: "User")
+          User.create!(id: 4, first_name: "Alice", active: false, last_name: "Admin")
+
+          # Nested AND conditions within OR
+          users = User.query
+            .where { (active == true) & (last_name == "Admin") }
+            .or { (active == false) & (first_name == "Jane") }
+            .to_a
+          users.size.should eq(2) # John (active AND Admin) OR Jane (NOT active AND Jane)
+          users.map(&.first_name).sort.should eq(["Jane", "John"])
+        end
+      end
+    end
   end
 end
