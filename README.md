@@ -303,14 +303,16 @@ User.query.where.not { active == false }.each do |user|
   # Get all users that are not inactive
 end
 
-# Chaining where and where.not conditions
+# Chaining where, where.not, and where.or conditions
 User.query
   .where { active == true }
-  .where.not { role == "admin" }
-  .where.not(id: [1, 2, 3])
+  .not { role == "admin" }
+  .or(id: [1, 2, 3])
   .each do |user|
     # Complex filtering with chained conditions
   end
+# Generated SQL:
+# SELECT * FROM "users" WHERE ((("active" = TRUE) AND NOT ("role" = 'admin')) OR "id" IN (1, 2, 3))
 
 # Check if any records exist
 if User.query.where { active == true }.exists?
