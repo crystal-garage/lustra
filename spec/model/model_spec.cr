@@ -59,6 +59,60 @@ module ModelSpec
         end
       end
 
+      it "update_all" do
+        temporary do
+          reinit_example_models
+
+          # Create test users
+          user1 = User.create!(id: 1, first_name: "John", active: true)
+          user2 = User.create!(id: 2, first_name: "Jane", active: false)
+          user3 = User.create!(id: 3, first_name: "Bob", active: false)
+          user4 = User.create!(id: 4, first_name: "Alice", active: true)
+
+          # Test basic update_all with single field
+          affected = User.query.where { active == false }.update_all(active: true)
+          affected.should eq(2)
+
+          # Verify the update worked
+          User.query.where { active == true }.count.should eq(4)
+          User.query.where { active == false }.count.should eq(0)
+
+          # Test update_all with multiple fields
+          affected = User.query.where { id.in?([1, 2]) }.update_all(
+            first_name: "Updated",
+            last_name: "User"
+          )
+          affected.should eq(2)
+
+          # Verify multiple field update
+          user1.reload
+          user2.reload
+          user1.first_name.should eq("Updated")
+          user1.last_name.should eq("User")
+          user2.first_name.should eq("Updated")
+          user2.last_name.should eq("User")
+
+          # Test update_all with no matching records
+          affected = User.query.where { id == 999 }.update_all(active: false)
+          affected.should eq(0)
+
+          # Test update_all with all records
+          affected = User.query.update_all(active: false)
+          affected.should eq(4)
+          User.query.where { active == false }.count.should eq(4)
+
+          # Test that update_all bypasses validations and callbacks
+          # (we can verify this by checking it doesn't trigger timestamp updates)
+          original_updated_at = user1.reload.updated_at
+          sleep 0.01.seconds # Small delay to ensure timestamp would change if it were updated
+          User.query.where { id == 1 }.update_all(first_name: "DirectUpdate")
+          user1.reload
+          user1.first_name.should eq("DirectUpdate")
+          # updated_at should NOT change because update_all bypasses the model
+          user1.updated_at.should eq(original_updated_at)
+        end
+      end
+
       it "counter cache functionality" do
         temporary do
           reinit_example_models

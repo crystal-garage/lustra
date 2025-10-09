@@ -323,6 +323,13 @@ end
 user_names = User.query.pluck_col("first_name")
 user_data = User.query.pluck("first_name", "last_name")
 
+# Bulk update without loading models (bypasses validations and callbacks)
+affected = User.query.where { active == false }.update_all(status: "inactive")
+puts "Updated #{affected} users"
+
+# Update multiple columns at once
+User.query.where { role == "guest" }.update_all(role: "user", verified: true)
+
 # In case you know there's millions of rows, use a cursor to avoid memory issues!
 User.query.where { (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |user|
   # Do something with user; only 100 users will be stored in memory

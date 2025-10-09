@@ -852,5 +852,38 @@ module Lustra::Model
       to_delete.execute
       change! # because we want to lustra the caches in case we do something with the collection later
     end
+
+    # Update all the rows which would have been returned by this collection
+    # without loading the models into memory. Bypasses validations and callbacks.
+    #
+    # This is useful for bulk updates where you don't need to run validations
+    # or callbacks on each individual model.
+    #
+    # ```
+    # # Update all inactive users to have a specific status
+    # affected = User.query.where { active == false }.update_all(status: "inactive")
+    # puts "Updated #{affected} users"
+    #
+    # # Update multiple columns at once
+    # Post.query.where { published == false }.update_all(published: true, published_at: Time.utc)
+    #
+    # # With complex conditions
+    # User.query.where { created_at < 1.year.ago }.update_all(archived: true)
+    # ```
+    #
+    # Returns the number of rows affected.
+    def update_all(**fields) : Int64
+      to_update.set(**fields).execute_and_count
+    end
+
+    # :ditto:
+    def update_all(fields : NamedTuple) : Int64
+      to_update.set(fields).execute_and_count
+    end
+
+    # :ditto:
+    def update_all(fields : Hash(String, Lustra::SQL::Any)) : Int64
+      to_update.set(fields).execute_and_count
+    end
   end
 end
