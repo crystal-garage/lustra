@@ -21,7 +21,7 @@ module Lustra::SQL::Query::Pluck
   # User.query.pluck_col("CASE WHEN id % 2 = 0 THEN id ELSE NULL END AS id").each do
   # # ...
   # ```
-  def pluck_col(field : Lustra::SQL::Symbolic)
+  def pluck_col(field : Lustra::SQL::Symbolic) : Array(Lustra::SQL::Any)
     field = Lustra::SQL.escape(field) if field.is_a?(Symbol)
 
     sql = clear_select.select(field).to_sql
@@ -41,7 +41,7 @@ module Lustra::SQL::Query::Pluck
   end
 
   # :ditto:
-  def pluck_col(field : Lustra::SQL::Symbolic, type : T.class) forall T
+  def pluck_col(field : Lustra::SQL::Symbolic, type : T.class) : Array(T) forall T
     field = Lustra::SQL.escape(field) if field.is_a?(Symbol)
 
     sql = clear_select.select(field).to_sql
@@ -69,7 +69,7 @@ module Lustra::SQL::Query::Pluck
   #   # ...
   # end
   # ```
-  def pluck(*fields)
+  def pluck(*fields) : Array
     pluck(fields)
   end
 
