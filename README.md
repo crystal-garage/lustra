@@ -290,7 +290,7 @@ u : User? = User.query.find { email =~ /yacine/i }
 
 To prepare a collection, just use `Model#query`.
 Collections include `SQL::Select` object, so all the low level API
-(`where`, `where_not`, `join`, `group_by`, `lock`...) can be used in this context.
+(`where`, `where.not`, `or_where`, `join`, `group_by`, `lock`...) can be used in this context.
 
 ```crystal
 # Basic filtering with where
@@ -298,16 +298,16 @@ User.query.where { (id >= 100) & (id <= 200) }.each do |user|
   # Do something with user !
 end
 
-# Negative filtering with where_not
-User.query.where_not { active == false }.each do |user|
+# Negative filtering with where.not
+User.query.where.not { active == false }.each do |user|
   # Get all users that are not inactive
 end
 
-# Chaining where and where_not conditions
+# Chaining where and where.not conditions
 User.query
-  .where { id > 10 }
-  .where_not { role == "admin" }
-  .where_not(id: [1, 2, 3])
+  .where { active == true }
+  .where.not { role == "admin" }
+  .where.not(id: [1, 2, 3])
   .each do |user|
     # Complex filtering with chained conditions
   end
