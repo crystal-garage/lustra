@@ -168,6 +168,62 @@ module ModelSpec
         end
       end
 
+      it "increment and decrement" do
+        temporary do
+          reinit_example_models
+
+          # Create test user with posts_count
+          user = User.create!(first_name: "John", posts_count: 5)
+          user.posts_count.should eq(5)
+
+          # Test increment! (saves to DB immediately)
+          user.increment!(:posts_count)
+          user.posts_count.should eq(6)
+          # Verify it was saved to DB
+          user.reload.posts_count.should eq(6)
+
+          # Test increment! with custom amount
+          user.increment!(:posts_count, 3)
+          user.posts_count.should eq(9)
+          user.reload.posts_count.should eq(9)
+
+          # Test decrement!
+          user.decrement!(:posts_count)
+          user.posts_count.should eq(8)
+          user.reload.posts_count.should eq(8)
+
+          # Test decrement! with custom amount
+          user.decrement!(:posts_count, 3)
+          user.posts_count.should eq(5)
+          user.reload.posts_count.should eq(5)
+
+          # Test increment without save (just in-memory)
+          user.increment(:posts_count, 2)
+          user.posts_count.should eq(7)
+          # Should NOT be saved to DB yet
+          User.find!(user.id).posts_count.should eq(5)
+          # Save and verify
+          user.save!
+          user.reload.posts_count.should eq(7)
+
+          # Test decrement without save
+          user.decrement(:posts_count, 2)
+          user.posts_count.should eq(5)
+          # Should NOT be saved to DB yet
+          User.find!(user.id).posts_count.should eq(7)
+          # Save and verify
+          user.save!
+          user.reload.posts_count.should eq(5)
+
+          # Test that increment! bypasses callbacks (no timestamp update)
+          original_updated_at = user.updated_at
+          sleep 0.01.seconds
+          user.increment!(:posts_count)
+          user.reload
+          user.updated_at.should eq(original_updated_at)
+        end
+      end
+
       it "update_all" do
         temporary do
           reinit_example_models

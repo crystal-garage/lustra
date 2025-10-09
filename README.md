@@ -634,6 +634,28 @@ u.email_column.changed? # < Return "true"
 u.email_column.revert # Return to #undef.
 ```
 
+##### Atomic Counter Updates
+
+Increment or decrement numeric columns atomically without running validations or callbacks:
+
+```crystal
+# Increment/decrement with immediate save (bypasses validations and callbacks)
+user.increment!(:login_count)        # Increment by 1
+user.increment!(:score, 10)          # Increment by custom amount
+user.decrement!(:attempts_left)      # Decrement by 1
+user.decrement!(:balance, 5.5)       # Decrement by custom amount
+
+# Increment/decrement in-memory only (requires save! to persist)
+user.increment(:login_count)
+user.decrement(:attempts_left, 2)
+user.save!  # Persist both changes together
+
+# Thread-safe atomic updates (using SQL: SET column = column + amount)
+user.increment!(:view_count)  # Safe for concurrent requests
+```
+
+The `!` versions update the database immediately using atomic SQL operations, making them thread-safe for counters like views, likes, or login counts.
+
 #### Validation
 
 ##### Presence validator
