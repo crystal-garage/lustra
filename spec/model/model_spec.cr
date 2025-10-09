@@ -107,8 +107,8 @@ module ModelSpec
           # Test chaining where and where.not
           users = User.query
             .where { id > 1 }
-            .where.not { active == false }
-            .where.not(id: [4])
+            .not { active == false }
+            .not(id: [4])
             .to_a
 
           users.size.should eq(1)
@@ -116,8 +116,8 @@ module ModelSpec
 
           # Test another chaining combination
           users = User.query
-            .where.not(id: [1, 2])
-            .where.not { active == nil }
+            .not(id: [1, 2])
+            .not { active == nil }
             .to_a
 
           users.size.should eq(1)
