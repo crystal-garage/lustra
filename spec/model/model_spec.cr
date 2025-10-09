@@ -59,6 +59,62 @@ module ModelSpec
         end
       end
 
+      it "find with array of IDs" do
+        temporary do
+          reinit_example_models
+
+          # Create test users
+          User.create!(id: 1, first_name: "John")
+          User.create!(id: 2, first_name: "Jane")
+          User.create!(id: 3, first_name: "Bob")
+          User.create!(id: 4, first_name: "Alice")
+
+          # Test finding multiple users by array of IDs
+          users = User.find([1, 2, 3])
+          users.size.should eq(3)
+          users.map(&.id).sort.should eq([1, 2, 3])
+          users.map(&.first_name).sort.should eq(["Bob", "Jane", "John"])
+
+          # Test with empty array
+          users = User.find([] of Int64)
+          users.size.should eq(0)
+
+          # Test with single ID in array
+          users = User.find([2])
+          users.size.should eq(1)
+          users.first.id.should eq(2)
+          users.first.first_name.should eq("Jane")
+
+          # Test with some non-existent IDs (should only return existing ones)
+          users = User.find([1, 99, 3, 100])
+          users.size.should eq(2)
+          users.map(&.id).sort.should eq([1, 3])
+
+          # Test with all non-existent IDs
+          users = User.find([99, 100, 101])
+          users.size.should eq(0)
+
+          # Test find! with valid IDs
+          users = User.find!([1, 2, 3])
+          users.size.should eq(3)
+          users.map(&.id).sort.should eq([1, 2, 3])
+
+          # Test find! raises error when some IDs not found
+          expect_raises(Lustra::SQL::RecordNotFoundError, /Couldn't find all records/) do
+            User.find!([1, 2, 99])
+          end
+
+          # Test find! raises error when all IDs not found
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
+            User.find!([99, 100])
+          end
+
+          # Test find! with empty array
+          users = User.find!([] of Int64)
+          users.size.should eq(0)
+        end
+      end
+
       it "find_by" do
         temporary do
           reinit_example_models

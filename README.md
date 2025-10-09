@@ -283,6 +283,10 @@ User.query.first # Get the first user, ordered by primary key
 User.find!(1) # Returns user with id=1, or raises exception if not found
 User.find(1)  # Returns user with id=1, or nil if not found
 
+# Find multiple users by array of IDs
+users = User.find([1, 2, 3])    # Returns Array(User), may be partial if some IDs don't exist
+users = User.find!([1, 2, 3])   # Raises error if ANY ID is not found
+
 # Find by other columns
 user = User.find_by(email: "test@example.com")  # Returns nil if not found
 user = User.find_by!(email: "test@example.com") # Raises error if not found

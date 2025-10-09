@@ -25,6 +25,7 @@ Performance/AnyInsteadOfEmpty:
 Performance/ChainedCallWithNoBang:
   Excluded:
   - spec/model/where_spec.cr
+  - spec/model/model_spec.cr
   Enabled: true
 
 Lint/UselessAssign:

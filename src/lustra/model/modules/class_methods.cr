@@ -104,10 +104,35 @@ module Lustra::Model::ClassMethods
         query.where { raw(__pkey__) == x }.first
       end
 
+      # Find multiple models by an array of primary keys.
+      # Returns an array of models (may be empty if none found).
+      #
+      # ```
+      # users = User.find([1, 2, 3])
+      # users.size # => 0..3 depending on how many were found
+      # ```
+      def self.find(ids : Array)
+        query.where { raw(__pkey__).in?(ids) }.to_a
+      end
+
       # Returns a model using primary key equality.
       # Raises error if the model is not found.
       def self.find!(x)
         find(x) || raise Lustra::SQL::RecordNotFoundError.new
+      end
+
+      # Find multiple models by an array of primary keys.
+      # Raises error if ANY of the IDs are not found.
+      #
+      # ```
+      # users = User.find!([1, 2, 3]) # Raises if any ID is not found
+      # ```
+      def self.find!(ids : Array)
+        results = find(ids)
+        if results.size != ids.size
+          raise Lustra::SQL::RecordNotFoundError.new("Couldn't find all records with IDs: #{ids.inspect}")
+        end
+        results
       end
 
       # Find a model by column values. Returns `nil` if not found.
