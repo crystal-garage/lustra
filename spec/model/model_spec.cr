@@ -874,14 +874,110 @@ module ModelSpec
         end
       end
 
-      it "touch model" do
-        temporary do
-          reinit_example_models
+      context "touch" do
+        it "updates updated_at timestamp" do
+          temporary do
+            reinit_example_models
 
-          c = Category.create!({name: "Nature"})
-          updated_at = c.updated_at
-          c.touch
-          c.updated_at.should_not eq(updated_at)
+            c = Category.create!({name: "Nature"})
+            updated_at = c.updated_at
+            c.touch
+            c.updated_at.should_not eq(updated_at)
+          end
+        end
+
+        it "updates specific column" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+            updated_at = user.updated_at
+            last_comment_at = user.last_comment_at
+
+            user.touch(:last_comment_at)
+            user.updated_at.should_not eq(updated_at)
+            user.last_comment_at.should_not eq(last_comment_at)
+          end
+        end
+
+        it "updates specific column with time" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+
+            time = 30.seconds.ago
+            user.touch(:last_comment_at, time)
+            user.updated_at.should eq(time)
+          end
+        end
+
+        it "updates multiple columns" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+            updated_at = user.updated_at
+            last_comment_at = user.last_comment_at
+
+            user.touch([:last_comment_at, :updated_at])
+            user.touch(:last_comment_at, :updated_at)
+            user.updated_at.should_not eq(updated_at)
+            user.last_comment_at.should_not eq(last_comment_at)
+          end
+        end
+
+        it "updates multiple columns with time" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+            time = 30.seconds.ago
+
+            user.touch(:last_comment_at, :updated_at, time: time)
+            user.updated_at.should eq(time)
+            user.last_comment_at.should eq(time)
+          end
+        end
+
+        it "bypasses validations and callbacks" do
+          temporary do
+            reinit_example_models
+
+            # Create a user with valid data
+            user = User.create!({first_name: "John", last_name: "Doe"})
+            user_id = user.id
+            original_updated_at = user.updated_at
+
+            # Make the user invalid by setting first_name to empty string using direct SQL
+            Lustra::SQL::ConnectionPool.with_connection("default") do |cnx|
+              cnx.exec("UPDATE users SET first_name = '' WHERE id = $1", user_id)
+            end
+
+            # Reload the user - it now has invalid data
+            user = User.find!(user_id)
+            user.first_name.should eq("")
+
+            # Attempting to save! would fail validation, but touch should work
+            # because it bypasses validations
+            user.touch
+
+            # Verify updated_at was changed from the original
+            user.updated_at.should_not eq(original_updated_at)
+          end
+        end
+
+        it "raises error when model is not persisted" do
+          temporary do
+            reinit_example_models
+
+            user = User.new({first_name: "John", last_name: "Doe"})
+            user.persisted?.should be_false
+
+            expect_raises(Lustra::Model::Error, "Model must be persisted before touching") do
+              user.touch
+            end
+          end
         end
       end
     end
