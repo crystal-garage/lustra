@@ -405,6 +405,49 @@ module Lustra::Model::HasColumns
       self
     end
 
+    # Returns a hash of all changed attributes with their [old_value, new_value].
+    #
+    # ```
+    # user.email = "new@test.com"
+    # user.first_name = "John"
+    # user.changes  # => {"email" => ["old@test.com", "new@test.com"], "first_name" => [nil, "John"]}
+    # ```
+    def changes : Hash(String, Tuple(Lustra::SQL::Any, Lustra::SQL::Any))
+      changes_hash = {} of String => Tuple(Lustra::SQL::Any, Lustra::SQL::Any)
+
+      {% for name, settings in COLUMNS %}
+        if @{{settings[:crystal_variable_name]}}_column.changed?
+          old_val = @{{settings[:crystal_variable_name]}}_column.old_value
+          new_val = @{{settings[:crystal_variable_name]}}_column.value
+          # Only include if old_value is defined (not UNKNOWN)
+          unless old_val.is_a?(Lustra::Model::Column::UnknownClass)
+            changes_hash[{{settings[:db_column_name]}}] = {old_val.as(Lustra::SQL::Any), new_val.as(Lustra::SQL::Any)}
+          end
+        end
+      {% end %}
+
+      changes_hash
+    end
+
+    # Returns an array of names of all changed attributes.
+    #
+    # ```
+    # user.email = "new@test.com"
+    # user.first_name = "John"
+    # user.changed  # => ["email", "first_name"]
+    # ```
+    def changed : Array(String)
+      changed_attrs = [] of String
+
+      {% for name, settings in COLUMNS %}
+        if @{{settings[:crystal_variable_name]}}_column.changed?
+          changed_attrs << {{settings[:db_column_name]}}
+        end
+      {% end %}
+
+      changed_attrs
+    end
+
     # Return a hash version of the columns of this model.
     def to_h(full = false) : Hash(String, ::Lustra::SQL::Any)
       out = super
