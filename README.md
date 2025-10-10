@@ -575,6 +575,65 @@ users.each do |u|
 end
 ```
 
+### Scopes and Default Scopes
+
+#### Scopes
+
+Scopes allow you to define reusable query fragments that make your code more readable and maintainable:
+
+```crystal
+class Post
+  include Lustra::Model
+
+  column title : String
+  column published : Bool
+  column view_count : Int32
+
+  # Simple scope
+  scope("published") { where(published: true) }
+
+  # Scope with parameter
+  scope("popular") { |min_views| where { view_count >= min_views } }
+
+  # Scope that chains multiple conditions
+  scope("recent") { where { created_at > 7.days.ago }.order_by(created_at: :desc) }
+end
+
+# Usage
+Post.published                    # All published posts
+Post.popular(100)                 # Posts with 100+ views
+Post.published.recent             # Published posts from last 7 days
+Post.published.popular(50).first  # Most popular published post
+```
+
+#### Default Scopes
+
+Default scopes automatically apply conditions to **all** queries on a model. This is particularly useful for soft deletes and multi-tenancy:
+
+```crystal
+class Post
+  include Lustra::Model
+
+  column title : String
+  column deleted_at : Time?
+
+  # This filter is applied to ALL queries automatically
+  default_scope { where { deleted_at == nil } }
+end
+
+# All these queries automatically exclude deleted posts:
+Post.find(1)          # WHERE id = 1 AND deleted_at IS NULL
+Post.query.first      # WHERE deleted_at IS NULL ORDER BY id LIMIT 1
+Post.query.where(...) # WHERE ... AND deleted_at IS NULL
+
+# To bypass the default scope when needed:
+Post.query.unscoped.count      # Count all posts including deleted
+Post.query.unscoped.first      # Get first record ignoring scope
+Post.query.unscoped.where(...) # Build query without default scope
+```
+
+**Warning:** Default scopes can be confusing because they're implicit. Use them sparingly and document them clearly. Always provide an `unscoped` escape hatch when you need to bypass them.
+
 ### Inspection & SQL logging
 
 #### Inspection
