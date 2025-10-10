@@ -970,6 +970,150 @@ module ModelSpec
         end
       end
 
+      context "attribute change tracking" do
+        it "returns change tuple with column.change" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+
+            # No changes yet
+            user.first_name_column.change.should be_nil
+            user.last_name_column.change.should be_nil
+
+            # Make change
+            user.first_name = "Jane"
+
+            # Get change tuple {old, new}
+            if change = user.first_name_column.change
+              change[0].should eq("John")
+              change[1].should eq("Jane")
+            else
+              fail "Expected first_name_column.change to return a tuple"
+            end
+
+            # Unchanged attribute returns nil
+            user.last_name_column.change.should be_nil
+          end
+        end
+
+        it "returns all changes with changes method" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+
+            # No changes initially
+            user.changes.should eq({} of String => Tuple(Lustra::SQL::Any, Lustra::SQL::Any))
+
+            # Make multiple changes
+            user.first_name = "Jane"
+            user.last_name = "Smith"
+
+            # Get all changes
+            changes = user.changes
+            changes.size.should eq(2)
+            changes["first_name"].should eq({"John", "Jane"})
+            changes["last_name"].should eq({"Doe", "Smith"})
+          end
+        end
+
+        it "returns changed attribute names with changed method" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+
+            # No changes initially
+            user.changed.should eq([] of String)
+
+            # Make changes
+            user.first_name = "Jane"
+            user.last_name = "Smith"
+
+            # Get list of changed attributes
+            user.changed.should contain("first_name")
+            user.changed.should contain("last_name")
+            user.changed.size.should eq(2)
+          end
+        end
+
+        it "resets tracking after save" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+
+            user.first_name = "Jane"
+            user.first_name_column.changed?.should be_true
+
+            user.save!
+
+            # After save, changes are cleared
+            user.first_name_column.changed?.should be_false
+            user.changes.should eq({} of String => Tuple(Lustra::SQL::Any, Lustra::SQL::Any))
+            user.changed.should eq([] of String)
+          end
+        end
+
+        it "can be used in callbacks for conditional logic" do
+          temporary do
+            reinit_example_models
+
+            # Track what happened in callback
+            last_name_changed_in_callback = false
+            first_name_changed_in_callback = false
+
+            User.before(:save) do |model|
+              user = model.as(User)
+
+              # Check if specific field changed
+              if user.last_name_column.changed?
+                last_name_changed_in_callback = true
+              end
+
+              # Get the actual change
+              if change = user.first_name_column.change
+                old_name, new_name = change
+                first_name_changed_in_callback = true if old_name != new_name
+              end
+            end
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+
+            # Change last_name only
+            user.last_name = "Smith"
+            user.save!
+
+            last_name_changed_in_callback.should be_true
+            first_name_changed_in_callback.should be_false
+          end
+        end
+
+        it "shows all changes for auditing in callbacks" do
+          temporary do
+            reinit_example_models
+
+            audit_log = {} of String => Tuple(Lustra::SQL::Any, Lustra::SQL::Any)
+
+            User.before(:save) do |model|
+              user = model.as(User)
+              audit_log = user.changes
+            end
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+            user.first_name = "Jane"
+            user.last_name = "Smith"
+            user.save!
+
+            # Callback captured all changes
+            audit_log.size.should eq(2)
+            audit_log["first_name"].should eq({"John", "Jane"})
+            audit_log["last_name"].should eq({"Doe", "Smith"})
+          end
+        end
+      end
+
       context "touch" do
         it "updates updated_at timestamp" do
           temporary do

@@ -158,4 +158,18 @@ class Lustra::Model::Column(T, C)
     @old_value = @value
     self
   end
+
+  # Returns the change for this column as a tuple of {old_value, new_value}.
+  # Returns `nil` if the column hasn't changed or if old_value is not defined.
+  #
+  # ```
+  # user.email = "new@test.com"
+  # user.email_column.change # => {"old@test.com", "new@test.com"}
+  # user.name_column.change  # => nil (if not changed)
+  # ```
+  def change : Tuple(T, T)?
+    return nil unless @changed
+    return nil if @old_value.is_a?(UnknownClass)
+    {@old_value.as(T), @value.as(T)}
+  end
 end

@@ -39,7 +39,16 @@ module Lustra::Model::HasHooks
     # `event_name` - the lifecycle event (`:create`, `:update`, `:validate`, etc.)
     # `block` - the callback block to execute
     #
-    # Example: before(:validate) { |model| model.sanitize_data }
+    # Note: The block parameter has type `Lustra::Model`. Use `.as(YourModel)` to access
+    # model-specific methods and columns.
+    #
+    # Example:
+    # ```
+    # before(:validate) do |model|
+    #   user = model.as(User)
+    #   user.email = user.email.downcase
+    # end
+    # ```
     def before(event_name : Symbol, &block : Lustra::Model -> Nil)
       Lustra::Model::EventManager.attach(self, :before, event_name, block)
     end
@@ -49,7 +58,16 @@ module Lustra::Model::HasHooks
     # `event_name` - the lifecycle event (`:create`, `:update`, `:validate`, etc.)
     # `block` - the callback block to execute
     #
-    # Example: `after(:create) { |model| model.send_welcome_email }`
+    # Note: The block parameter has type `Lustra::Model`. Use `.as(YourModel)` to access
+    # model-specific methods and columns.
+    #
+    # Example:
+    # ```
+    # after(:create) do |model|
+    #   user = model.as(User)
+    #   user.send_welcome_email
+    # end
+    # ```
     def after(event_name : Symbol, &block : Lustra::Model -> Nil)
       Lustra::Model::EventManager.attach(self, :after, event_name, block)
     end
@@ -58,7 +76,9 @@ module Lustra::Model::HasHooks
   # Macro version of `before` - calls a method instead of a block
   #
   # Example: `before(:validate, :sanitize_data)`
-  # Equivalent to: `before(:validate) { |model| model.sanitize_data }`
+  # Equivalent to: `before(:validate) { |model| model.as(User).sanitize_data }`
+  #
+  # The macro automatically casts to the correct type for you.
   macro before(event_name, method_name)
     before({{event_name}}) { |mdl|
       mdl.as({{@type}}).{{method_name.id}}
@@ -68,7 +88,9 @@ module Lustra::Model::HasHooks
   # Macro version of `after` - calls a method instead of a block
   #
   # Example: `after(:create, :send_welcome_email)`
-  # Equivalent to: `after(:create) { |model| model.send_welcome_email }`
+  # Equivalent to: `after(:create) { |model| model.as(User).send_welcome_email }`
+  #
+  # The macro automatically casts to the correct type for you.
   macro after(event_name, method_name)
     after({{event_name}}) { |mdl|
       mdl.as({{@type}}).{{method_name.id}}

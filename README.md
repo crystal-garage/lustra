@@ -684,13 +684,43 @@ u.email = "test@example.com"
 u.save! # Save or throw if unsavable (validation failed).
 ```
 
-Columns can be checked & reverted:
+##### Attribute Change Tracking
+
+Lustra automatically tracks changes to model attributes:
 
 ```crystal
-u = User.new
-u.email = "test@example.com"
-u.email_column.changed? # < Return "true"
-u.email_column.revert # Return to #undef.
+user = User.create!({first_name: "John", last_name: "Doe", email: "john@test.com"})
+
+# Make some changes
+user.first_name = "Jane"
+user.email = "jane@test.com"
+
+# Get change for specific attribute as {old, new} tuple
+user.first_name_column.change # => {"John", "Jane"}
+user.email_column.change      # => {"john@test.com", "jane@test.com"}
+user.last_name_column.change  # => nil (not changed)
+
+# Get all changes at once
+user.changes
+# => {"first_name" => {"John", "Jane"}, "email" => {"john@test.com", "jane@test.com"}}
+
+# Get list of changed attribute names
+user.changed # => ["first_name", "email"]
+
+# After saving, changes are cleared
+user.save!
+user.changed # => []
+user.changes # => {}
+```
+
+**Column-level access:**
+
+```crystal
+# Access change tracking via column objects
+user.email_column.changed?  # Check if changed
+user.email_column.old_value # Get raw old value
+user.email_column.change    # Get {old, new} tuple (nil if not changed)
+user.email_column.revert    # Revert to old value
 ```
 
 ##### Atomic Counter Updates
@@ -764,7 +794,8 @@ class Post
 
   belongs_to user : User, counter_cache: true
 
-  after(:destroy) do |post|
+  after(:destroy) do |model|
+    post = model.as(Post)
     # Clean up associated data
     Comment.query.where(post_id: post.id).delete_all
   end
@@ -933,16 +964,18 @@ class User
 
   # Block syntax
   before(:validate) do |model|
-    model.email = model.email.downcase
+    user = model.as(User)
+    user.email = user.email.downcase
   end
 
   after(:create) do |model|
-    puts "New user created: #{model.name}"
+    user = model.as(User)
+    puts "New user created: #{user.first_name}"
   end
 
-  # Method syntax (cleaner for complex logic)
+  # Method syntax (cleaner for complex logic - auto-casts for you)
   before(:save, :normalize_email)
-  after(:delete, :cleanup_user_data)
+  after(:destroy, :cleanup_user_data)
 
   def normalize_email
     self.email = email.strip.downcase
@@ -978,30 +1011,34 @@ after(:save) { puts "3" }
 **Sanitizing data before validation:**
 ```crystal
 before(:validate) do |model|
-  model.email = model.email.strip.downcase if model.email_column.defined?
+  user = model.as(User)
+  user.email = user.email.strip.downcase if user.email_column.defined?
 end
 ```
 
 **Sending notifications after creation:**
 ```crystal
 after(:create) do |model|
-  WelcomeMailer.send(model.email)
+  user = model.as(User)
+  WelcomeMailer.send(user.email)
 end
 ```
 
 **Cleanup after deletion:**
 ```crystal
 after(:destroy) do |model|
-  FileStorage.delete(model.avatar_path) if model.avatar_path
+  user = model.as(User)
+  FileStorage.delete(user.avatar_path) if user.avatar_path
 end
 ```
 
 **Auditing changes:**
 ```crystal
 after(:update) do |model|
+  user = model.as(User)
   AuditLog.create!(
     model_type: "User",
-    model_id: model.id,
+    model_id: user.id,
     action: "update"
   )
 end
