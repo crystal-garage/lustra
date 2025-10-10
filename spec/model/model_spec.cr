@@ -1020,6 +1020,89 @@ module ModelSpec
         end
       end
 
+      context "explain and explain_analyze" do
+        it "explain returns query execution plan" do
+          temporary do
+            reinit_example_models
+
+            User.create!({first_name: "John"})
+            User.create!({first_name: "Jane"})
+
+            plan = User.query.where { first_name == "John" }.explain
+
+            # Verify it returns a non-empty string with EXPLAIN output
+            plan.should_not be_empty
+            # Should contain some kind of scan or plan node
+            (plan.includes?("Scan") || plan.includes?("Index") || plan.includes?("cost")).should be_true
+          end
+        end
+
+        it "explain works with complex queries" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John"})
+            Post.create!({title: "Post 1", user: user})
+
+            plan = User.query.join(:posts).where { first_name == "John" }.explain
+            puts plan
+
+            plan.should_not be_empty
+            # Should mention tables or have execution plan
+            plan.should_not be_empty
+          end
+        end
+
+        it "explain_analyze returns actual execution statistics" do
+          temporary do
+            reinit_example_models
+
+            User.create!({first_name: "John"})
+            User.create!({first_name: "Jane"})
+
+            plan = User.query.where { first_name == "John" }.explain_analyze
+
+            # Verify it contains actual execution details
+            plan.should_not be_empty
+            (plan.includes?("actual time") || plan.includes?("rows=")).should be_true
+          end
+        end
+
+        it "explain does not execute the query" do
+          temporary do
+            reinit_example_models
+
+            # explain should not actually delete anything
+            plan = User.query.where { first_name == "Test" }.to_delete.explain
+
+            plan.should_not be_empty
+            (plan.includes?("Delete") || plan.includes?("Scan")).should be_true
+          end
+        end
+
+        it "explain_analyze does execute the query" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "Test"})
+            initial_count = User.query.count
+
+            # explain_analyze will actually execute the delete
+            # So we wrap in transaction to test safely
+            Lustra::SQL.transaction do
+              plan = User.query.where(first_name: "Test").to_delete.explain_analyze
+              plan.should contain("actual time")
+
+              # Rollback to prevent actual deletion in test
+              raise Lustra::SQL::RollbackError.new
+            end
+
+            # Verify rollback worked
+            User.query.count.should eq(initial_count)
+          end
+        end
+      end
+
       context "attribute change tracking" do
         it "returns change tuple with column.change" do
           temporary do

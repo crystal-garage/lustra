@@ -663,6 +663,58 @@ p # => #<Post:0x10c5f6720
 
 In this case, the `*` means a column is changed and the object is dirty and diverge from the database.
 
+#### Query Performance Analysis
+
+Lustra provides PostgreSQL `EXPLAIN` support to analyze and optimize your queries:
+
+```crystal
+# Get query execution plan (doesn't modify data, but may read for planning)
+plan = User.query.where { active == true }.explain
+puts plan
+# Output:
+# Seq Scan on users  (cost=0.00..35.50 rows=10 width=116)
+#   Filter: (active = true)
+
+# Get actual execution statistics (RUNS the query)
+plan = User.query.where { active == true }.join(:posts).explain_analyze
+puts plan
+# Output includes:
+# - Actual execution time
+# - Rows processed
+# - Memory usage
+# - Index usage details
+# - Join algorithms used
+
+# Optimize complex queries
+slow_query = Post.query
+  .join(:user)
+  .join(:category)
+  .where { published == true }
+  .order_by(created_at: :desc)
+
+# Analyze to find bottlenecks
+puts slow_query.explain_analyze
+
+# Use insights to add indexes, rewrite query, etc.
+```
+
+**Common use cases:**
+- **Finding missing indexes**: Look for "Seq Scan" on large tables
+- **Understanding join performance**: See which join algorithms are used
+- **Debugging slow queries**: Get actual timing and row counts
+- **Capacity planning**: Understand query costs before deploying
+
+**Difference between `explain` and `explain_analyze`:**
+
+| Method | Modifies Data | Shows Actual Stats | Use When |
+|--------|---------------|-------------------|----------|
+| `explain` | No | No (estimated) | Safe for all queries, get execution plan |
+| `explain_analyze` | Yes* | Yes (actual) | Need actual performance data |
+
+- `explain` is safe - shows estimated plan without modifying data
+- `explain_analyze` EXECUTES the query fully, including INSERT/UPDATE/DELETE
+- For write operations with `explain_analyze`, wrap in a transaction with rollback if testing
+
 #### SQL Logging
 
 One thing very important for a good ORM is to offer vision of the SQL

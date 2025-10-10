@@ -31,4 +31,62 @@ module Lustra::SQL::Query::Execute
       end
     end
   end
+
+  # Returns the PostgreSQL query execution plan.
+  # Shows the execution plan without running the actual query (for SELECT),
+  # but for INSERT/UPDATE/DELETE it shows the plan without modifying data.
+  #
+  # ```
+  # plan = User.query.where { active == true }.explain
+  # puts plan
+  # # => "Seq Scan on users  (cost=0.00..35.50 rows=10 width=116)"
+  # ```
+  #
+  # Returns the full EXPLAIN output as a string.
+  def explain(connection_name : String? = nil) : String
+    sql = "EXPLAIN #{to_sql}"
+    result = [] of String
+
+    Lustra::SQL.log_query(sql) do
+      Lustra::SQL::ConnectionPool.with_connection(connection_name || self.connection_name) do |cnx|
+        cnx.query(sql) do |rs|
+          rs.each do
+            result << rs.read(String)
+          end
+        end
+      end
+    end
+
+    result.join("\n")
+  end
+
+  # Returns the PostgreSQL query execution plan AND executes the query to get actual statistics.
+  # This shows actual execution times, row counts, and resource usage.
+  #
+  # ```
+  # plan = User.query.where { active == true }.explain_analyze
+  # puts plan
+  # # Shows actual execution time, rows processed, and detailed statistics
+  # ```
+  #
+  # **Warning:** This EXECUTES the query (including INSERT/UPDATE/DELETE).
+  # Use with caution on write operations. Wrap in a transaction and rollback if needed.
+  #
+  # Returns the full EXPLAIN ANALYZE output as a string.
+  def explain_analyze(connection_name : String? = nil) : String
+    sql = "EXPLAIN ANALYZE #{to_sql}"
+    result = [] of String
+
+    Lustra::SQL.log_query(sql) do
+      Lustra::SQL::ConnectionPool.with_connection(connection_name || self.connection_name) do |cnx|
+        cnx.query(sql) do |rs|
+          rs.each do
+            result << rs.read(String)
+          end
+        end
+      end
+    end
+
+    result.join("\n")
+  end
 end
