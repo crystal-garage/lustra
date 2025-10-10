@@ -715,6 +715,21 @@ puts slow_query.explain_analyze
 - `explain_analyze` EXECUTES the query fully, including INSERT/UPDATE/DELETE
 - For write operations with `explain_analyze`, wrap in a transaction with rollback if testing
 
+**Safe pattern for testing write operations:**
+
+```crystal
+# Analyze a DELETE or UPDATE without permanently modifying data
+Lustra::SQL.transaction do
+  plan = User.query.where { inactive == true }.to_delete.explain_analyze
+  puts plan # See actual execution statistics
+
+  # Rollback to undo changes
+  raise Lustra::SQL::RollbackError.new
+end
+
+# Data is unchanged - safe for production analysis!
+```
+
 #### SQL Logging
 
 One thing very important for a good ORM is to offer vision of the SQL

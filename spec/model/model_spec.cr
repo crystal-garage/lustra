@@ -1045,7 +1045,6 @@ module ModelSpec
             Post.create!({title: "Post 1", user: user})
 
             plan = User.query.join(:posts).where { first_name == "John" }.explain
-            puts plan
 
             plan.should_not be_empty
             # Should mention tables or have execution plan
@@ -1099,6 +1098,52 @@ module ModelSpec
 
             # Verify rollback worked
             User.query.count.should eq(initial_count)
+          end
+        end
+
+        it "safe pattern for explain_analyze with write operations" do
+          temporary do
+            reinit_example_models
+
+            User.create!({first_name: "John", last_name: "Doe"})
+            User.create!({first_name: "Jane", last_name: "Smith"})
+            initial_count = User.query.count
+
+            # Safe pattern: Wrap in transaction and rollback
+            plan = ""
+            Lustra::SQL.transaction do
+              # This will actually UPDATE the records
+              plan = User.query.where(last_name: "Doe").to_update.set(active: true).explain_analyze
+
+              # Force rollback to undo the changes
+              raise Lustra::SQL::RollbackError.new
+            end
+
+            # Verify the plan was captured
+            plan.should_not be_empty
+            (plan.includes?("actual time") || plan.includes?("Update")).should be_true
+
+            # Verify no data was permanently modified
+            User.query.count.should eq(initial_count)
+            User.query.where(active: true).count.should eq(0)
+          end
+        end
+
+        it "explain_analyze with SELECT is safe to use directly" do
+          temporary do
+            reinit_example_models
+
+            User.create!({first_name: "John"})
+            User.create!({first_name: "Jane"})
+
+            # For SELECT queries, explain_analyze is safe - doesn't modify data
+            plan = User.query.where { first_name == "John" }.explain_analyze
+
+            plan.should_not be_empty
+            plan.should contain("actual time")
+
+            # Data is unchanged
+            User.query.count.should eq(2)
           end
         end
       end
