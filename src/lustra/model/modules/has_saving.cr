@@ -321,6 +321,89 @@ module Lustra::Model::HasSaving
     increment(column, -by)
   end
 
+  # Update a single column directly in the database without running validations or callbacks.
+  # This is useful for updating columns that don't need validation (like counters, flags, timestamps).
+  #
+  # ```
+  # user.update_column(:login_count, 10)
+  # user.update_column(:last_login_at, Time.utc)
+  # ```
+  #
+  # **Warning:** This bypasses:
+  # - Validations
+  # - Callbacks
+  # - Timestamp updates (updated_at will NOT change)
+  #
+  # Returns `self` for chaining.
+  def update_column(column : Symbol | String, value)
+    raise "Model must be persisted before updating columns" unless persisted?
+
+    column_name = column.to_s
+
+    # Update database directly
+    Lustra::SQL.update(self.class.full_table_name)
+      .set({column_name => value})
+      .where { raw(self.class.__pkey__) == __pkey__ }
+      .execute(@@connection)
+
+    # Update in-memory value
+    set({column_name => value})
+    clear_change_flags
+
+    self
+  end
+
+  # Update multiple columns directly in the database without running validations or callbacks.
+  #
+  # ```
+  # user.update_columns(login_count: 10, last_login_at: Time.utc)
+  # user.update_columns({status: "active", verified: true})
+  # ```
+  #
+  # **Warning:** This bypasses:
+  # - Validations
+  # - Callbacks
+  # - Timestamp updates (updated_at will NOT change)
+  #
+  # Returns `self` for chaining.
+  def update_columns(**columns)
+    raise "Model must be persisted before updating columns" unless persisted?
+
+    # Update database directly
+    Lustra::SQL.update(self.class.full_table_name)
+      .set(**columns)
+      .where { raw(self.class.__pkey__) == __pkey__ }
+      .execute(@@connection)
+
+    # Update in-memory values
+    set(**columns)
+    clear_change_flags
+
+    self
+  end
+
+  # :ditto:
+  def update_columns(columns : NamedTuple)
+    update_columns(**columns)
+  end
+
+  # :ditto:
+  def update_columns(columns : Hash(String, Lustra::SQL::Any))
+    raise "Model must be persisted before updating columns" unless persisted?
+
+    # Update database directly
+    Lustra::SQL.update(self.class.full_table_name)
+      .set(columns)
+      .where { raw(self.class.__pkey__) == __pkey__ }
+      .execute(@@connection)
+
+    # Update in-memory values
+    set(columns)
+    clear_change_flags
+
+    self
+  end
+
   private def save_built_associations
     built_associations.each do |_, models|
       models.each do |model|

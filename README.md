@@ -656,6 +656,29 @@ user.increment!(:view_count)  # Safe for concurrent requests
 
 The `!` versions update the database immediately using atomic SQL operations, making them thread-safe for counters like views, likes, or login counts.
 
+##### Direct Column Updates
+
+Update columns directly without running validations or callbacks. Useful for performance-critical updates when you know the data is valid:
+
+```crystal
+# Update single column (bypasses validations, callbacks, and timestamp updates)
+user.update_column(:login_count, 10)
+user.update_column(:last_login_at, Time.utc)
+
+# Update multiple columns at once
+user.update_columns(login_count: 5, status: "active", verified: true)
+
+# With NamedTuple or Hash
+user.update_columns({admin: true, role: "superuser"})
+```
+
+**Warning:** `update_column` and `update_columns` bypass:
+- Validations
+- Callbacks (before/after hooks)
+- Automatic timestamp updates (`updated_at` will NOT change)
+
+Use these methods only when you need raw performance and are certain the data is valid.
+
 #### Validation
 
 ##### Presence validator

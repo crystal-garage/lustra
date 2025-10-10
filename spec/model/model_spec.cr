@@ -168,6 +168,77 @@ module ModelSpec
         end
       end
 
+      it "update_column and update_columns" do
+        temporary do
+          reinit_example_models
+
+          # Create test user
+          user = User.create!(first_name: "John", last_name: "Doe", active: true, posts_count: 5)
+          original_updated_at = user.updated_at
+
+          # Test update_column with single field
+          sleep 0.01.seconds
+          user.update_column(:first_name, "Jane")
+          user.first_name.should eq("Jane")
+
+          # Verify it was saved to DB
+          user.reload
+          user.first_name.should eq("Jane")
+
+          # Verify updated_at was NOT changed (bypasses timestamps)
+          user.updated_at.should eq(original_updated_at)
+
+          # Test update_column with different types
+          user.update_column(:posts_count, 10)
+          user.posts_count.should eq(10)
+          user.reload.posts_count.should eq(10)
+
+          user.update_column(:active, false)
+          user.active.should be_false
+          user.reload.active.should be_false
+
+          # Test update_columns with multiple fields
+          sleep 0.01.seconds
+          user.update_columns(first_name: "Bob", last_name: "Smith", posts_count: 20)
+          user.first_name.should eq("Bob")
+          user.last_name.should eq("Smith")
+          user.posts_count.should eq(20)
+
+          # Verify saved to DB
+          user.reload
+          user.first_name.should eq("Bob")
+          user.last_name.should eq("Smith")
+          user.posts_count.should eq(20)
+
+          # Verify updated_at still not changed
+          user.updated_at.should eq(original_updated_at)
+
+          # Test update_columns with NamedTuple
+          tuple = {first_name: "Alice", active: true}
+          user.update_columns(tuple)
+          user.reload
+          user.first_name.should eq("Alice")
+          user.active.should be_true
+
+          # Test update_columns with Hash
+          hash = {"last_name" => "Johnson", "posts_count" => 15} of String => Lustra::SQL::Any
+          user.update_columns(hash)
+          user.reload
+          user.last_name.should eq("Johnson")
+          user.posts_count.should eq(15)
+
+          # Test that it raises error on non-persisted model
+          new_user = User.new({first_name: "Test"})
+          expect_raises(Exception, /must be persisted/) do
+            new_user.update_column(:first_name, "Fail")
+          end
+
+          expect_raises(Exception, /must be persisted/) do
+            new_user.update_columns(first_name: "Fail")
+          end
+        end
+      end
+
       it "increment and decrement" do
         temporary do
           reinit_example_models
