@@ -697,15 +697,6 @@ User.query.where { active == false }.delete_all   # Fast bulk delete, NO callbac
 User.query.where { active == false }.destroy_all  # Loads each record, calls destroy, HAS callbacks
 ```
 
-**Key Differences:**
-
-| Method | Callbacks | Performance | Use When |
-|--------|-----------|-------------|----------|
-| `delete` | ❌ No | Fast | You don't need to clean up associations or trigger hooks |
-| `destroy` | ✅ Yes | Slower | You need callbacks (e.g., counter caches, dependent records) |
-| `delete_all` | ❌ No | Very fast | Bulk deletion without loading records |
-| `destroy_all` | ✅ Yes | Slow | Need callbacks on each record (loads into memory) |
-
 **Example with callbacks:**
 
 ```crystal
