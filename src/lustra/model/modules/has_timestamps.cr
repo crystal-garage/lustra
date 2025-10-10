@@ -24,63 +24,62 @@ module Lustra::Model::HasTimestamps
       model.updated_at = Time.local if model.changed? && !model.updated_at_column.changed?
     end
 
-    # Saves the record with the updated_at set to the current time.
-    # Does not bypass validations or callbacks.
+    # Updates timestamp columns without triggering validations or callbacks.
     #
     # ```
     # user.touch             # Updates updated_at
     # user.touch(2.days.ago) # Updates updated_at to specific time
     # ```
     def touch(time : Time = Time.local) : Lustra::Model
-      self.updated_at = time
-      self.save!
+      raise "Model must be persisted before touching" unless persisted?
+
+      update_columns(updated_at: time)
 
       self
     end
 
-    # Updates the specified column and updated_at to the current time.
-    # Does not bypass validations or callbacks.
+    # Updates the specified column and updated_at without triggering validations or callbacks.
     #
     # ```
     # user.touch(:last_login_at) # Updates last_login_at and updated_at
     # user.touch(:last_seen_at, 1.hour.ago)
     # ```
     def touch(column : Symbol | String, time : Time = Time.local) : Lustra::Model
+      raise "Model must be persisted before touching" unless persisted?
+
       column_name = column.to_s
 
-      # Use set to update the column value
-      set({column_name => time})
-
-      # Also update updated_at unless it's the column being touched
-      self.updated_at = time unless column_name == "updated_at"
-
-      self.save!
+      # Update the specified column and updated_at (unless the column is updated_at itself)
+      if column_name == "updated_at"
+        update_columns(updated_at: time)
+      else
+        updates = {column_name => time, "updated_at" => time} of String => Lustra::SQL::Any
+        update_columns(updates)
+      end
 
       self
     end
 
-    # Updates the specified columns and updated_at to the current time.
-    # Does not bypass validations or callbacks.
+    # Updates multiple timestamp columns without triggering validations or callbacks.
     #
     # ```
     # user.touch([:last_login_at, :last_seen_at])
     # user.touch([:last_login_at, :last_seen_at], 3.days.ago)
     # ```
     def touch(columns : Array(Symbol | String), time : Time = Time.local) : Lustra::Model
-      # Update each specified column
+      raise "Model must be persisted before touching" unless persisted?
+
       updates = {} of String => Lustra::SQL::Any
       columns.each do |column|
         updates[column.to_s] = time
       end
 
-      set(updates)
-
       # Also update updated_at unless it was explicitly included
       unless columns.any? { |c| c.to_s == "updated_at" }
-        self.updated_at = time
+        updates["updated_at"] = time
       end
 
-      self.save!
+      update_columns(updates)
 
       self
     end

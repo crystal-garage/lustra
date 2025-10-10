@@ -939,6 +939,33 @@ module ModelSpec
             user.last_comment_at.should eq(time)
           end
         end
+
+        it "bypasses validations and callbacks" do
+          temporary do
+            reinit_example_models
+
+            # Create a user with valid data
+            user = User.create!({first_name: "John", last_name: "Doe"})
+            user_id = user.id
+            original_updated_at = user.updated_at
+
+            # Make the user invalid by setting first_name to empty string using direct SQL
+            Lustra::SQL::ConnectionPool.with_connection("default") do |cnx|
+              cnx.exec("UPDATE users SET first_name = '' WHERE id = $1", user_id)
+            end
+
+            # Reload the user - it now has invalid data
+            user = User.find!(user_id)
+            user.first_name.should eq("")
+
+            # Attempting to save! would fail validation, but touch should work
+            # because it bypasses validations
+            user.touch
+
+            # Verify updated_at was changed from the original
+            user.updated_at.should_not eq(original_updated_at)
+          end
+        end
       end
     end
 
