@@ -31,7 +31,7 @@ module Lustra::Model::HasTimestamps
     # user.touch(2.days.ago) # Updates updated_at to specific time
     # ```
     def touch(time : Time = Time.local) : Lustra::Model
-      raise "Model must be persisted before touching" unless persisted?
+      raise Lustra::Model::Error.new("Model must be persisted before touching") unless persisted?
 
       update_columns(updated_at: time)
 
@@ -45,7 +45,7 @@ module Lustra::Model::HasTimestamps
     # user.touch(:last_seen_at, 1.hour.ago)
     # ```
     def touch(column : Symbol | String, time : Time = Time.local) : Lustra::Model
-      raise "Model must be persisted before touching" unless persisted?
+      raise Lustra::Model::Error.new("Model must be persisted before touching") unless persisted?
 
       column_name = column.to_s
 
@@ -67,7 +67,7 @@ module Lustra::Model::HasTimestamps
     # user.touch([:last_login_at, :last_seen_at], 3.days.ago)
     # ```
     def touch(columns : Array(Symbol | String), time : Time = Time.local) : Lustra::Model
-      raise "Model must be persisted before touching" unless persisted?
+      raise Lustra::Model::Error.new("Model must be persisted before touching") unless persisted?
 
       updates = {} of String => Lustra::SQL::Any
       columns.each do |column|

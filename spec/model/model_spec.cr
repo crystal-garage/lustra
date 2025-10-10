@@ -966,6 +966,19 @@ module ModelSpec
             user.updated_at.should_not eq(original_updated_at)
           end
         end
+
+        it "raises error when model is not persisted" do
+          temporary do
+            reinit_example_models
+
+            user = User.new({first_name: "John", last_name: "Doe"})
+            user.persisted?.should be_false
+
+            expect_raises(Lustra::Model::Error, "Model must be persisted before touching") do
+              user.touch
+            end
+          end
+        end
       end
     end
 
