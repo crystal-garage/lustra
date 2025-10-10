@@ -877,11 +877,38 @@ module Lustra::Model
       {% end %}
     end
 
-    # Delete all the rows which would have been returned by this collection.
+    # Delete all the rows which would have been returned by this collection WITHOUT callbacks.
+    # This is a bulk operation that doesn't load models into memory.
     # Is equivalent to `collection.to_delete.execute`
+    #
+    # ```
+    # User.query.where { active == false }.delete_all
+    # ```
+    #
+    # Returns `self` for chaining.
     def delete_all : self
       to_delete.execute
-      change! # because we want to lustra the caches in case we do something with the collection later
+      change! # because we want to clear the caches in case we do something with the collection later
+    end
+
+    # Destroy all the rows which would have been returned by this collection WITH callbacks.
+    # This loads each model into memory and calls `destroy` on it, triggering all `:delete` callbacks.
+    # Use `delete_all` if you don't need callbacks (much faster for large datasets).
+    #
+    # ```
+    # # With callbacks - slower but safe
+    # User.query.where { active == false }.destroy_all
+    #
+    # # Without callbacks - faster
+    # User.query.where { active == false }.delete_all
+    # ```
+    #
+    # Returns `self` for chaining.
+    def destroy_all : self
+      each do |model|
+        model.destroy
+      end
+      change! # because we want to clear the caches in case we do something with the collection later
     end
 
     # Update all the rows which would have been returned by this collection

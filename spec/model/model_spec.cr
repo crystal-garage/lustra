@@ -370,13 +370,13 @@ module ModelSpec
           user1.reload
           user1.posts_count.should eq(2)
 
-          # Delete a post - counter should decrement
-          post1.delete
+          # Destroy a post - counter should decrement
+          post1.destroy
           user1.reload
           user1.posts_count.should eq(1)
 
-          # Delete another post - counter should decrement
-          post2.delete
+          # Destroy another post - counter should decrement
+          post2.destroy
           user1.reload
           user1.posts_count.should eq(0)
         end
@@ -871,6 +871,102 @@ module ModelSpec
           u.delete.should be_true
           u.persisted?.should be_false
           User.query.count.should eq 1
+        end
+      end
+
+      context "delete vs destroy" do
+        it "delete removes record without callbacks" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+            user_id = user.id
+
+            # Track if callback was called
+            callback_called = false
+            User.before(:destroy) do |_|
+              callback_called = true
+            end
+
+            # delete should NOT trigger callbacks
+            user.delete.should be_true
+            callback_called.should be_false
+
+            # User should be gone from database
+            User.find(user_id).should be_nil
+            user.persisted?.should be_false
+          end
+        end
+
+        it "destroy removes record with callbacks" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+            user_id = user.id
+
+            # Track if callback was called
+            callback_called = false
+            User.before(:destroy) do |_|
+              callback_called = true
+            end
+
+            # destroy SHOULD trigger callbacks
+            user.destroy.should be_true
+            callback_called.should be_true
+
+            # User should be gone from database
+            User.find(user_id).should be_nil
+            user.persisted?.should be_false
+          end
+        end
+
+        it "delete_all bulk deletes without callbacks" do
+          temporary do
+            reinit_example_models
+
+            User.create!({first_name: "John", last_name: "Doe"})
+            User.create!({first_name: "Jane", last_name: "Doe"})
+            User.create!({first_name: "Bob", last_name: "Smith"})
+
+            # Track if callback was called
+            callback_count = 0
+            User.before(:destroy) do |_|
+              callback_count += 1
+            end
+
+            # delete_all should NOT trigger callbacks
+            User.query.where(last_name: "Doe").delete_all
+            callback_count.should eq(0)
+
+            # Only Bob should remain
+            User.query.count.should eq(1)
+            User.query.first!.first_name.should eq("Bob")
+          end
+        end
+
+        it "destroy_all loads and destroys with callbacks" do
+          temporary do
+            reinit_example_models
+
+            User.create!({first_name: "John", last_name: "Doe"})
+            User.create!({first_name: "Jane", last_name: "Doe"})
+            User.create!({first_name: "Bob", last_name: "Smith"})
+
+            # Track if callback was called
+            callback_count = 0
+            User.before(:destroy) do |_|
+              callback_count += 1
+            end
+
+            # destroy_all SHOULD trigger callbacks for each record
+            User.query.where(last_name: "Doe").destroy_all
+            callback_count.should eq(2)
+
+            # Only Bob should remain
+            User.query.count.should eq(1)
+            User.query.first!.first_name.should eq("Bob")
+          end
         end
       end
 
