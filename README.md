@@ -794,7 +794,8 @@ class Post
 
   belongs_to user : User, counter_cache: true
 
-  after(:destroy) do |post|
+  after(:destroy) do |model|
+    post = model.as(Post)
     # Clean up associated data
     Comment.query.where(post_id: post.id).delete_all
   end
@@ -963,16 +964,18 @@ class User
 
   # Block syntax
   before(:validate) do |model|
-    model.email = model.email.downcase
+    user = model.as(User)
+    user.email = user.email.downcase
   end
 
   after(:create) do |model|
-    puts "New user created: #{model.name}"
+    user = model.as(User)
+    puts "New user created: #{user.first_name}"
   end
 
-  # Method syntax (cleaner for complex logic)
+  # Method syntax (cleaner for complex logic - auto-casts for you)
   before(:save, :normalize_email)
-  after(:delete, :cleanup_user_data)
+  after(:destroy, :cleanup_user_data)
 
   def normalize_email
     self.email = email.strip.downcase
@@ -1008,30 +1011,34 @@ after(:save) { puts "3" }
 **Sanitizing data before validation:**
 ```crystal
 before(:validate) do |model|
-  model.email = model.email.strip.downcase if model.email_column.defined?
+  user = model.as(User)
+  user.email = user.email.strip.downcase if user.email_column.defined?
 end
 ```
 
 **Sending notifications after creation:**
 ```crystal
 after(:create) do |model|
-  WelcomeMailer.send(model.email)
+  user = model.as(User)
+  WelcomeMailer.send(user.email)
 end
 ```
 
 **Cleanup after deletion:**
 ```crystal
 after(:destroy) do |model|
-  FileStorage.delete(model.avatar_path) if model.avatar_path
+  user = model.as(User)
+  FileStorage.delete(user.avatar_path) if user.avatar_path
 end
 ```
 
 **Auditing changes:**
 ```crystal
 after(:update) do |model|
+  user = model.as(User)
   AuditLog.create!(
     model_type: "User",
-    model_id: model.id,
+    model_id: user.id,
     action: "update"
   )
 end
