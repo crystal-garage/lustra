@@ -943,5 +943,21 @@ module Lustra::Model
     def update_all(fields : Hash(String, Lustra::SQL::Any)) : Int64
       to_update.set(fields).execute_and_count
     end
+
+    # Convenient shortcut to get an array of primary key values.
+    # Equivalent to `pluck_col(T.__pkey__)` but more readable.
+    #
+    # ```
+    # User.query.where { active == true }.ids
+    # # => [1, 2, 3, 4, 5]
+    #
+    # Post.query.where { published == true }.ids
+    # # => [10, 25, 42, 100]
+    # ```
+    #
+    # Returns an array of primary key values (typically `Array(Int64)` or `Array(Int32)`).
+    def ids : Array(Lustra::SQL::Any)
+      pluck_col(T.__pkey__)
+    end
   end
 end

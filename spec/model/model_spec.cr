@@ -970,6 +970,56 @@ module ModelSpec
         end
       end
 
+      context "ids method" do
+        it "returns array of primary key values" do
+          temporary do
+            reinit_example_models
+
+            user1 = User.create!({first_name: "John"})
+            user2 = User.create!({first_name: "Jane"})
+            user3 = User.create!({first_name: "Bob"})
+
+            # Get all IDs
+            all_ids = User.query.ids
+            all_ids.should eq([user1.id, user2.id, user3.id])
+          end
+        end
+
+        it "works with where clauses" do
+          temporary do
+            reinit_example_models
+
+            user1 = User.create!({first_name: "John", last_name: "Doe"})
+            user2 = User.create!({first_name: "Jane", last_name: "Doe"})
+            user3 = User.create!({first_name: "Bob", last_name: "Smith"})
+
+            # Get IDs with filter
+            doe_ids = User.query.where(last_name: "Doe").ids
+            doe_ids.should eq([user1.id, user2.id])
+          end
+        end
+
+        it "returns empty array when no records" do
+          temporary do
+            reinit_example_models
+
+            User.query.where(first_name: "NonExistent").ids.should be_empty
+          end
+        end
+
+        it "is chainable with other query methods" do
+          temporary do
+            reinit_example_models
+
+            5.times { |i| User.create!({first_name: "User#{i}"}) }
+
+            # Chain with limit and order
+            ids = User.query.order_by(:id, :desc).limit(3).ids
+            ids.size.should eq(3)
+          end
+        end
+      end
+
       context "attribute change tracking" do
         it "returns change tuple with column.change" do
           temporary do

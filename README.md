@@ -335,6 +335,9 @@ end
 user_names = User.query.pluck_col("first_name")
 user_data = User.query.pluck("first_name", "last_name")
 
+# Get array of IDs (shortcut for pluck_col primary key)
+active_user_ids = User.query.where { active == true }.ids  # => [1, 2, 3, 4, 5]
+
 # Bulk update without loading models (bypasses validations and callbacks)
 affected = User.query.where { active == false }.update_all(status: "inactive")
 puts "Updated #{affected} users"
