@@ -1055,6 +1055,63 @@ module ModelSpec
             user.changed.should eq([] of String)
           end
         end
+
+        it "can be used in callbacks for conditional logic" do
+          temporary do
+            reinit_example_models
+
+            # Track what happened in callback
+            last_name_changed_in_callback = false
+            first_name_changed_in_callback = false
+
+            User.before(:save) do |model|
+              user = model.as(User)
+
+              # Check if specific field changed
+              if user.last_name_column.changed?
+                last_name_changed_in_callback = true
+              end
+
+              # Get the actual change
+              if change = user.first_name_column.change
+                old_name, new_name = change
+                first_name_changed_in_callback = true if old_name != new_name
+              end
+            end
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+
+            # Change last_name only
+            user.last_name = "Smith"
+            user.save!
+
+            last_name_changed_in_callback.should be_true
+            first_name_changed_in_callback.should be_false
+          end
+        end
+
+        it "shows all changes for auditing in callbacks" do
+          temporary do
+            reinit_example_models
+
+            audit_log = {} of String => Tuple(Lustra::SQL::Any, Lustra::SQL::Any)
+
+            User.before(:save) do |model|
+              user = model.as(User)
+              audit_log = user.changes
+            end
+
+            user = User.create!({first_name: "John", last_name: "Doe"})
+            user.first_name = "Jane"
+            user.last_name = "Smith"
+            user.save!
+
+            # Callback captured all changes
+            audit_log.size.should eq(2)
+            audit_log["first_name"].should eq({"John", "Jane"})
+            audit_log["last_name"].should eq({"Doe", "Smith"})
+          end
+        end
       end
 
       context "touch" do
