@@ -874,14 +874,70 @@ module ModelSpec
         end
       end
 
-      it "touch model" do
-        temporary do
-          reinit_example_models
+      context "touch" do
+        it "updates updated_at timestamp" do
+          temporary do
+            reinit_example_models
 
-          c = Category.create!({name: "Nature"})
-          updated_at = c.updated_at
-          c.touch
-          c.updated_at.should_not eq(updated_at)
+            c = Category.create!({name: "Nature"})
+            updated_at = c.updated_at
+            c.touch
+            c.updated_at.should_not eq(updated_at)
+          end
+        end
+
+        it "updates specific column" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+            updated_at = user.updated_at
+            last_comment_at = user.last_comment_at
+
+            user.touch(:last_comment_at)
+            user.updated_at.should_not eq(updated_at)
+            user.last_comment_at.should_not eq(last_comment_at)
+          end
+        end
+
+        it "updates specific column with time" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+
+            time = 30.seconds.ago
+            user.touch(:last_comment_at, time)
+            user.updated_at.should eq(time)
+          end
+        end
+
+        it "updates multiple columns" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+            updated_at = user.updated_at
+            last_comment_at = user.last_comment_at
+
+            user.touch([:last_comment_at, :updated_at])
+            user.touch(:last_comment_at, :updated_at)
+            user.updated_at.should_not eq(updated_at)
+            user.last_comment_at.should_not eq(last_comment_at)
+          end
+        end
+
+        it "updates multiple columns with time" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!({first_name: "John", last_comment_at: 1.minutes.ago})
+            time = 30.seconds.ago
+
+            user.touch(:last_comment_at, :updated_at, time: time)
+            user.updated_at.should eq(time)
+            user.last_comment_at.should eq(time)
+          end
         end
       end
     end
