@@ -93,8 +93,17 @@ module Lustra::Model::ClassMethods
       # See `Lustra::Model::CollectionBase`
       class Collection < Lustra::Model::CollectionBase(\{{@type}}); end
 
-      # Return a new empty query `SELECT * FROM [my_model_table]`. Can be refined after that.
+      # Return a new query `SELECT * FROM [my_model_table]`. Can be refined after that.
+      # Automatically applies default_scope if defined.
       def self.query
+        q = Collection.new.use_connection(connection).from(self.full_table_name)
+        # Apply default scope if the method exists
+        q.responds_to?(:__apply_default_scope__) ? q.__apply_default_scope__ : q
+      end
+
+      # :nodoc:
+      # Internal method used by Collection#unscoped to get a clean query.
+      def self.__unscoped_query__
         Collection.new.use_connection(connection).from(self.full_table_name)
       end
 
