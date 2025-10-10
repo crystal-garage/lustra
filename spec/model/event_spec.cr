@@ -41,7 +41,7 @@ module EventSpec
 
     after(:create) { |model| model.as(CallbackTestModel).callback_triggered = true }
     after(:update) { |_| ACCUMULATOR << "update_callback" }
-    after(:delete) { |_| ACCUMULATOR << "delete_callback" }
+    after(:destroy) { |_| ACCUMULATOR << "destroy_callback" }
   end
 
   describe "Lustra::Model" do
@@ -85,16 +85,16 @@ module EventSpec
         end
       end
 
-      it "triggers after(:delete) callback when model is deleted" do
+      it "triggers after(:destroy) callback when model is destroyed" do
         temporary do
           reinit_example_models
 
           model = CallbackTestModel.create!(name: "test")
           ACCUMULATOR.clear
 
-          model.delete
+          model.destroy
 
-          ACCUMULATOR.should contain("delete_callback")
+          ACCUMULATOR.should contain("destroy_callback")
         end
       end
     end

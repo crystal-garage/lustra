@@ -205,7 +205,7 @@ module Lustra::Model::Relations::BelongsToMacro
         {{self_type}}.after(:create) do |mdl|
           mdl.as(self)._bt_increment_counter_{{method_name}}
         end
-        {{self_type}}.after(:delete) do |mdl|
+        {{self_type}}.after(:destroy) do |mdl|
           mdl.as(self)._bt_decrement_counter_{{method_name}}
         end
       {% end %}

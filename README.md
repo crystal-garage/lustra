@@ -679,6 +679,54 @@ user.update_columns({admin: true, role: "superuser"})
 
 Use these methods only when you need raw performance and are certain the data is valid.
 
+##### Deleting Records
+
+Lustra provides two ways to delete records:
+
+```crystal
+# delete - Fast deletion WITHOUT callbacks (just removes from DB)
+user.delete
+user.persisted? # => false
+
+# destroy - Safe deletion WITH callbacks (triggers before/after :destroy hooks)
+user.destroy
+user.persisted? # => false
+
+# Bulk operations on collections
+User.query.where { active == false }.delete_all   # Fast bulk delete, NO callbacks
+User.query.where { active == false }.destroy_all  # Loads each record, calls destroy, HAS callbacks
+```
+
+**Key Differences:**
+
+| Method | Callbacks | Performance | Use When |
+|--------|-----------|-------------|----------|
+| `delete` | ❌ No | Fast | You don't need to clean up associations or trigger hooks |
+| `destroy` | ✅ Yes | Slower | You need callbacks (e.g., counter caches, dependent records) |
+| `delete_all` | ❌ No | Very fast | Bulk deletion without loading records |
+| `destroy_all` | ✅ Yes | Slow | Need callbacks on each record (loads into memory) |
+
+**Example with callbacks:**
+
+```crystal
+class Post
+  include Lustra::Model
+
+  belongs_to user : User, counter_cache: true
+
+  after(:destroy) do |post|
+    # Clean up associated data
+    Comment.query.where(post_id: post.id).delete_all
+  end
+end
+
+# This will trigger the callback and clean up comments
+post.destroy
+
+# This will NOT trigger callbacks - comments remain orphaned
+post.delete
+```
+
 #### Validation
 
 ##### Presence validator
@@ -817,7 +865,7 @@ Lustra provides a comprehensive callback system to hook into model lifecycle eve
 - `:save` - Triggered for any save operation (wraps create/update)
 - `:create` - Triggered when a new record is inserted
 - `:update` - Triggered when an existing record is updated
-- `:delete` - Triggered when a record is deleted
+- `:destroy` - Triggered when a record is destroyed (via `destroy` method, not `delete`)
 
 ##### Callback Directions
 
@@ -893,7 +941,7 @@ end
 
 **Cleanup after deletion:**
 ```crystal
-after(:delete) do |model|
+after(:destroy) do |model|
   FileStorage.delete(model.avatar_path) if model.avatar_path
 end
 ```
@@ -917,12 +965,12 @@ Callbacks work seamlessly with associations like `counter_cache` and `touch`:
 class Post
   include Lustra::Model
 
-  belongs_to user : User, counter_cache: true  # Uses after(:create) and after(:delete)
+  belongs_to user : User, counter_cache: true  # Uses after(:create) and after(:destroy)
   belongs_to category : Category, touch: true   # Uses after(:create) and after(:update)
 end
 ```
 
-The `counter_cache` automatically registers `after(:create)` and `after(:delete)` callbacks to increment/decrement the counter on the parent model.
+The `counter_cache` automatically registers `after(:create)` and `after(:destroy)` callbacks to increment/decrement the counter on the parent model.
 
 ### Migration
 

@@ -1,11 +1,11 @@
 # This module handles saving models to the database and triggers lifecycle callbacks.
-# It's where the actual `:create`, `:update`, `:delete`, and `:save` callbacks are triggered.
+# It's where the actual `:create`, `:update`, `:destroy`, and `:save` callbacks are triggered.
 #
 # Key callback trigger points:
 # - `:save` callbacks: triggered for the entire save operation (wraps create/update)
-# - `:create` callbacks: triggered when a new record is inserted into the database
-# - `:update` callbacks: triggered when an existing record is updated in the database
-# - `:delete` callbacks: triggered when a record is deleted from the database
+# - `:create` callbacks: triggered when a new record is created
+# - `:update` callbacks: triggered when an existing record is updated
+# - `:destroy` callbacks: triggered when a record is destroyed
 #
 # The callbacks are triggered via `with_triggers` which calls `Lustra::Model::EventManager`
 module Lustra::Model::HasSaving
@@ -220,14 +220,41 @@ module Lustra::Model::HasSaving
     self
   end
 
-  # Delete the model by building and executing a `DELETE` query.
-  # A deleted model is not persisted anymore, and can be saved again.
-  # Lustra will do `INSERT` instead of `UPDATE` then
-  # Return `true` if the model has been successfully deleted, and `false` otherwise.
+  # Delete the model from the database WITHOUT running callbacks.
+  # Use this for performance when you don't need to trigger callbacks.
+  # The deleted model is not persisted anymore and can be saved again.
+  #
+  # ```
+  # user.delete
+  # user.persisted? # => false
+  # ```
+  #
+  # Returns `true` if successfully deleted, `false` otherwise.
   def delete
     return false unless persisted?
 
-    with_triggers(:delete) do
+    Lustra::SQL::DeleteQuery.new.from(self.class.full_table_name).where { var("#{self.class.__pkey__}") == __pkey__ }.execute(@@connection)
+
+    @persisted = false
+    clear_change_flags
+
+    true
+  end
+
+  # Destroy the model from the database WITH callbacks and validations.
+  # This is the safe way to delete records as it triggers all `:destroy` callbacks.
+  # The destroyed model is not persisted anymore and can be saved again.
+  #
+  # ```
+  # user.destroy    # Triggers before(:destroy) and after(:destroy) callbacks
+  # user.persisted? # => false
+  # ```
+  #
+  # Returns `true` if successfully destroyed, `false` otherwise.
+  def destroy
+    return false unless persisted?
+
+    with_triggers(:destroy) do
       Lustra::SQL::DeleteQuery.new.from(self.class.full_table_name).where { var("#{self.class.__pkey__}") == __pkey__ }.execute(@@connection)
 
       @persisted = false
