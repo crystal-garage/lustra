@@ -136,7 +136,7 @@ dependencies:
   lustra:
     github: crystal-garage/lustra
     branch: develop
-    version: ">= 0.11.0"
+    version: ">= 0.12.0"
 ```
 
 Then:
