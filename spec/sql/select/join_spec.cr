@@ -23,7 +23,7 @@ module JoinSpec
     it "constructs all common type of joins" do
       # Just ensure it is callable.
       {% for join in [:left, :inner, :right, :full_outer, :cross] %}
-        Lustra::SQL.select.from("posts").{{join.id}}_join("users")
+        Lustra::SQL.select.from("posts").{{ join.id }}_join("users")
       {% end %}
     end
 

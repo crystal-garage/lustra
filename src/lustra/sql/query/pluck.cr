@@ -106,10 +106,10 @@ module Lustra::SQL::Query::Pluck
       rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
 
       {% begin %}
-        o = [] of Tuple({% for k, v in T %}{{v.instance}},{% end %})
+        o = [] of Tuple({% for k, v in T %}{{ v.instance }},{% end %})
 
         while rs.move_next
-          o << { {% for k, v in T %} rs.read({{v.instance}}), {% end %}}
+          o << { {% for k, v in T %} rs.read({{ v.instance }}), {% end %}}
         end
         o
       {% end %}

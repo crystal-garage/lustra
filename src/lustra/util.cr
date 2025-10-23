@@ -34,6 +34,6 @@ module Lustra::Util
 
   # :nodoc:
   macro to_proc(*args, &block)
-    -> ({{args.join(", ").id}}) { {{block.body}} }
+    -> ({{ args.join(", ").id }}) { {{ block.body }} }
   end
 end

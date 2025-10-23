@@ -27,9 +27,9 @@ class Lustra::CLI::Generator < Admiral::Command
   end
 
   macro ecr_to_s(string, opts)
-    opts = {{opts}}
+    opts = {{ opts }}
     io = IO::Memory.new
-    ECR.embed {{string}}, io
+    ECR.embed {{ string }}, io
     io.to_s
   end
 end

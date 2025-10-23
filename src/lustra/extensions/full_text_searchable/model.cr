@@ -87,14 +87,14 @@ require "./tsvector"
 module Lustra::Model::FullTextSearchable
   # Set this model as searchable using tsvector
   macro full_text_searchable(through = "full_text_vector", catalog = "pg_catalog.english", scope_name = "search")
-    column( {{through.id}} : Lustra::TSVector, presence: false)
+    column( {{ through.id }} : Lustra::TSVector, presence: false)
 
-    scope "{{scope_name.id}}" do |str|
+    scope "{{ scope_name.id }}" do |str|
       table = self.item_class.table
       where {
         op(
-          var(table, "{{through.id}}"),
-          to_tsquery({{catalog}}, Lustra::Model::FullTextSearchable.to_tsq(str)),
+          var(table, "{{ through.id }}"),
+          to_tsquery({{ catalog }}, Lustra::Model::FullTextSearchable.to_tsq(str)),
           "@@"
         )
       }

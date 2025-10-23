@@ -20,7 +20,7 @@ module Lustra::Model::HasFactory
 
   # :nodoc:
   macro __default_factory__
-    Lustra::Model::Factory.add({{@type.stringify}}, ::Lustra::Model::Factory::SimpleFactory({{@type}}).new)
+    Lustra::Model::Factory.add({{ @type.stringify }}, ::Lustra::Model::Factory::SimpleFactory({{ @type }}).new)
   end
 
   # :nodoc:
@@ -36,11 +36,11 @@ module Lustra::Model::HasFactory
   macro polymorphic(through = "type")
     {% POLYMORPHISM_SETTINGS[:has_factory] = true %}
 
-    column {{through.id}} : String
+    column {{ through.id }} : String
 
     before(:validate) do |model|
       model = model.as(self)
-      model.{{through.id}} = model.class.name
+      model.{{ through.id }} = model.class.name
     end
 
     # Subclasses are refined using a default scope
@@ -49,14 +49,14 @@ module Lustra::Model::HasFactory
       class Collection < Lustra::Model::CollectionBase(\{{@type}}); end
 
       def self.query
-        Collection.new.from(table).where { {{through.id}} == self.name }
+        Collection.new.from(table).where { {{ through.id }} == self.name }
       end
     end
 
     # Base class can be refined too, only if the baseclass is not abstract.
     {% unless @type.abstract? %}
       def self.query
-        Collection.new.from(table).where { {{through.id}} == self.name }
+        Collection.new.from(table).where { {{ through.id }} == self.name }
       end
     {% end %}
 
@@ -65,8 +65,8 @@ module Lustra::Model::HasFactory
     end
 
     Lustra::Model::Factory.add(
-      "{{@type}}",
-      Lustra::Model::Factory::PolymorphicFactory({{@type}}).new({{through.id.stringify}}, "{{@type}}")
+      "{{ @type }}",
+      Lustra::Model::Factory::PolymorphicFactory({{ @type }}).new({{ through.id.stringify }}, "{{ @type }}")
     )
 
     macro inherited

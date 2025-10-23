@@ -205,41 +205,41 @@ module Lustra::Model::HasColumns
                  "not nilable type (e.g. Int32 instead of Int32?). Lustra will use the nilable parameter of the model instead." %}
       {% end %}
 
-      @{{var_name}}_column : Lustra::Model::Column({{type}}, {{converter}}) =
-        Lustra::Model::Column({{type}}, {{converter}}).new(
-          {{db_name}},
-          has_db_default: {{has_db_default}}
+      @{{ var_name }}_column : Lustra::Model::Column({{ type }}, {{ converter }}) =
+        Lustra::Model::Column({{ type }}, {{ converter }}).new(
+          {{ db_name }},
+          has_db_default: {{ has_db_default }}
         )
 
-      # Returns the column object used to manage `{{var_name}}` field
+      # Returns the column object used to manage `{{ var_name }}` field
       #
       # See `Lustra::Model::Column`
-      def {{var_name}}_column : Lustra::Model::Column({{type}}, {{converter}})
-        @{{var_name}}_column
+      def {{ var_name }}_column : Lustra::Model::Column({{ type }}, {{ converter }})
+        @{{ var_name }}_column
       end
 
-      # Returns the value of `{{var_name}}` column or throw an exception if the column is not defined.
-      def {{var_name}} : {{type}}
-        @{{var_name}}_column.value
+      # Returns the value of `{{ var_name }}` column or throw an exception if the column is not defined.
+      def {{ var_name }} : {{ type }}
+        @{{ var_name }}_column.value
       end
 
-      # Setter for `{{var_name}}` column.
-      def {{var_name}}=(x : {{type}})
-        @{{var_name}}_column.value = x
+      # Setter for `{{ var_name }}` column.
+      def {{ var_name }}=(x : {{ type }})
+        @{{ var_name }}_column.value = x
       end
 
       {% if settings[:primary] %}
         # :nodoc:
-        class_property __pkey__ : String = "{{var_name}}"
+        class_property __pkey__ : String = "{{ var_name }}"
 
         # :nodoc:
         def __pkey__
-          @{{var_name}}_column.value
+          @{{ var_name }}_column.value
         end
 
         # :nodoc:
         def __pkey_column__
-          @{{var_name}}_column
+          @{{ var_name }}_column
         end
       {% end %}
     {% end %}
@@ -251,12 +251,12 @@ module Lustra::Model::HasColumns
       {% verbatim do %}
         {% for name, typ in T %}
           {% if settings = COLUMNS["#{name}"] %}
-            @{{settings[:crystal_variable_name]}}_column.reset_convert(t[:{{name}}])
+            @{{ settings[:crystal_variable_name] }}_column.reset_convert(t[:{{ name }}])
           {% else %}
             {% if !@type.has_method?("#{name}=") %}
               {% raise "Cannot find the column `#{name}` of the model `#{@type}`" %}
             {% end %}
-            self.{{name}} = t[:{{name}}]
+            self.{{ name }} = t[:{{ name }}]
           {% end %}
         {% end %}
       {% end %}
@@ -275,7 +275,7 @@ module Lustra::Model::HasColumns
       {% verbatim do %}
         {% for name, settings in COLUMNS %}
           v = h.fetch(:\{{settings[:db_column_name]}}) { Lustra::Model::Column::UNKNOWN }
-          @{{settings[:crystal_variable_name]}}_column.reset_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
+          @{{ settings[:crystal_variable_name] }}_column.reset_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
         {% end %}
       {% end %}
 
@@ -288,8 +288,8 @@ module Lustra::Model::HasColumns
 
       {% verbatim do %}
         {% for name, settings in COLUMNS %}
-          v = h.fetch({{settings[:db_column_name]}}) { Lustra::Model::Column::UNKNOWN }
-          @{{settings[:crystal_variable_name]}}_column.reset_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
+          v = h.fetch({{ settings[:db_column_name] }}) { Lustra::Model::Column::UNKNOWN }
+          @{{ settings[:crystal_variable_name] }}_column.reset_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
         {% end %}
       {% end %}
 
@@ -306,12 +306,12 @@ module Lustra::Model::HasColumns
       {% verbatim do %}
         {% for name, typ in T %}
           {% if settings = COLUMNS["#{name}".id] %}
-            @{{settings[:crystal_variable_name]}}_column.set_convert(t[:{{name}}])
+            @{{ settings[:crystal_variable_name] }}_column.set_convert(t[:{{ name }}])
           {% else %}
             {% if !@type.has_method?("#{name}=") %}
               {% raise "No method #{@type}##{name}= while trying to set value of #{name}" %}
             {% end %}
-            self.{{name}} = t[:{{name}}]
+            self.{{ name }} = t[:{{ name }}]
           {% end %}
         {% end %}
       {% end %}
@@ -329,8 +329,8 @@ module Lustra::Model::HasColumns
 
       {% verbatim do %}
         {% for name, settings in COLUMNS %}
-          v = h.fetch(:{{settings[:db_column_name]}}) { Lustra::Model::Column::UNKNOWN }
-          @{{settings[:crystal_variable_name]}}_column.set_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
+          v = h.fetch(:{{ settings[:db_column_name] }}) { Lustra::Model::Column::UNKNOWN }
+          @{{ settings[:crystal_variable_name] }}_column.set_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
         {% end %}
       {% end %}
 
@@ -343,8 +343,8 @@ module Lustra::Model::HasColumns
 
       {% verbatim do %}
         {% for name, settings in COLUMNS %}
-          v = h.fetch({{settings[:db_column_name]}}) { Lustra::Model::Column::UNKNOWN }
-          @{{settings[:crystal_variable_name]}}_column.set_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
+          v = h.fetch({{ settings[:db_column_name] }}) { Lustra::Model::Column::UNKNOWN }
+          @{{ settings[:crystal_variable_name] }}_column.set_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
         {% end %}
       {% end %}
 
@@ -360,9 +360,9 @@ module Lustra::Model::HasColumns
       o = super
 
       {% for name, settings in COLUMNS %}
-        if @{{settings[:crystal_variable_name]}}_column.defined? &&
-           @{{settings[:crystal_variable_name]}}_column.changed?
-          o[{{settings[:db_column_name]}}] = @{{settings[:crystal_variable_name]}}_column.to_sql_value
+        if @{{ settings[:crystal_variable_name] }}_column.defined? &&
+           @{{ settings[:crystal_variable_name] }}_column.changed?
+          o[{{ settings[:db_column_name] }}] = @{{ settings[:crystal_variable_name] }}_column.to_sql_value
         end
       {% end %}
 
@@ -384,8 +384,8 @@ module Lustra::Model::HasColumns
 
       {% for name, settings in COLUMNS %}
         unless persisted?
-          if @{{settings[:crystal_variable_name]}}_column.failed_to_be_present?
-            add_error({{settings[:crystal_variable_name].stringify}}, "must be present")
+          if @{{ settings[:crystal_variable_name] }}_column.failed_to_be_present?
+            add_error({{ settings[:crystal_variable_name].stringify }}, "must be present")
           end
         end
       {% end %}
@@ -399,7 +399,7 @@ module Lustra::Model::HasColumns
     # Returns `self`
     def clear_change_flags
       {% for name, settings in COLUMNS %}
-        @{{settings[:crystal_variable_name]}}_column.clear_change_flag
+        @{{ settings[:crystal_variable_name] }}_column.clear_change_flag
       {% end %}
 
       self
@@ -416,12 +416,12 @@ module Lustra::Model::HasColumns
       changes_hash = {} of String => Tuple(Lustra::SQL::Any, Lustra::SQL::Any)
 
       {% for name, settings in COLUMNS %}
-        if @{{settings[:crystal_variable_name]}}_column.changed?
-          old_val = @{{settings[:crystal_variable_name]}}_column.old_value
-          new_val = @{{settings[:crystal_variable_name]}}_column.value
+        if @{{ settings[:crystal_variable_name] }}_column.changed?
+          old_val = @{{ settings[:crystal_variable_name] }}_column.old_value
+          new_val = @{{ settings[:crystal_variable_name] }}_column.value
           # Only include if old_value is defined (not UNKNOWN)
           unless old_val.is_a?(Lustra::Model::Column::UnknownClass)
-            changes_hash[{{settings[:db_column_name]}}] = {old_val.as(Lustra::SQL::Any), new_val.as(Lustra::SQL::Any)}
+            changes_hash[{{ settings[:db_column_name] }}] = {old_val.as(Lustra::SQL::Any), new_val.as(Lustra::SQL::Any)}
           end
         end
       {% end %}
@@ -440,8 +440,8 @@ module Lustra::Model::HasColumns
       changed_attrs = [] of String
 
       {% for name, settings in COLUMNS %}
-        if @{{settings[:crystal_variable_name]}}_column.changed?
-          changed_attrs << {{settings[:db_column_name]}}
+        if @{{ settings[:crystal_variable_name] }}_column.changed?
+          changed_attrs << {{ settings[:db_column_name] }}
         end
       {% end %}
 
@@ -453,8 +453,8 @@ module Lustra::Model::HasColumns
       out = super
 
       {% for name, settings in COLUMNS %}
-        if full || @{{settings[:crystal_variable_name]}}_column.defined?
-          out[{{settings[:db_column_name]}}] = @{{settings[:crystal_variable_name]}}_column.to_sql_value(nil)
+        if full || @{{ settings[:crystal_variable_name] }}_column.defined?
+          out[{{ settings[:db_column_name] }}] = @{{ settings[:crystal_variable_name] }}_column.to_sql_value(nil)
         end
       {% end %}
 
@@ -468,9 +468,9 @@ module Lustra::Model::HasColumns
     def to_json(json, emit_nulls = false)
       json.object do
         {% for name, settings in COLUMNS %}
-          if emit_nulls || @{{settings[:crystal_variable_name]}}_column.defined?
-            json.field {{settings[:db_column_name]}} do
-              @{{settings[:crystal_variable_name]}}_column.value(nil).to_json(json)
+          if emit_nulls || @{{ settings[:crystal_variable_name] }}_column.defined?
+            json.field {{ settings[:db_column_name] }} do
+              @{{ settings[:crystal_variable_name] }}_column.value(nil).to_json(json)
             end
           end
         {% end %}
@@ -481,7 +481,7 @@ module Lustra::Model::HasColumns
     #   have been changed.). Return `false` otherwise.
     def changed?
       {% for name, settings in COLUMNS %}
-        return true if @{{settings[:crystal_variable_name]}}_column.changed?
+        return true if @{{ settings[:crystal_variable_name] }}_column.changed?
       {% end %}
 
       return false

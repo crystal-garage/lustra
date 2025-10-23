@@ -18,7 +18,7 @@ module Lustra::Model::HasSerialPkey
     {% cb = PKEY_TYPE[type] %}
 
     {% if cb %}
-      {{cb.gsub(/__name__/, name).id}}
+      {{ cb.gsub(/__name__/, name).id }}
     {% else %}
       {% raise "Cannot define primary key of type #{type}. Candidates are: #{PKEY_TYPE.keys.join(", ")}" %}
     {% end %}

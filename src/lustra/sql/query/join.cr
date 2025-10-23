@@ -28,14 +28,14 @@ module Lustra::SQL::Query::Join
   end
 
   {% for j in ["left", "right", "full_outer", "inner"] %}
-    # Add a {{"#{j.id}".upcase}} JOIN directive to the query
-    def {{j.id}}_join(name : Selectable, lateral = false, &block)
-      join_impl(name, :{{j.id}}, lateral, Lustra::Expression.ensure_node!(with Lustra::Expression.new yield))
+    # Add a {{ "#{j.id}".upcase }} JOIN directive to the query
+    def {{ j.id }}_join(name : Selectable, lateral = false, &block)
+      join_impl(name, :{{ j.id }}, lateral, Lustra::Expression.ensure_node!(with Lustra::Expression.new yield))
     end
 
-    # Add a {{"#{j.id}".upcase}} JOIN directive to the query
-    def {{j.id}}_join(name : Selectable, condition : String = "true", lateral = false)
-      join_impl(name, :{{j.id}}, lateral, Lustra::Expression::Node::Raw.new( "(" + condition + ")"))
+    # Add a {{ "#{j.id}".upcase }} JOIN directive to the query
+    def {{ j.id }}_join(name : Selectable, condition : String = "true", lateral = false)
+      join_impl(name, :{{ j.id }}, lateral, Lustra::Expression::Node::Raw.new( "(" + condition + ")"))
     end
   {% end %}
 

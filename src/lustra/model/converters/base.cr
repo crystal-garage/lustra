@@ -20,7 +20,7 @@ module Lustra::Model::Converter
       {% raise "Unknown converter: #{name}" %}
     {% end %}
 
-    {{ CONVERTERS[name] }}.to_column({{value}})
+    {{ CONVERTERS[name] }}.to_column({{ value }})
   end
 
   macro to_db(name, value)
@@ -32,6 +32,6 @@ module Lustra::Model::Converter
       {% raise "Unknown converter: #{name}" %}
     {% end %}
 
-    {{ CONVERTERS[name] }}.to_db({{value}})
+    {{ CONVERTERS[name] }}.to_db({{ value }})
   end
 end

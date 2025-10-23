@@ -4,25 +4,25 @@ module Lustra::Model::Converter
   # Macro used to generate conveniently all conversion for
   # numbers (different bitsize, signed/unsigned etc...)
   private macro number_converter(t)
-    # Convert from and to {{t}}
-    class ::Lustra::Model::Converter::{{t}}Converter
-      def self.to_column(x) : {{t}}?
+    # Convert from and to {{ t }}
+    class ::Lustra::Model::Converter::{{ t }}Converter
+      def self.to_column(x) : {{ t }}?
         case x
         when Nil
           nil
         when Number
-          {{t}}.new(x)
+          {{ t }}.new(x)
         else
-          {{t}}.new(x.to_s)
+          {{ t }}.new(x.to_s)
         end
       end
 
-      def self.to_db(x : {{t}}?)
+      def self.to_db(x : {{ t }}?)
         x
       end
     end
 
-    Lustra::Model::Converter.add_converter("{{t}}", ::Lustra::Model::Converter::{{t}}Converter)
+    Lustra::Model::Converter.add_converter("{{ t }}", ::Lustra::Model::Converter::{{ t }}Converter)
   end
 
   number_converter(Int8)

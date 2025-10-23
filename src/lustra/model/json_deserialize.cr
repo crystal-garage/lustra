@@ -23,15 +23,15 @@ macro columns_to_instance_vars
 
     {% for name, settings in COLUMNS %}
       @[JSON::Field(presence: true)]
-      getter {{name.id}} : {{settings[:type]}} {% unless settings[:type].resolve.nilable? %} | Nil {% end %}
+      getter {{ name.id }} : {{ settings[:type] }} {% unless settings[:type].resolve.nilable? %} | Nil {% end %}
       @[JSON::Field(ignore: true)]
-      getter? {{name.id}}_present : Bool
+      getter? {{ name.id }}_present : Bool
     {% end %}
 
     # Create a new empty model and fill the columns with object's instance variables
     # Trusted flag set to true will allow mass assignment without protection
     def create(trusted : Bool)
-      assign_columns({{@type}}.new, trusted)
+      assign_columns({{ @type }}.new, trusted)
     end
 
     # Update the inputted model and assign the columns with object's instance variables
@@ -45,12 +45,12 @@ macro columns_to_instance_vars
       # Trusted flag set to true will allow mass assignment without protection
       protected def assign_columns(model, trusted : Bool)
         {% for name, settings in COLUMNS %}
-          if ({{ settings[:mass_assign] }} || trusted) && self.{{name.id}}_present?
-            %value = self.{{name.id}}
+          if ({{ settings[:mass_assign] }} || trusted) && self.{{ name.id }}_present?
+            %value = self.{{ name.id }}
             {% if settings[:type].resolve.nilable? %}
-              model.{{name.id}} = %value
+              model.{{ name.id }} = %value
             {% else %}
-              model.{{name.id}} = %value unless %value.nil?
+              model.{{ name.id }} = %value unless %value.nil?
             {% end %}
           end
         {% end %}

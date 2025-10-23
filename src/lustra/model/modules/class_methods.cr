@@ -82,10 +82,10 @@ module Lustra::Model::ClassMethods
       class_property __pkey__ : String = "id"
 
       # :doc:
-      # {{@type}}::Collection
+      # {{ @type }}::Collection
       #
       # This is the object managing a `SELECT` request.
-      # A new collection is created by calling `{{@type}}.query`
+      # A new collection is created by calling `{{ @type }}.query`
       #
       # Collection are mutable and refining the SQL will mutate the collection.
       # You may want to copy the collection by calling `dup`

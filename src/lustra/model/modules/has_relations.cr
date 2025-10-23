@@ -188,43 +188,43 @@ module Lustra::Model::HasRelations
     {% for name, settings in RELATIONS %}
       {% if settings[:relation_type] == :belongs_to %}
         Relations::BelongsToMacro.generate(
-          {{@type}},
-          {{name}},
-          {{settings[:type]}},
-          {{settings[:nilable]}},
-          {{settings[:foreign_key]}},
-          {{settings[:primary]}},
-          {{settings[:no_cache]}},
-          {{settings[:foreign_key_type]}},
-          {{settings[:touch]}},
-          {{settings[:counter_cache]}}
+          {{ @type }},
+          {{ name }},
+          {{ settings[:type] }},
+          {{ settings[:nilable] }},
+          {{ settings[:foreign_key] }},
+          {{ settings[:primary] }},
+          {{ settings[:no_cache] }},
+          {{ settings[:foreign_key_type] }},
+          {{ settings[:touch] }},
+          {{ settings[:counter_cache] }}
         )
       {% elsif settings[:relation_type] == :has_many %}
         Relations::HasManyMacro.generate(
-          {{@type}},
-          {{name}},
-          {{settings[:type]}},
-          {{settings[:foreign_key]}},
-          {{settings[:primary_key]}},
-          {{settings[:autosave]}}
+          {{ @type }},
+          {{ name }},
+          {{ settings[:type] }},
+          {{ settings[:foreign_key] }},
+          {{ settings[:primary_key] }},
+          {{ settings[:autosave] }}
         )
       {% elsif settings[:relation_type] == :has_many_through %}
         Relations::HasManyThroughMacro.generate(
-          {{@type}},
-          {{name}},
-          {{settings[:type]}},
-          {{settings[:through]}},
-          {{settings[:own_key]}},
-          {{settings[:foreign_key]}},
-          {{settings[:autosave]}}
+          {{ @type }},
+          {{ name }},
+          {{ settings[:type] }},
+          {{ settings[:through] }},
+          {{ settings[:own_key] }},
+          {{ settings[:foreign_key] }},
+          {{ settings[:autosave] }}
         )
       {% elsif settings[:relation_type] == :has_one %}
         Relations::HasOneMacro.generate(
-          {{@type}},
-          {{name}},
-          {{settings[:type]}},
-          {{settings[:foreign_key]}},
-          {{settings[:primary_key]}}
+          {{ @type }},
+          {{ name }},
+          {{ settings[:type] }},
+          {{ settings[:foreign_key] }},
+          {{ settings[:primary_key] }}
         )
       {% else %}
         {% raise "I don't know this relation: #{settings[:relation_type]}" %}

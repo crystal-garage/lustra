@@ -39,27 +39,27 @@ module Lustra
   # ```
   macro json_serializable_converter(type)
     {% type = type.resolve %}
-    module ::Lustra::Model::Converter::{{type}}Converter
-      def self.to_column(x) : ::{{type}}?
+    module ::Lustra::Model::Converter::{{ type }}Converter
+      def self.to_column(x) : ::{{ type }}?
         case x
-        when ::{{type}}
+        when ::{{ type }}
           x
         when String
-          ::{{type}}.new(::JSON::PullParser.new(x))
+          ::{{ type }}.new(::JSON::PullParser.new(x))
         when ::JSON::PullParser
-          ::{{type}}.new(x)
+          ::{{ type }}.new(x)
         when ::JSON::Any
-          ::{{type}}.new(::JSON::PullParser.new(x.to_json))
+          ::{{ type }}.new(::JSON::PullParser.new(x.to_json))
         else
-          raise "Cannot convert to {{type}} from #{x.class}"
+          raise "Cannot convert to {{ type }} from #{x.class}"
         end
       end
 
-      def self.to_db(x : ::{{type}}?)
+      def self.to_db(x : ::{{ type }}?)
         x ? x.to_json : nil
       end
     end
 
-    ::Lustra::Model::Converter.add_converter({{"#{type}"}}, ::Lustra::Model::Converter::{{type}}Converter)
+    ::Lustra::Model::Converter.add_converter({{ "#{type}" }}, ::Lustra::Model::Converter::{{ type }}Converter)
   end
 end

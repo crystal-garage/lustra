@@ -19,34 +19,34 @@ ARRAY_TYPEMAP = {
 }
 
 {% for k, exp in ARRAY_VALUES %}
-  module Lustra::Model::Converter::ArrayConverter{{exp.id}}
-    def self.to_column(x) : Array(::{{exp.id}})?
+  module Lustra::Model::Converter::ArrayConverter{{ exp.id }}
+    def self.to_column(x) : Array(::{{ exp.id }})?
       case x
       when Nil
         nil
-      when ::{{exp.id}}
+      when ::{{ exp.id }}
         [x]
-      when Array(::{{exp.id}})
+      when Array(::{{ exp.id }})
         x
-      when Array(::PG::{{exp.id}}Array)
+      when Array(::PG::{{ exp.id }}Array)
         x.map do |i|
           case i
-          when ::{{exp.id}}
+          when ::{{ exp.id }}
             i
           else
             nil
           end
         end.compact
       when Array(::JSON::Any)
-        x.map(&.as_{{k.id}})
+        x.map(&.as_{{ k.id }})
       when ::JSON::Any
         if arr = x.as_a?
-          arr.map(&.as_{{k.id}})
+          arr.map(&.as_{{ k.id }})
         else
-          raise "Cannot convert from #{x.class} to Array({{exp.id}}) [1]"
+          raise "Cannot convert from #{x.class} to Array({{ exp.id }}) [1]"
         end
       else
-        raise "Cannot convert from #{x.class} to Array({{exp.id}}) [2]"
+        raise "Cannot convert from #{x.class} to Array({{ exp.id }}) [2]"
       end
     end
 
@@ -59,15 +59,15 @@ ARRAY_TYPEMAP = {
       end
     end
 
-    def self.to_db(x : Array(::{{exp.id}})?) : Lustra::SQL::Any
+    def self.to_db(x : Array(::{{ exp.id }})?) : Lustra::SQL::Any
       {% t = ARRAY_TYPEMAP["#{exp.id}"] %}
 
       return unless x
 
-      Lustra::Expression.unsafe({"Array[", to_string(x), "]::{{t.id}}"}.join)
+      Lustra::Expression.unsafe({"Array[", to_string(x), "]::{{ t.id }}"}.join)
     end
   end
 
-  Lustra::Model::Converter.add_converter("Array({{exp.id}})", Lustra::Model::Converter::ArrayConverter{{exp.id}})
-  Lustra::Model::Converter.add_converter("Array({{exp.id}} | Nil)", Lustra::Model::Converter::ArrayConverter{{exp.id}})
+  Lustra::Model::Converter.add_converter("Array({{ exp.id }})", Lustra::Model::Converter::ArrayConverter{{ exp.id }})
+  Lustra::Model::Converter.add_converter("Array({{ exp.id }} | Nil)", Lustra::Model::Converter::ArrayConverter{{ exp.id }})
 {% end %}

@@ -3,23 +3,23 @@ require "../expression"
 # Mother class of all the rendering nodes
 abstract class Lustra::Expression::Node
   macro define_operator(op_name, sql_name, null = false)
-    def {{op_name.id}}(any : Node) : Node
-      Node::DoubleOperator.new(self, any, "{{sql_name.id}}")
+    def {{ op_name.id }}(any : Node) : Node
+      Node::DoubleOperator.new(self, any, "{{ sql_name.id }}")
     end
 
     {% if null %}
-      def {{op_name.id}}(some_nil : Nil) : Node
-        Node::DoubleOperator.new(self, Null.new, {{null}} )
+      def {{ op_name.id }}(some_nil : Nil) : Node
+        Node::DoubleOperator.new(self, Null.new, {{ null }} )
       end
     {% end %}
 
-    def {{op_name.id}}(any : T) : Node forall T
-      Node::DoubleOperator.new(self, Literal.new(any), "{{sql_name.id}}")
+    def {{ op_name.id }}(any : T) : Node forall T
+      Node::DoubleOperator.new(self, Literal.new(any), "{{ sql_name.id }}")
     end
   end
 
   {% for op in [">", ">=", "<", "<=", "+", "-", "*", "/"] %}
-    define_operator({{op}}, {{op}})
+    define_operator({{ op }}, {{ op }})
   {% end %}
 
   def =~(any : Node) : Node

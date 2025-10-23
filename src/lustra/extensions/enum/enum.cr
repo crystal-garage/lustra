@@ -111,15 +111,15 @@ module Lustra
   # u.gender = MyApp::Gender::Male
   # ```
   macro enum(name, *values, &block)
-    struct {{name.id}} < ::Lustra::Enum
+    struct {{ name.id }} < ::Lustra::Enum
       {% for i in values %}
-        {{i.camelcase.id}} = {{name.id}}.new("{{i.id}}")
+        {{ i.camelcase.id }} = {{ name.id }}.new("{{ i.id }}")
       {% end %}
 
       {% begin %}
         AUTHORIZED_VALUES = {
         {% for i in values %}
-          "{{i.id}}" => {{i.camelcase.id}},
+          "{{ i.id }}" => {{ i.camelcase.id }},
         {% end %}
         }
       {% end %}
@@ -168,7 +168,7 @@ module Lustra
         Lustra::Model::Converter.add_converter("\{{@type}}", ::Lustra::Model::Converter::\{{@type}}Converter)
       end
 
-      {{yield}}
+      {{ yield }}
     end
   end
 end

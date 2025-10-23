@@ -9,13 +9,13 @@ module Lustra::Model::Relations::HasManyMacro
     primary_key = nil,
     autosave = false,
   )
-    # The method {{method_name}} is a `has_many` relation to {{relation_type}}
-    def {{method_name}} : {{relation_type}}::Collection
-      %primary_key = {{(primary_key || "__pkey__").id}}
+    # The method {{ method_name }} is a `has_many` relation to {{ relation_type }}
+    def {{ method_name }} : {{ relation_type }}::Collection
+      %primary_key = {{ (primary_key || "__pkey__").id }}
 
       %foreign_key =
         {% if foreign_key %}
-          "{{foreign_key}}"
+          "{{ foreign_key }}"
         {% else %}
           (self.class.table.to_s.singularize + "_id")
         {% end %}
@@ -23,21 +23,21 @@ module Lustra::Model::Relations::HasManyMacro
       cache = @cache
 
       query =
-        if cache && cache.active?("{{method_name}}")
-          arr = cache.hit("{{method_name}}", self.__pkey_column__.to_sql_value, {{relation_type}})
+        if cache && cache.active?("{{ method_name }}")
+          arr = cache.hit("{{ method_name }}", self.__pkey_column__.to_sql_value, {{ relation_type }})
 
           # This relation will trigger the cache if it exists
-          {{relation_type}}.query
+          {{ relation_type }}.query
             .tags({ "#{%foreign_key}" => "#{%primary_key}" })
             .where { raw(%foreign_key) == %primary_key }
             .with_cached_result(arr)
         else
-          {{relation_type}}.query
+          {{ relation_type }}.query
             .tags({ "#{%foreign_key}" => "#{%primary_key}" })
             .where { raw(%foreign_key) == %primary_key }
         end
 
-      query.append_operation = -> (x : {{relation_type}}) {
+      query.append_operation = -> (x : {{ relation_type }}) {
         x.reset(query.tags)
         x.save!
         x
@@ -46,7 +46,7 @@ module Lustra::Model::Relations::HasManyMacro
       # Set parent model context for autosave functionality
       {% if autosave %}
         query.parent_model = self
-        query.association_name = "{{method_name}}"
+        query.association_name = "{{ method_name }}"
         query.autosave = true
       {% end %}
 
@@ -55,41 +55,41 @@ module Lustra::Model::Relations::HasManyMacro
 
     # Addition of the method for eager loading and N+1 avoidance.
     class Collection
-      # Eager load the has many relation {{method_name}}.
+      # Eager load the has many relation {{ method_name }}.
       # Use it to avoid N+1 queries.
-      def with_{{method_name}}(fetch_columns = false, &block : {{relation_type}}::Collection ->) : self
+      def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
         before_query do
-          %primary_key = {{(primary_key || "#{relation_type}.__pkey__").id}}
-          %foreign_key =   {% if foreign_key %} "{{foreign_key}}" {% else %} ({{self_type}}.table.to_s.singularize + "_id") {% end %}
+          %primary_key = {{ (primary_key || "#{relation_type}.__pkey__").id }}
+          %foreign_key =   {% if foreign_key %} "{{ foreign_key }}" {% else %} ({{ self_type }}.table.to_s.singularize + "_id") {% end %}
 
           #SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM users )
-          sub_query = self.dup.clear_select.select("#{{{self_type}}.table}.#{%primary_key}")
+          sub_query = self.dup.clear_select.select("#{{{ self_type }}.table}.#{%primary_key}")
 
-          qry = {{relation_type}}.query.where { raw(%foreign_key).in?(sub_query) }
+          qry = {{ relation_type }}.query.where { raw(%foreign_key).in?(sub_query) }
           block.call(qry)
 
-          @cache.active "{{method_name}}"
+          @cache.active "{{ method_name }}"
 
-          h = {} of Lustra::SQL::Any => Array({{relation_type}})
+          h = {} of Lustra::SQL::Any => Array({{ relation_type }})
 
           qry.each(fetch_columns: true) do |mdl|
             unless h[mdl.attributes[%foreign_key]]?
-              h[mdl.attributes[%foreign_key]] = [] of {{relation_type}}
+              h[mdl.attributes[%foreign_key]] = [] of {{ relation_type }}
             end
 
             h[mdl.attributes[%foreign_key]] << mdl
           end
 
           h.each do |key, value|
-            @cache.set("{{method_name}}", key, value)
+            @cache.set("{{ method_name }}", key, value)
           end
         end
 
         self
       end
 
-      def with_{{method_name}}(fetch_columns = false)
-        with_{{method_name}}(fetch_columns) { }
+      def with_{{ method_name }}(fetch_columns = false)
+        with_{{ method_name }}(fetch_columns) { }
       end
     end
   end

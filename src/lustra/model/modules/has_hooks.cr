@@ -80,8 +80,8 @@ module Lustra::Model::HasHooks
   #
   # The macro automatically casts to the correct type for you.
   macro before(event_name, method_name)
-    before({{event_name}}) { |mdl|
-      mdl.as({{@type}}).{{method_name.id}}
+    before({{ event_name }}) { |mdl|
+      mdl.as({{ @type }}).{{ method_name.id }}
     }
   end
 
@@ -92,8 +92,8 @@ module Lustra::Model::HasHooks
   #
   # The macro automatically casts to the correct type for you.
   macro after(event_name, method_name)
-    after({{event_name}}) { |mdl|
-      mdl.as({{@type}}).{{method_name.id}}
+    after({{ event_name }}) { |mdl|
+      mdl.as({{ @type }}).{{ method_name.id }}
     }
   end
 end

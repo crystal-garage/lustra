@@ -18,10 +18,10 @@ class Lustra::Expression::Node::Variable < Lustra::Expression::Node
 
   macro method_missing(call)
     {% if call.args.size > 0 %}
-      args = Lustra::Expression[{{call.args}}].join(", ")
-      return Node::Variable.new("{{call.name.id}}(#{args})", self)
+      args = Lustra::Expression[{{ call.args }}].join(", ")
+      return Node::Variable.new("{{ call.name.id }}(#{args})", self)
     {% else %}
-      return Node::Variable.new({{call.name.id.stringify}}, self)
+      return Node::Variable.new({{ call.name.id.stringify }}, self)
     {% end %}
   end
 
