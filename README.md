@@ -145,6 +145,47 @@ Then:
 require "lustra"
 ```
 
+### Database Setup
+
+Initialize your database connection:
+
+```crystal
+Lustra::SQL.init("postgres://user:password@localhost/database_name")
+```
+
+For multiple database connections:
+
+```crystal
+Lustra::SQL.init("readonly", "postgres://user:password@localhost/readonly_db")
+Lustra::SQL.init("primary", "postgres://user:password@localhost/primary_db")
+```
+
+**Using specific connections:**
+
+At the model level:
+
+```crystal
+class ReadOnlyModel
+  include Lustra::Model
+
+  self.connection = "readonly" # All queries use readonly connection
+
+  column id : Int64, primary: true
+  column data : String
+end
+```
+
+At the query level:
+
+```crystal
+# For model queries
+User.query.use_connection("readonly").where { active == true }
+
+# For raw SQL queries
+Lustra::SQL.execute("readonly", "SELECT * FROM users")
+Lustra::SQL.select.from("users").where { active == true }.use_connection("readonly").to_a
+```
+
 ### Model definition
 
 Lustra offers some mixins, just include them in your classes:
