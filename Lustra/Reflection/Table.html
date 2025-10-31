@@ -1,0 +1,5270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Crystal Docs 1.17.1">
+<meta name="crystal_docs.project_version" content="develop">
+<meta name="crystal_docs.project_name" content="lustra">
+
+
+
+<link href="../../css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../../js/doc.js"></script>
+
+  <meta name="repository-name" content="lustra">
+  <title>Lustra::Reflection::Table - lustra develop</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "../../";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill="currentColor" fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<input type="checkbox" id="sidebar-btn">
+<label for="sidebar-btn" id="sidebar-btn-label">
+  <svg class="open" xmlns="http://www.w3.org/2000/svg" height="2em" width="2em" viewBox="0 0 512 512"><title>Open Sidebar</title><path fill="currentColor" d="M80 96v64h352V96H80zm0 112v64h352v-64H80zm0 112v64h352v-64H80z"></path></svg>
+  <svg class="close" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 512 512"><title>Close Sidebar</title><path fill="currentColor" d="m118.6 73.4-45.2 45.2L210.7 256 73.4 393.4l45.2 45.2L256 301.3l137.4 137.3 45.2-45.2L301.3 256l137.3-137.4-45.2-45.2L256 210.7Z"></path></svg>
+</label>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="../../index.html">
+          lustra
+        </a>
+      </h1>
+
+      <span class="project-version">
+        develop
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class=" " data-id="lustra/toplevel" data-name="top level namespace">
+      <a href="../../toplevel.html">Top Level Namespace</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/BigDecimal" data-name="bigdecimal">
+      <a href="../../BigDecimal.html">BigDecimal</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Char" data-name="char">
+      <a href="../../Char.html">Char</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Citext" data-name="citext">
+      <a href="../../Citext.html">Citext</a>
+      
+    </li>
+  
+  <li class="parent open current" data-id="lustra/Lustra" data-name="lustra">
+      <a href="../../Lustra.html">Lustra</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI" data-name="lustra::cli">
+      <a href="../../Lustra/CLI.html">CLI</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Base" data-name="lustra::cli::base">
+      <a href="../../Lustra/CLI/Base.html">Base</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Base/Arguments" data-name="lustra::cli::base::arguments">
+      <a href="../../Lustra/CLI/Base/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Base/Flags" data-name="lustra::cli::base::flags">
+      <a href="../../Lustra/CLI/Base/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Command" data-name="lustra::cli::command">
+      <a href="../../Lustra/CLI/Command.html">Command</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Generator" data-name="lustra::cli::generator">
+      <a href="../../Lustra/CLI/Generator.html">Generator</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Arguments" data-name="lustra::cli::generator::arguments">
+      <a href="../../Lustra/CLI/Generator/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Flags" data-name="lustra::cli::generator::flags">
+      <a href="../../Lustra/CLI/Generator/Flags.html">Flags</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Generator/Migration" data-name="lustra::cli::generator::migration">
+      <a href="../../Lustra/CLI/Generator/Migration.html">Migration</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Migration/Arguments" data-name="lustra::cli::generator::migration::arguments">
+      <a href="../../Lustra/CLI/Generator/Migration/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Migration/Flags" data-name="lustra::cli::generator::migration::flags">
+      <a href="../../Lustra/CLI/Generator/Migration/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Generator/Model" data-name="lustra::cli::generator::model">
+      <a href="../../Lustra/CLI/Generator/Model.html">Model</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Model/Arguments" data-name="lustra::cli::generator::model::arguments">
+      <a href="../../Lustra/CLI/Generator/Model/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Model/Flags" data-name="lustra::cli::generator::model::flags">
+      <a href="../../Lustra/CLI/Generator/Model/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Record" data-name="lustra::cli::generator::record">
+      <a href="../../Lustra/CLI/Generator/Record.html">Record</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration" data-name="lustra::cli::migration">
+      <a href="../../Lustra/CLI/Migration.html">Migration</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Arguments" data-name="lustra::cli::migration::arguments">
+      <a href="../../Lustra/CLI/Migration/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Down" data-name="lustra::cli::migration::down">
+      <a href="../../Lustra/CLI/Migration/Down.html">Down</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Down/Arguments" data-name="lustra::cli::migration::down::arguments">
+      <a href="../../Lustra/CLI/Migration/Down/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Down/Flags" data-name="lustra::cli::migration::down::flags">
+      <a href="../../Lustra/CLI/Migration/Down/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Flags" data-name="lustra::cli::migration::flags">
+      <a href="../../Lustra/CLI/Migration/Flags.html">Flags</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Migrate" data-name="lustra::cli::migration::migrate">
+      <a href="../../Lustra/CLI/Migration/Migrate.html">Migrate</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Migrate/Arguments" data-name="lustra::cli::migration::migrate::arguments">
+      <a href="../../Lustra/CLI/Migration/Migrate/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Migrate/Flags" data-name="lustra::cli::migration::migrate::flags">
+      <a href="../../Lustra/CLI/Migration/Migrate/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Rollback" data-name="lustra::cli::migration::rollback">
+      <a href="../../Lustra/CLI/Migration/Rollback.html">Rollback</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Rollback/Arguments" data-name="lustra::cli::migration::rollback::arguments">
+      <a href="../../Lustra/CLI/Migration/Rollback/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Rollback/Flags" data-name="lustra::cli::migration::rollback::flags">
+      <a href="../../Lustra/CLI/Migration/Rollback/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Seed" data-name="lustra::cli::migration::seed">
+      <a href="../../Lustra/CLI/Migration/Seed.html">Seed</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Seed/Arguments" data-name="lustra::cli::migration::seed::arguments">
+      <a href="../../Lustra/CLI/Migration/Seed/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Seed/Flags" data-name="lustra::cli::migration::seed::flags">
+      <a href="../../Lustra/CLI/Migration/Seed/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Set" data-name="lustra::cli::migration::set">
+      <a href="../../Lustra/CLI/Migration/Set.html">Set</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Set/Arguments" data-name="lustra::cli::migration::set::arguments">
+      <a href="../../Lustra/CLI/Migration/Set/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Set/Flags" data-name="lustra::cli::migration::set::flags">
+      <a href="../../Lustra/CLI/Migration/Set/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Status" data-name="lustra::cli::migration::status">
+      <a href="../../Lustra/CLI/Migration/Status.html">Status</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Status/Arguments" data-name="lustra::cli::migration::status::arguments">
+      <a href="../../Lustra/CLI/Migration/Status/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Status/Flags" data-name="lustra::cli::migration::status::flags">
+      <a href="../../Lustra/CLI/Migration/Status/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Up" data-name="lustra::cli::migration::up">
+      <a href="../../Lustra/CLI/Migration/Up.html">Up</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Up/Arguments" data-name="lustra::cli::migration::up::arguments">
+      <a href="../../Lustra/CLI/Migration/Up/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Up/Flags" data-name="lustra::cli::migration::up::flags">
+      <a href="../../Lustra/CLI/Migration/Up/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Seed" data-name="lustra::cli::seed">
+      <a href="../../Lustra/CLI/Seed.html">Seed</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Seed/Arguments" data-name="lustra::cli::seed::arguments">
+      <a href="../../Lustra/CLI/Seed/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Seed/Flags" data-name="lustra::cli::seed::flags">
+      <a href="../../Lustra/CLI/Seed/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Enum" data-name="lustra::enum">
+      <a href="../../Lustra/Enum.html">Enum</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Enum/Converter" data-name="lustra::enum::converter(t)">
+      <a href="../../Lustra/Enum/Converter.html">Converter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/ErrorMessages" data-name="lustra::errormessages">
+      <a href="../../Lustra/ErrorMessages.html">ErrorMessages</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression" data-name="lustra::expression">
+      <a href="../../Lustra/Expression.html">Expression</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/AvailableLiteral" data-name="lustra::expression::availableliteral">
+      <a href="../../Lustra/Expression/AvailableLiteral.html">AvailableLiteral</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/JSONB" data-name="lustra::expression::jsonb">
+      <a href="../../Lustra/Expression/JSONB.html">JSONB</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/JSONB/Node" data-name="lustra::expression::jsonb::node">
+      <a href="../../Lustra/Expression/JSONB/Node.html">Node</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Literal" data-name="lustra::expression::literal">
+      <a href="../../Lustra/Expression/Literal.html">Literal</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/Node" data-name="lustra::expression::node">
+      <a href="../../Lustra/Expression/Node.html">Node</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/Node/Between" data-name="lustra::expression::node::between">
+      <a href="../../Lustra/Expression/Node/Between.html">Between</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Between/BetweenType" data-name="lustra::expression::node::between::betweentype">
+      <a href="../../Lustra/Expression/Node/Between/BetweenType.html">BetweenType</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/DoubleOperator" data-name="lustra::expression::node::doubleoperator">
+      <a href="../../Lustra/Expression/Node/DoubleOperator.html">DoubleOperator</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Function" data-name="lustra::expression::node::function">
+      <a href="../../Lustra/Expression/Node/Function.html">Function</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/InArray" data-name="lustra::expression::node::inarray">
+      <a href="../../Lustra/Expression/Node/InArray.html">InArray</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/InRange" data-name="lustra::expression::node::inrange">
+      <a href="../../Lustra/Expression/Node/InRange.html">InRange</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/InSelect" data-name="lustra::expression::node::inselect">
+      <a href="../../Lustra/Expression/Node/InSelect.html">InSelect</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/Node/JSONB" data-name="lustra::expression::node::jsonb">
+      <a href="../../Lustra/Expression/Node/JSONB.html">JSONB</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/JSONB/ArrayContains" data-name="lustra::expression::node::jsonb::arraycontains">
+      <a href="../../Lustra/Expression/Node/JSONB/ArrayContains.html">ArrayContains</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/JSONB/Equality" data-name="lustra::expression::node::jsonb::equality">
+      <a href="../../Lustra/Expression/Node/JSONB/Equality.html">Equality</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/JSONB/Field" data-name="lustra::expression::node::jsonb::field">
+      <a href="../../Lustra/Expression/Node/JSONB/Field.html">Field</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Literal" data-name="lustra::expression::node::literal">
+      <a href="../../Lustra/Expression/Node/Literal.html">Literal</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Minus" data-name="lustra::expression::node::minus">
+      <a href="../../Lustra/Expression/Node/Minus.html">Minus</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/NodeArray" data-name="lustra::expression::node::nodearray">
+      <a href="../../Lustra/Expression/Node/NodeArray.html">NodeArray</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Not" data-name="lustra::expression::node::not">
+      <a href="../../Lustra/Expression/Node/Not.html">Not</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/Node/NotBetween" data-name="lustra::expression::node::notbetween">
+      <a href="../../Lustra/Expression/Node/NotBetween.html">NotBetween</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/NotBetween/BetweenType" data-name="lustra::expression::node::notbetween::betweentype">
+      <a href="../../Lustra/Expression/Node/NotBetween/BetweenType.html">BetweenType</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Null" data-name="lustra::expression::node::null">
+      <a href="../../Lustra/Expression/Node/Null.html">Null</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/PGArray" data-name="lustra::expression::node::pgarray(t)">
+      <a href="../../Lustra/Expression/Node/PGArray.html">PGArray</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Raw" data-name="lustra::expression::node::raw">
+      <a href="../../Lustra/Expression/Node/Raw.html">Raw</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Variable" data-name="lustra::expression::node::variable">
+      <a href="../../Lustra/Expression/Node/Variable.html">Variable</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/UnsafeSql" data-name="lustra::expression::unsafesql">
+      <a href="../../Lustra/Expression/UnsafeSql.html">UnsafeSql</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/IllegalEnumValueError" data-name="lustra::illegalenumvalueerror">
+      <a href="../../Lustra/IllegalEnumValueError.html">IllegalEnumValueError</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Interval" data-name="lustra::interval">
+      <a href="../../Lustra/Interval.html">Interval</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Interval/Converter" data-name="lustra::interval::converter">
+      <a href="../../Lustra/Interval/Converter.html">Converter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Migration" data-name="lustra::migration">
+      <a href="../../Lustra/Migration.html">Migration</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/AddColumn" data-name="lustra::migration::addcolumn">
+      <a href="../../Lustra/Migration/AddColumn.html">AddColumn</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/AddTable" data-name="lustra::migration::addtable">
+      <a href="../../Lustra/Migration/AddTable.html">AddTable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/ChangeColumnType" data-name="lustra::migration::changecolumntype">
+      <a href="../../Lustra/Migration/ChangeColumnType.html">ChangeColumnType</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/CreateEnum" data-name="lustra::migration::createenum">
+      <a href="../../Lustra/Migration/CreateEnum.html">CreateEnum</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/CreateIndex" data-name="lustra::migration::createindex">
+      <a href="../../Lustra/Migration/CreateIndex.html">CreateIndex</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Direction" data-name="lustra::migration::direction">
+      <a href="../../Lustra/Migration/Direction.html">Direction</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/DropEnum" data-name="lustra::migration::dropenum">
+      <a href="../../Lustra/Migration/DropEnum.html">DropEnum</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/DropTable" data-name="lustra::migration::droptable">
+      <a href="../../Lustra/Migration/DropTable.html">DropTable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Execute" data-name="lustra::migration::execute">
+      <a href="../../Lustra/Migration/Execute.html">Execute</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/FullTextSearchableHelpers" data-name="lustra::migration::fulltextsearchablehelpers">
+      <a href="../../Lustra/Migration/FullTextSearchableHelpers.html">FullTextSearchableHelpers</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Migration/FullTextSearchableOperation" data-name="lustra::migration::fulltextsearchableoperation">
+      <a href="../../Lustra/Migration/FullTextSearchableOperation.html">FullTextSearchableOperation</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/FullTextSearchableOperation/Priority" data-name="lustra::migration::fulltextsearchableoperation::priority">
+      <a href="../../Lustra/Migration/FullTextSearchableOperation/Priority.html">Priority</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/FullTextSearchableTableHelpers" data-name="lustra::migration::fulltextsearchabletablehelpers">
+      <a href="../../Lustra/Migration/FullTextSearchableTableHelpers.html">FullTextSearchableTableHelpers</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Helper" data-name="lustra::migration::helper">
+      <a href="../../Lustra/Migration/Helper.html">Helper</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/IrreversibleMigration" data-name="lustra::migration::irreversiblemigration">
+      <a href="../../Lustra/Migration/IrreversibleMigration.html">IrreversibleMigration</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Manager" data-name="lustra::migration::manager">
+      <a href="../../Lustra/Migration/Manager.html">Manager</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Operation" data-name="lustra::migration::operation">
+      <a href="../../Lustra/Migration/Operation.html">Operation</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/RemoveColumn" data-name="lustra::migration::removecolumn">
+      <a href="../../Lustra/Migration/RemoveColumn.html">RemoveColumn</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/RenameColumn" data-name="lustra::migration::renamecolumn">
+      <a href="../../Lustra/Migration/RenameColumn.html">RenameColumn</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Migration/Table" data-name="lustra::migration::table">
+      <a href="../../Lustra/Migration/Table.html">Table</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Table/ColumnOperation" data-name="lustra::migration::table::columnoperation">
+      <a href="../../Lustra/Migration/Table/ColumnOperation.html">ColumnOperation</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Table/FkeyOperation" data-name="lustra::migration::table::fkeyoperation">
+      <a href="../../Lustra/Migration/Table/FkeyOperation.html">FkeyOperation</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Table/IndexOperation" data-name="lustra::migration::table::indexoperation">
+      <a href="../../Lustra/Migration/Table/IndexOperation.html">IndexOperation</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model" data-name="lustra::model">
+      <a href="../../Lustra/Model.html">Model</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/ClassMethods" data-name="lustra::model::classmethods">
+      <a href="../../Lustra/Model/ClassMethods.html">ClassMethods</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/CollectionBase" data-name="lustra::model::collectionbase(t)">
+      <a href="../../Lustra/Model/CollectionBase.html">CollectionBase</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Column" data-name="lustra::model::column(t, c)">
+      <a href="../../Lustra/Model/Column.html">Column</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Column/UnknownClass" data-name="lustra::model::column::unknownclass">
+      <a href="../../Lustra/Model/Column/UnknownClass.html">UnknownClass</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Connection" data-name="lustra::model::connection">
+      <a href="../../Lustra/Model/Connection.html">Connection</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Converter" data-name="lustra::model::converter">
+      <a href="../../Lustra/Model/Converter.html">Converter</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterBool" data-name="lustra::model::converter::arrayconverterbool">
+      <a href="../../Lustra/Model/Converter/ArrayConverterBool.html">ArrayConverterBool</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterFloat32" data-name="lustra::model::converter::arrayconverterfloat32">
+      <a href="../../Lustra/Model/Converter/ArrayConverterFloat32.html">ArrayConverterFloat32</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterFloat64" data-name="lustra::model::converter::arrayconverterfloat64">
+      <a href="../../Lustra/Model/Converter/ArrayConverterFloat64.html">ArrayConverterFloat64</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterInt32" data-name="lustra::model::converter::arrayconverterint32">
+      <a href="../../Lustra/Model/Converter/ArrayConverterInt32.html">ArrayConverterInt32</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterInt64" data-name="lustra::model::converter::arrayconverterint64">
+      <a href="../../Lustra/Model/Converter/ArrayConverterInt64.html">ArrayConverterInt64</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterString" data-name="lustra::model::converter::arrayconverterstring">
+      <a href="../../Lustra/Model/Converter/ArrayConverterString.html">ArrayConverterString</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Base" data-name="lustra::model::converter::base">
+      <a href="../../Lustra/Model/Converter/Base.html">Base</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BcryptPasswordConverter" data-name="lustra::model::converter::bcryptpasswordconverter">
+      <a href="../../Lustra/Model/Converter/BcryptPasswordConverter.html">BcryptPasswordConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BigDecimalConverter" data-name="lustra::model::converter::bigdecimalconverter">
+      <a href="../../Lustra/Model/Converter/BigDecimalConverter.html">BigDecimalConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BigFloatConverter" data-name="lustra::model::converter::bigfloatconverter">
+      <a href="../../Lustra/Model/Converter/BigFloatConverter.html">BigFloatConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BigIntConverter" data-name="lustra::model::converter::bigintconverter">
+      <a href="../../Lustra/Model/Converter/BigIntConverter.html">BigIntConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BoolConverter" data-name="lustra::model::converter::boolconverter">
+      <a href="../../Lustra/Model/Converter/BoolConverter.html">BoolConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Float32Converter" data-name="lustra::model::converter::float32converter">
+      <a href="../../Lustra/Model/Converter/Float32Converter.html">Float32Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Float64Converter" data-name="lustra::model::converter::float64converter">
+      <a href="../../Lustra/Model/Converter/Float64Converter.html">Float64Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int16Converter" data-name="lustra::model::converter::int16converter">
+      <a href="../../Lustra/Model/Converter/Int16Converter.html">Int16Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int32Converter" data-name="lustra::model::converter::int32converter">
+      <a href="../../Lustra/Model/Converter/Int32Converter.html">Int32Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int64Converter" data-name="lustra::model::converter::int64converter">
+      <a href="../../Lustra/Model/Converter/Int64Converter.html">Int64Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int8Converter" data-name="lustra::model::converter::int8converter">
+      <a href="../../Lustra/Model/Converter/Int8Converter.html">Int8Converter</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Converter/JSON" data-name="lustra::model::converter::json">
+      <a href="../../Lustra/Model/Converter/JSON.html">JSON</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/JSON/AnyConverter" data-name="lustra::model::converter::json::anyconverter">
+      <a href="../../Lustra/Model/Converter/JSON/AnyConverter.html">AnyConverter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/StringConverter" data-name="lustra::model::converter::stringconverter">
+      <a href="../../Lustra/Model/Converter/StringConverter.html">StringConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/TimeConverter" data-name="lustra::model::converter::timeconverter">
+      <a href="../../Lustra/Model/Converter/TimeConverter.html">TimeConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt16Converter" data-name="lustra::model::converter::uint16converter">
+      <a href="../../Lustra/Model/Converter/UInt16Converter.html">UInt16Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt32Converter" data-name="lustra::model::converter::uint32converter">
+      <a href="../../Lustra/Model/Converter/UInt32Converter.html">UInt32Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt64Converter" data-name="lustra::model::converter::uint64converter">
+      <a href="../../Lustra/Model/Converter/UInt64Converter.html">UInt64Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt8Converter" data-name="lustra::model::converter::uint8converter">
+      <a href="../../Lustra/Model/Converter/UInt8Converter.html">UInt8Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UUIDConverter" data-name="lustra::model::converter::uuidconverter">
+      <a href="../../Lustra/Model/Converter/UUIDConverter.html">UUIDConverter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Error" data-name="lustra::model::error">
+      <a href="../../Lustra/Model/Error.html">Error</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/EventManager" data-name="lustra::model::eventmanager">
+      <a href="../../Lustra/Model/EventManager.html">EventManager</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/EventManager/EventKey" data-name="lustra::model::eventmanager::eventkey">
+      <a href="../../Lustra/Model/EventManager/EventKey.html">EventKey</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/EventManager/HookFunction" data-name="lustra::model::eventmanager::hookfunction">
+      <a href="../../Lustra/Model/EventManager/HookFunction.html">HookFunction</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Factory" data-name="lustra::model::factory">
+      <a href="../../Lustra/Model/Factory.html">Factory</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Factory/Base" data-name="lustra::model::factory::base">
+      <a href="../../Lustra/Model/Factory/Base.html">Base</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Factory/PolymorphicFactory" data-name="lustra::model::factory::polymorphicfactory(t)">
+      <a href="../../Lustra/Model/Factory/PolymorphicFactory.html">PolymorphicFactory</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Factory/SimpleFactory" data-name="lustra::model::factory::simplefactory(t)">
+      <a href="../../Lustra/Model/Factory/SimpleFactory.html">SimpleFactory</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/FullTextSearchable" data-name="lustra::model::fulltextsearchable">
+      <a href="../../Lustra/Model/FullTextSearchable.html">FullTextSearchable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasColumns" data-name="lustra::model::hascolumns">
+      <a href="../../Lustra/Model/HasColumns.html">HasColumns</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasFactory" data-name="lustra::model::hasfactory">
+      <a href="../../Lustra/Model/HasFactory.html">HasFactory</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/HasHooks" data-name="lustra::model::hashooks">
+      <a href="../../Lustra/Model/HasHooks.html">HasHooks</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasHooks/ClassMethods" data-name="lustra::model::hashooks::classmethods">
+      <a href="../../Lustra/Model/HasHooks/ClassMethods.html">ClassMethods</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasRelations" data-name="lustra::model::hasrelations">
+      <a href="../../Lustra/Model/HasRelations.html">HasRelations</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasSaving" data-name="lustra::model::hassaving">
+      <a href="../../Lustra/Model/HasSaving.html">HasSaving</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasScope" data-name="lustra::model::hasscope">
+      <a href="../../Lustra/Model/HasScope.html">HasScope</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasSerialPkey" data-name="lustra::model::hasserialpkey">
+      <a href="../../Lustra/Model/HasSerialPkey.html">HasSerialPkey</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasTimestamps" data-name="lustra::model::hastimestamps">
+      <a href="../../Lustra/Model/HasTimestamps.html">HasTimestamps</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/HasValidation" data-name="lustra::model::hasvalidation">
+      <a href="../../Lustra/Model/HasValidation.html">HasValidation</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasValidation/Error" data-name="lustra::model::hasvalidation::error">
+      <a href="../../Lustra/Model/HasValidation/Error.html">Error</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/InvalidError" data-name="lustra::model::invaliderror">
+      <a href="../../Lustra/Model/InvalidError.html">InvalidError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/JSONDeserialize" data-name="lustra::model::jsondeserialize">
+      <a href="../../Lustra/Model/JSONDeserialize.html">JSONDeserialize</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/QueryCache" data-name="lustra::model::querycache">
+      <a href="../../Lustra/Model/QueryCache.html">QueryCache</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/ReadOnlyError" data-name="lustra::model::readonlyerror">
+      <a href="../../Lustra/Model/ReadOnlyError.html">ReadOnlyError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Relations" data-name="lustra::model::relations">
+      <a href="../../Lustra/Model/Relations.html">Relations</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent open current" data-id="lustra/Lustra/Reflection" data-name="lustra::reflection">
+      <a href="../../Lustra/Reflection.html">Reflection</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/Reflection/Column" data-name="lustra::reflection::column">
+      <a href="../../Lustra/Reflection/Column.html">Column</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Reflection/Column/Collection" data-name="lustra::reflection::column::collection">
+      <a href="../../Lustra/Reflection/Column/Collection.html">Collection</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent open current" data-id="lustra/Lustra/Reflection/Table" data-name="lustra::reflection::table">
+      <a href="../../Lustra/Reflection/Table.html">Table</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Reflection/Table/Collection" data-name="lustra::reflection::table::collection">
+      <a href="../../Lustra/Reflection/Table/Collection.html">Collection</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL" data-name="lustra::sql">
+      <a href="../../Lustra/SQL.html">SQL</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Any" data-name="lustra::sql::any">
+      <a href="../../Lustra/SQL/Any.html">Any</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/CancelTransactionError" data-name="lustra::sql::canceltransactionerror">
+      <a href="../../Lustra/SQL/CancelTransactionError.html">CancelTransactionError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Column" data-name="lustra::sql::column">
+      <a href="../../Lustra/SQL/Column.html">Column</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/ConnectionPool" data-name="lustra::sql::connectionpool">
+      <a href="../../Lustra/SQL/ConnectionPool.html">ConnectionPool</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/DeleteQuery" data-name="lustra::sql::deletequery">
+      <a href="../../Lustra/SQL/DeleteQuery.html">DeleteQuery</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Error" data-name="lustra::sql::error">
+      <a href="../../Lustra/SQL/Error.html">Error</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/ExecutionError" data-name="lustra::sql::executionerror">
+      <a href="../../Lustra/SQL/ExecutionError.html">ExecutionError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Fragment" data-name="lustra::sql::fragment">
+      <a href="../../Lustra/SQL/Fragment.html">Fragment</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/From" data-name="lustra::sql::from">
+      <a href="../../Lustra/SQL/From.html">From</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/InsertQuery" data-name="lustra::sql::insertquery">
+      <a href="../../Lustra/SQL/InsertQuery.html">InsertQuery</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/InsertQuery/Inserable" data-name="lustra::sql::insertquery::inserable">
+      <a href="../../Lustra/SQL/InsertQuery/Inserable.html">Inserable</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Join" data-name="lustra::sql::join">
+      <a href="../../Lustra/SQL/Join.html">Join</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/JSONB" data-name="lustra::sql::jsonb">
+      <a href="../../Lustra/SQL/JSONB.html">JSONB</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/JSONB/JSONBHash" data-name="lustra::sql::jsonb::jsonbhash">
+      <a href="../../Lustra/SQL/JSONB/JSONBHash.html">JSONBHash</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/JSONB/JSONBKey" data-name="lustra::sql::jsonb::jsonbkey">
+      <a href="../../Lustra/SQL/JSONB/JSONBKey.html">JSONBKey</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Logger" data-name="lustra::sql::logger">
+      <a href="../../Lustra/SQL/Logger.html">Logger</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/OperationNotPermittedError" data-name="lustra::sql::operationnotpermittederror">
+      <a href="../../Lustra/SQL/OperationNotPermittedError.html">OperationNotPermittedError</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query" data-name="lustra::sql::query">
+      <a href="../../Lustra/SQL/Query.html">Query</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Aggregate" data-name="lustra::sql::query::aggregate">
+      <a href="../../Lustra/SQL/Query/Aggregate.html">Aggregate</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/BeforeQuery" data-name="lustra::sql::query::beforequery">
+      <a href="../../Lustra/SQL/Query/BeforeQuery.html">BeforeQuery</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Change" data-name="lustra::sql::query::change">
+      <a href="../../Lustra/SQL/Query/Change.html">Change</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Connection" data-name="lustra::sql::query::connection">
+      <a href="../../Lustra/SQL/Query/Connection.html">Connection</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/CTE" data-name="lustra::sql::query::cte">
+      <a href="../../Lustra/SQL/Query/CTE.html">CTE</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Execute" data-name="lustra::sql::query::execute">
+      <a href="../../Lustra/SQL/Query/Execute.html">Execute</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Fetch" data-name="lustra::sql::query::fetch">
+      <a href="../../Lustra/SQL/Query/Fetch.html">Fetch</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/From" data-name="lustra::sql::query::from">
+      <a href="../../Lustra/SQL/Query/From.html">From</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/GroupBy" data-name="lustra::sql::query::groupby">
+      <a href="../../Lustra/SQL/Query/GroupBy.html">GroupBy</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Having" data-name="lustra::sql::query::having">
+      <a href="../../Lustra/SQL/Query/Having.html">Having</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Join" data-name="lustra::sql::query::join">
+      <a href="../../Lustra/SQL/Query/Join.html">Join</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Lock" data-name="lustra::sql::query::lock">
+      <a href="../../Lustra/SQL/Query/Lock.html">Lock</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/OffsetLimit" data-name="lustra::sql::query::offsetlimit">
+      <a href="../../Lustra/SQL/Query/OffsetLimit.html">OffsetLimit</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query/OnConflict" data-name="lustra::sql::query::onconflict">
+      <a href="../../Lustra/SQL/Query/OnConflict.html">OnConflict</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/OnConflict/OnConflictWhereClause" data-name="lustra::sql::query::onconflict::onconflictwhereclause">
+      <a href="../../Lustra/SQL/Query/OnConflict/OnConflictWhereClause.html">OnConflictWhereClause</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query/OrderBy" data-name="lustra::sql::query::orderby">
+      <a href="../../Lustra/SQL/Query/OrderBy.html">OrderBy</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/OrderBy/Record" data-name="lustra::sql::query::orderby::record">
+      <a href="../../Lustra/SQL/Query/OrderBy/Record.html">Record</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Pluck" data-name="lustra::sql::query::pluck">
+      <a href="../../Lustra/SQL/Query/Pluck.html">Pluck</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Select" data-name="lustra::sql::query::select">
+      <a href="../../Lustra/SQL/Query/Select.html">Select</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Where" data-name="lustra::sql::query::where">
+      <a href="../../Lustra/SQL/Query/Where.html">Where</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query/Window" data-name="lustra::sql::query::window">
+      <a href="../../Lustra/SQL/Query/Window.html">Window</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Window/WindowDeclaration" data-name="lustra::sql::query::window::windowdeclaration">
+      <a href="../../Lustra/SQL/Query/Window/WindowDeclaration.html">WindowDeclaration</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/WithPagination" data-name="lustra::sql::query::withpagination">
+      <a href="../../Lustra/SQL/Query/WithPagination.html">WithPagination</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/QueryBuildingError" data-name="lustra::sql::querybuildingerror">
+      <a href="../../Lustra/SQL/QueryBuildingError.html">QueryBuildingError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/RecordNotFoundError" data-name="lustra::sql::recordnotfounderror">
+      <a href="../../Lustra/SQL/RecordNotFoundError.html">RecordNotFoundError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/RollbackError" data-name="lustra::sql::rollbackerror">
+      <a href="../../Lustra/SQL/RollbackError.html">RollbackError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Selectable" data-name="lustra::sql::selectable">
+      <a href="../../Lustra/SQL/Selectable.html">Selectable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/SelectBuilder" data-name="lustra::sql::selectbuilder">
+      <a href="../../Lustra/SQL/SelectBuilder.html">SelectBuilder</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/SelectQuery" data-name="lustra::sql::selectquery">
+      <a href="../../Lustra/SQL/SelectQuery.html">SelectQuery</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Symbolic" data-name="lustra::sql::symbolic">
+      <a href="../../Lustra/SQL/Symbolic.html">Symbolic</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Transaction" data-name="lustra::sql::transaction">
+      <a href="../../Lustra/SQL/Transaction.html">Transaction</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Transaction/Level" data-name="lustra::sql::transaction::level">
+      <a href="../../Lustra/SQL/Transaction/Level.html">Level</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/UpdateQuery" data-name="lustra::sql::updatequery">
+      <a href="../../Lustra/SQL/UpdateQuery.html">UpdateQuery</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/UpdateQuery/Updatable" data-name="lustra::sql::updatequery::updatable">
+      <a href="../../Lustra/SQL/UpdateQuery/Updatable.html">Updatable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/UpdateQuery/UpdateInstruction" data-name="lustra::sql::updatequery::updateinstruction">
+      <a href="../../Lustra/SQL/UpdateQuery/UpdateInstruction.html">UpdateInstruction</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/TimeInDay" data-name="lustra::timeinday">
+      <a href="../../Lustra/TimeInDay.html">TimeInDay</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/TimeInDay/Converter" data-name="lustra::timeinday::converter">
+      <a href="../../Lustra/TimeInDay/Converter.html">Converter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/TSVector" data-name="lustra::tsvector">
+      <a href="../../Lustra/TSVector.html">TSVector</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/TSVector/Converter" data-name="lustra::tsvector::converter">
+      <a href="../../Lustra/TSVector/Converter.html">Converter</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/TSVector/Lexem" data-name="lustra::tsvector::lexem">
+      <a href="../../Lustra/TSVector/Lexem.html">Lexem</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/TSVector/Lexem/Position" data-name="lustra::tsvector::lexem::position">
+      <a href="../../Lustra/TSVector/Lexem/Position.html">Position</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Util" data-name="lustra::util">
+      <a href="../../Lustra/Util.html">Util</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Validation" data-name="lustra::validation">
+      <a href="../../Lustra/Validation.html">Validation</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Validation/Helper" data-name="lustra::validation::helper">
+      <a href="../../Lustra/Validation/Helper.html">Helper</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/View" data-name="lustra::view">
+      <a href="../../Lustra/View.html">View</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Slice" data-name="slice(t)">
+      <a href="../../Slice.html">Slice</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Time" data-name="time">
+      <a href="../../Time.html">Time</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/UUID" data-name="uuid">
+      <a href="../../UUID.html">UUID</a>
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">
+    class
+  </span> Lustra::<wbr>Reflection::<wbr>Table
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../Lustra/Reflection/Table.html">Lustra::Reflection::Table</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
+
+
+
+
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>Reflection of the tables using information_schema in postgreSQL.</p>
+<p><span class="flag orange">TODO</span>  Usage of view instead of model</p>
+
+
+
+
+
+
+
+  <h2>
+    <a id="included-modules" class="anchor" href="#included-modules">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Included Modules
+  </h2>
+  <ul class="other-types-list">
+    
+      <li class="other-type"><a href="../../Lustra/Model.html">Lustra::Model</a></li>
+    
+  </ul>
+
+
+
+  <h2>
+    <a id="extended-modules" class="anchor" href="#extended-modules">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Extended Modules
+  </h2>
+  <ul class="other-types-list">
+    
+      <li class="other-type"><a href="../../Lustra/Model/HasHooks/ClassMethods.html">Lustra::Model::HasHooks::ClassMethods</a></li>
+    
+  </ul>
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+    
+      <a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L3" target="_blank">
+        lustra/model/reflection/table.cr
+      </a>
+    
+    <br/>
+  
+
+
+
+  
+    <h2>
+      <a id="constant-summary" class="anchor" href="#constant-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+      Constant Summary
+    </h2>
+  
+  <dl>
+    
+      <dt class="entry-const" id="COLUMNS">
+        <strong>COLUMNS</strong> = <code>{<span class="s">&quot;table_catalog&quot;</span> <span class="o">=&gt;</span> {<span class="k">type</span>: <span class="t">String</span>,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  primary: <span class="n">false</span>, converter: <span class="s">&quot;String&quot;</span>, db_column_name: <span class="s">&quot;table_catalog&quot;</span>, crystal_variable_name: table_catalog, presence: <span class="n">true</span>, mass_assign: <span class="n">true</span>}, <span class="s">&quot;table_schema&quot;</span> <span class="o">=&gt;</span> {<span class="k">type</span>: <span class="t">String</span>,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  primary: <span class="n">false</span>, converter: <span class="s">&quot;String&quot;</span>, db_column_name: <span class="s">&quot;table_schema&quot;</span>, crystal_variable_name: table_schema, presence: <span class="n">true</span>, mass_assign: <span class="n">true</span>}, <span class="s">&quot;table_name&quot;</span> <span class="o">=&gt;</span> {<span class="k">type</span>: <span class="t">String</span>, primary: <span class="n">true</span>, converter: <span class="s">&quot;String&quot;</span>, db_column_name: <span class="s">&quot;table_name&quot;</span>, crystal_variable_name: table_name, presence: <span class="n">true</span>, mass_assign: <span class="n">true</span>}, <span class="s">&quot;table_type&quot;</span> <span class="o">=&gt;</span> {<span class="k">type</span>: <span class="t">String</span>,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  primary: <span class="n">false</span>, converter: <span class="s">&quot;String&quot;</span>, db_column_name: <span class="s">&quot;table_type&quot;</span>, crystal_variable_name: table_type, presence: <span class="n">true</span>, mass_assign: <span class="n">true</span>}} <span class="k">of</span> <span class="t">Nil</span> <span class="o">=&gt;</span> <span class="t">Nil</span></code>
+      </dt>
+      
+    
+      <dt class="entry-const" id="POLYMORPHISM_SETTINGS">
+        <strong>POLYMORPHISM_SETTINGS</strong> = <code>{} <span class="k">of</span> <span class="t">Nil</span> <span class="o">=&gt;</span> <span class="t">Nil</span></code>
+      </dt>
+      
+    
+  </dl>
+
+
+
+  
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#build%28x%3ANamedTuple%29%3Aself-class-method" class="signature"><strong>.build</strong>(x : NamedTuple) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build a new empty model and fill the columns using the NamedTuple in argument.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#build%28x%3ANamedTuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method" class="signature"><strong>.build</strong>(x : NamedTuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build a new empty model and fill the columns using the NamedTuple in argument.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%28x%3ANamedTuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method" class="signature"><strong>.create</strong>(x : NamedTuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%28%2A%2Atuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method" class="signature"><strong>.create</strong>(**tuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%28x%3ANamedTuple%29%3Aself-class-method" class="signature"><strong>.create</strong>(x : NamedTuple) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%28%2A%2Atuple%29%3Aself-class-method" class="signature"><strong>.create</strong>(**tuple) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%21%28x%3ANamedTuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method" class="signature"><strong>.create!</strong>(x : NamedTuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%21%28%2A%2Atuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method" class="signature"><strong>.create!</strong>(**tuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%21%28x%3ANamedTuple%29%3Aself-class-method" class="signature"><strong>.create!</strong>(x : NamedTuple) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create%21%28%2A%2Atuple%29%3Aself-class-method" class="signature"><strong>.create!</strong>(**tuple) : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Build and new model and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#new%28h%3AHash%28String%2C_%29%2Ccache%3ALustra%3A%3AModel%3A%3AQueryCache%7CNil%3Dnil%2Cpersisted%3Dfalse%2Cfetch_columns%3Dfalse%29-class-method" class="signature"><strong>.new</strong>(h : Hash(String, _), cache : Lustra::Model::QueryCache | Nil = <span class="n">nil</span>, persisted = <span class="n">false</span>, fetch_columns = <span class="n">false</span>)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#new%28json%3AJSON%3A%3AAny%2Ccache%3ALustra%3A%3AModel%3A%3AQueryCache%7CNil%3Dnil%2Cpersisted%3Dfalse%29-class-method" class="signature"><strong>.new</strong>(json : JSON::Any, cache : Lustra::Model::QueryCache | Nil = <span class="n">nil</span>, persisted = <span class="n">false</span>)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#new%28t%3ANamedTuple%2Cpersisted%3Dfalse%29-class-method" class="signature"><strong>.new</strong>(t : NamedTuple, persisted = <span class="n">false</span>)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#new-class-method" class="signature"><strong>.new</strong></a>
+        
+      </li>
+    
+  </ul>
+
+
+  
+  <h2>
+    <a id="class-method-summary" class="anchor" href="#class-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Class Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#build%28%2A%2Atuple%3A%2A%2AT%29forallT-class-method" class="signature"><strong>.build</strong>(**tuple : **T) forall T</a>
+        
+          <div class="summary"><p>Build a new empty model and fill the columns using the NamedTuple in argument.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#build%28%2A%2Atuple%29-class-method" class="signature"><strong>.build</strong>(**tuple)</a>
+        
+          <div class="summary"><p>Build a new empty model and fill the columns using the NamedTuple in argument.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#build%28%2A%2Atuple%2C%26%29-class-method" class="signature"><strong>.build</strong>(**tuple, &)</a>
+        
+          <div class="summary"><p>Build a new empty model and fill the columns using the NamedTuple in argument.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#columns-class-method" class="signature"><strong>.columns</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#connection%3AString-class-method" class="signature"><strong>.connection</strong> : String</a>
+        
+          <div class="summary"><p>Define on which connection the model is living.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#connection%3D%28connection%3AString%29-class-method" class="signature"><strong>.connection=</strong>(connection : String)</a>
+        
+          <div class="summary"><p>Define on which connection the model is living.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create_from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-class-method" class="signature"><strong>.create_from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)</a>
+        
+          <div class="summary"><p>Create a new model from json and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#create_from_json%21%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-class-method" class="signature"><strong>.create_from_json!</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)</a>
+        
+          <div class="summary"><p>Create a new model from json and save it.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find%28ids%3AArray%29-class-method" class="signature"><strong>.find</strong>(ids : Array)</a>
+        
+          <div class="summary"><p>Find multiple models by an array of primary keys.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find%28x%29-class-method" class="signature"><strong>.find</strong>(x)</a>
+        
+          <div class="summary"><p>Returns a model using primary key equality Returns <code>nil</code> if not found.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find%21%28ids%3AArray%29-class-method" class="signature"><strong>.find!</strong>(ids : Array)</a>
+        
+          <div class="summary"><p>Find multiple models by an array of primary keys.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find%21%28x%29-class-method" class="signature"><strong>.find!</strong>(x)</a>
+        
+          <div class="summary"><p>Returns a model using primary key equality.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find_by%28tuple%3ANamedTuple%29-class-method" class="signature"><strong>.find_by</strong>(tuple : NamedTuple)</a>
+        
+          <div class="summary"><p>Find a model by column values.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find_by%28%2A%2Atuple%29-class-method" class="signature"><strong>.find_by</strong>(**tuple)</a>
+        
+          <div class="summary"><p>Find a model by column values.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find_by%21%28tuple%3ANamedTuple%29-class-method" class="signature"><strong>.find_by!</strong>(tuple : NamedTuple)</a>
+        
+          <div class="summary"><p>Find a model by column values.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#find_by%21%28%2A%2Atuple%29-class-method" class="signature"><strong>.find_by!</strong>(**tuple)</a>
+        
+          <div class="summary"><p>Find a model by column values.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-class-method" class="signature"><strong>.from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)</a>
+        
+          <div class="summary"><p>Create a new empty model and fill the columns from json.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#full_table_name-class-method" class="signature"><strong>.full_table_name</strong></a>
+        
+          <div class="summary"><p>returns the fully qualified and escaped name for this table.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#import%28array%3AEnumerable%28self%29%2Con_conflict%3ALustra%3A%3ASQL%3A%3AInsertQuery-%3E%7CNil%3Dnil%29-class-method" class="signature"><strong>.import</strong>(array : Enumerable(<span class="k">self</span>), on_conflict : Lustra::SQL::InsertQuery ->  | Nil = <span class="n">nil</span>)</a>
+        
+          <div class="summary"><p>Import a bulk of models in one SQL insert query.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#polymorphic%3F%3ABool-class-method" class="signature"><strong>.polymorphic?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#public-class-method" class="signature"><strong>.public</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#query-class-method" class="signature"><strong>.query</strong></a>
+        
+          <div class="summary"><p>Return a new query <code>SELECT * FROM [my_model_table]</code>.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#read_only%3D%28read_only%3ABool%29-class-method" class="signature"><strong>.read_only=</strong>(read_only : Bool)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#read_only%3F%3ABool-class-method" class="signature"><strong>.read_only?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#register_counter_cache%28association_model%3AClass%2Ccounter_column%3AString%2Cforeign_key%3AString%29-class-method" class="signature"><strong>.register_counter_cache</strong>(association_model : Class, counter_column : String, foreign_key : String)</a>
+        
+          <div class="summary"><p>Register a counter cache for this model using model class</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset_counters%28id%2C%2Acounter_models%29-class-method" class="signature"><strong>.reset_counters</strong>(id, *counter_models)</a>
+        
+          <div class="summary"><p>Reset counter cache columns to their correct values.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#schema%3ALustra%3A%3ASQL%3A%3ASymbolic%7CNil-class-method" class="signature"><strong>.schema</strong> : Lustra::SQL::Symbolic | Nil</a>
+        
+          <div class="summary"><p>Define the current schema used in PostgreSQL.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#schema%3D%28schema%3ALustra%3A%3ASQL%3A%3ASymbolic%7CNil%29-class-method" class="signature"><strong>.schema=</strong>(schema : Lustra::SQL::Symbolic | Nil)</a>
+        
+          <div class="summary"><p>Define the current schema used in PostgreSQL.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table%3ALustra%3A%3ASQL%3A%3ASymbolic-class-method" class="signature"><strong>.table</strong> : Lustra::SQL::Symbolic</a>
+        
+          <div class="summary"><p>Return the table name setup for this model.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table%3D%28table%3ALustra%3A%3ASQL%3A%3ASymbolic%29-class-method" class="signature"><strong>.table=</strong>(table : Lustra::SQL::Symbolic)</a>
+        
+          <div class="summary"><p>Return the table name setup for this model.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#tables_only-class-method" class="signature"><strong>.tables_only</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#views_only-class-method" class="signature"><strong>.views_only</strong></a>
+        
+      </li>
+    
+  </ul>
+
+
+  
+
+  
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#add_built_association%28association_name%3AString%2Cmodel%3ALustra%3A%3AModel%29-instance-method" class="signature"><strong>#add_built_association</strong>(association_name : String, model : Lustra::Model)</a>
+        
+          <div class="summary"><p>Add a built association to track for autosave</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#attributes%3AHash%28String%2CLustra%3A%3ASQL%3A%3AAny%29-instance-method" class="signature"><strong>#attributes</strong> : Hash(String, Lustra::SQL::Any)</a>
+        
+          <div class="summary"><p>Attributes, used when fetch_columns is true</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#built_associations%3AHash%28String%2CArray%28Lustra%3A%3AModel%29%29-instance-method" class="signature"><strong>#built_associations</strong> : Hash(String, Array(Lustra::Model))</a>
+        
+          <div class="summary"><p>Track built associations for autosave functionality</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#built_associations%3D%28built_associations%3AHash%28String%2CArray%28Lustra%3A%3AModel%29%29%29-instance-method" class="signature"><strong>#built_associations=</strong>(built_associations : Hash(String, Array(Lustra::Model)))</a>
+        
+          <div class="summary"><p>Track built associations for autosave functionality</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#cache%3ALustra%3A%3AModel%3A%3AQueryCache%7CNil-instance-method" class="signature"><strong>#cache</strong> : Lustra::Model::QueryCache | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#changed%3AArray%28String%29-instance-method" class="signature"><strong>#changed</strong> : Array(String)</a>
+        
+          <div class="summary"><p>Returns an array of names of all changed attributes.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#changed%3F-instance-method" class="signature"><strong>#changed?</strong></a>
+        
+          <div class="summary"><p>Return <code>true</code> if the model is dirty (e.g.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#changes%3AHash%28String%2CTuple%28Lustra%3A%3ASQL%3A%3AAny%2CLustra%3A%3ASQL%3A%3AAny%29%29-instance-method" class="signature"><strong>#changes</strong> : Hash(String, Tuple(Lustra::SQL::Any, Lustra::SQL::Any))</a>
+        
+          <div class="summary"><p>Returns a hash of all changed attributes with their [old_value, new_value].</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#clear_built_associations-instance-method" class="signature"><strong>#clear_built_associations</strong></a>
+        
+          <div class="summary"><p>Clear all built associations (called after successful save)</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#clear_change_flags-instance-method" class="signature"><strong>#clear_change_flags</strong></a>
+        
+          <div class="summary"><p>Reset the <code><a href="../../Lustra/Reflection/Table.html#changed%3F-instance-method">#changed?</a></code> flag on all columns</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#columns%3ALustra%3A%3AReflection%3A%3AColumn%3A%3ACollection-instance-method" class="signature"><strong>#columns</strong> : Lustra::Reflection::Column::Collection</a>
+        
+          <div class="summary"><p>The method columns is a <code>has_many</code> relation to Lustra::Reflection::Column</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#has_built_associations%3F%3ABool-instance-method" class="signature"><strong>#has_built_associations?</strong> : Bool</a>
+        
+          <div class="summary"><p>Check if there are any pending built associations</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#indexes%3AHash%28String%2CArray%28String%29%29-instance-method" class="signature"><strong>#indexes</strong> : Hash(String, Array(String))</a>
+        
+          <div class="summary"><p>List all the indexes related to the current table.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#invalidate_caching%3Aself-instance-method" class="signature"><strong>#invalidate_caching</strong> : <span class="k">self</span></a>
+        
+          <div class="summary"><p>Force to clean-up the caches for the relations connected to this model.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset%28h%3AHash%28Symbol%2C_%29%29-instance-method" class="signature"><strong>#reset</strong>(h : Hash(Symbol, _))</a>
+        
+          <div class="summary"><p>Set the columns from hash</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset%28h%3AHash%28String%2C_%29%29-instance-method" class="signature"><strong>#reset</strong>(h : Hash(String, _))</a>
+        
+          <div class="summary"><p>Set the model fields from hash</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset%28t%3ANamedTuple%29-instance-method" class="signature"><strong>#reset</strong>(t : NamedTuple)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset%28from_json%3AJSON%3A%3AAny%29-instance-method" class="signature"><strong>#reset</strong>(from_json : JSON::Any)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset%28%2A%2At%3A%2A%2AT%29forallT-instance-method" class="signature"><strong>#reset</strong>(**t : **T) forall T</a>
+        
+          <div class="summary"><p>reset flavors</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset_counters%28%2Acounter_models%29-instance-method" class="signature"><strong>#reset_counters</strong>(*counter_models)</a>
+        
+          <div class="summary"><p>Reset counter cache columns</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#set%28h%3AHash%28Symbol%2C_%29%29-instance-method" class="signature"><strong>#set</strong>(h : Hash(Symbol, _))</a>
+        
+          <div class="summary"><p>Set the columns from hash</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#set%28h%3AHash%28String%2C_%29%29-instance-method" class="signature"><strong>#set</strong>(h : Hash(String, _))</a>
+        
+          <div class="summary"><p>Set the model fields from hash</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#set%28t%3ANamedTuple%29-instance-method" class="signature"><strong>#set</strong>(t : NamedTuple)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#set%28from_json%3AJSON%3A%3AAny%29-instance-method" class="signature"><strong>#set</strong>(from_json : JSON::Any)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#set%28%2A%2At%3A%2A%2AT%29forallT-instance-method" class="signature"><strong>#set</strong>(**t : **T) forall T</a>
+        
+          <div class="summary"><p>Set one or multiple columns to a specific value This two are equivalents:</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#set_from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-instance-method" class="signature"><strong>#set_from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)</a>
+        
+          <div class="summary"><p>Set the fields from json passed as argument Trusted flag set to true will allow mass assignment without protection, FALSE by default</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_catalog%3AString-instance-method" class="signature"><strong>#table_catalog</strong> : String</a>
+        
+          <div class="summary"><p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_catalog%3AString-instance-method">#table_catalog</a></code> column or throw an exception if the column is not defined.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_catalog%3D%28x%3AString%29-instance-method" class="signature"><strong>#table_catalog=</strong>(x : String)</a>
+        
+          <div class="summary"><p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_catalog%3AString-instance-method">#table_catalog</a></code> column.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_catalog_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method" class="signature"><strong>#table_catalog_column</strong> : Lustra::Model::Column(String, Lustra::Model::Converter::StringConverter)</a>
+        
+          <div class="summary"><p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_catalog%3AString-instance-method">#table_catalog</a></code> field</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_name%3AString-instance-method" class="signature"><strong>#table_name</strong> : String</a>
+        
+          <div class="summary"><p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_name%3AString-instance-method">#table_name</a></code> column or throw an exception if the column is not defined.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_name%3D%28x%3AString%29-instance-method" class="signature"><strong>#table_name=</strong>(x : String)</a>
+        
+          <div class="summary"><p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_name%3AString-instance-method">#table_name</a></code> column.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_name_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method" class="signature"><strong>#table_name_column</strong> : Lustra::Model::Column(String, Lustra::Model::Converter::StringConverter)</a>
+        
+          <div class="summary"><p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_name%3AString-instance-method">#table_name</a></code> field</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_schema%3AString-instance-method" class="signature"><strong>#table_schema</strong> : String</a>
+        
+          <div class="summary"><p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_schema%3AString-instance-method">#table_schema</a></code> column or throw an exception if the column is not defined.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_schema%3D%28x%3AString%29-instance-method" class="signature"><strong>#table_schema=</strong>(x : String)</a>
+        
+          <div class="summary"><p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_schema%3AString-instance-method">#table_schema</a></code> column.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_schema_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method" class="signature"><strong>#table_schema_column</strong> : Lustra::Model::Column(String, Lustra::Model::Converter::StringConverter)</a>
+        
+          <div class="summary"><p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_schema%3AString-instance-method">#table_schema</a></code> field</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_type%3AString-instance-method" class="signature"><strong>#table_type</strong> : String</a>
+        
+          <div class="summary"><p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_type%3AString-instance-method">#table_type</a></code> column or throw an exception if the column is not defined.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_type%3D%28x%3AString%29-instance-method" class="signature"><strong>#table_type=</strong>(x : String)</a>
+        
+          <div class="summary"><p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_type%3AString-instance-method">#table_type</a></code> column.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#table_type_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method" class="signature"><strong>#table_type_column</strong> : Lustra::Model::Column(String, Lustra::Model::Converter::StringConverter)</a>
+        
+          <div class="summary"><p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_type%3AString-instance-method">#table_type</a></code> field</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#to_h%28full%3Dfalse%29%3AHash%28String%2CLustra%3A%3ASQL%3A%3AAny%29-instance-method" class="signature"><strong>#to_h</strong>(full = <span class="n">false</span>) : Hash(String, Lustra::SQL::Any)</a>
+        
+          <div class="summary"><p>Return a hash version of the columns of this model.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#to_json%28emit_nulls%3ABool%3Dfalse%29-instance-method" class="signature"><strong>#to_json</strong>(emit_nulls : Bool = <span class="n">false</span>)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#to_json%28json%2Cemit_nulls%3Dfalse%29-instance-method" class="signature"><strong>#to_json</strong>(json, emit_nulls = <span class="n">false</span>)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#update_from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-instance-method" class="signature"><strong>#update_from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)</a>
+        
+          <div class="summary"><p>Set the fields from json passed as argument and call <code>save</code> on the object Trusted flag set to true will allow mass assignment without protection, FALSE by default</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#update_from_json%21%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-instance-method" class="signature"><strong>#update_from_json!</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)</a>
+        
+          <div class="summary"><p>Set the fields from json passed as argument and call <code>save!</code> on the object Trusted flag set to true will allow mass assignment without protection, FALSE by default</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#update_h%3AHash%28String%2CLustra%3A%3ASQL%3A%3AAny%29-instance-method" class="signature"><strong>#update_h</strong> : Hash(String, Lustra::SQL::Any)</a>
+        
+          <div class="summary"><p>Generate the hash for update request (like during save)</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#validate_fields_presence-instance-method" class="signature"><strong>#validate_fields_presence</strong></a>
+        
+          <div class="summary"><p>For each column, ensure than when needed the column has present information into it.</p></div>
+        
+      </li>
+    
+  </ul>
+
+
+
+  <div class="methods-inherited">
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../Lustra/Model.html">Lustra::Model</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model.html#__pkey__-instance-method" class="tooltip">
+      <span>__pkey__</span>
+    __pkey__</a>, 
+    
+  
+    <a href="../../Lustra/Model.html#cache%3ALustra%3A%3AModel%3A%3AQueryCache%7CNil-instance-method" class="tooltip">
+      <span>cache : Lustra::Model::QueryCache | Nil</span>
+    cache</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model.html">Lustra::Model</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model.html#default_scope%28%26block%29-macro" class="tooltip">
+      <span>default_scope(&block)</span>
+    default_scope</a>, 
+    
+  
+    <a href="../../Lustra/Model.html#scope%28name%2C%26block%29-macro" class="tooltip">
+      <span>scope(name, &block)</span>
+    scope</a>
+    
+  
+
+
+    
+      
+
+
+      
+
+
+      
+
+  <h3>Class methods inherited from module <code><a href="../../Lustra/Model/FullTextSearchable.html">Lustra::Model::FullTextSearchable</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/FullTextSearchable.html#to_tsq%28text%29-class-method" class="tooltip">
+      <span>to_tsq(text)</span>
+    to_tsq</a>
+    
+  
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model/FullTextSearchable.html">Lustra::Model::FullTextSearchable</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/FullTextSearchable.html#full_text_searchable%28through%3D%22full_text_vector%22%2Ccatalog%3D%22pg_catalog.english%22%2Cscope_name%3D%22search%22%29-macro" class="tooltip">
+      <span>full_text_searchable(through = <span class="s">&quot;full_text_vector&quot;</span>, catalog = <span class="s">&quot;pg_catalog.english&quot;</span>, scope_name = <span class="s">&quot;search&quot;</span>)</span>
+    full_text_searchable</a>
+    
+  
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model/HasFactory.html">Lustra::Model::HasFactory</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasFactory.html#polymorphic%28through%3D%22type%22%29-macro" class="tooltip">
+      <span>polymorphic(through = <span class="s">&quot;type&quot;</span>)</span>
+    polymorphic</a>
+    
+  
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model/HasRelations.html">Lustra::Model::HasRelations</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasRelations.html#belongs_to%28name%2Cforeign_key%3Dnil%2Cno_cache%3Dfalse%2Cprimary%3Dfalse%2Cforeign_key_type%3DInt64%2Ctouch%3Dnil%2Ccounter_cache%3Dnil%29-macro" class="tooltip">
+      <span>belongs_to(name, foreign_key = <span class="n">nil</span>, no_cache = <span class="n">false</span>, primary = <span class="n">false</span>, foreign_key_type = <span class="t">Int64</span>, touch = <span class="n">nil</span>, counter_cache = <span class="n">nil</span>)</span>
+    belongs_to</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasRelations.html#has_many%28name%2Cthrough%3Dnil%2Cforeign_key%3Dnil%2Cown_key%3Dnil%2Cprimary_key%3Dnil%2Cno_cache%3Dfalse%2Cpolymorphic%3Dfalse%2Cforeign_key_type%3Dnil%2Cautosave%3Dfalse%29-macro" class="tooltip">
+      <span>has_many(name, through = <span class="n">nil</span>, foreign_key = <span class="n">nil</span>, own_key = <span class="n">nil</span>, primary_key = <span class="n">nil</span>, no_cache = <span class="n">false</span>, polymorphic = <span class="n">false</span>, foreign_key_type = <span class="n">nil</span>, autosave = <span class="n">false</span>)</span>
+    has_many</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasRelations.html#has_one%28name%2Cforeign_key%3Dnil%2Cprimary_key%3Dnil%2Cno_cache%3Dfalse%2Cpolymorphic%3Dfalse%2Cforeign_key_type%3Dnil%2Cautosave%3Dfalse%29-macro" class="tooltip">
+      <span>has_one(name, foreign_key = <span class="n">nil</span>, primary_key = <span class="n">nil</span>, no_cache = <span class="n">false</span>, polymorphic = <span class="n">false</span>, foreign_key_type = <span class="n">nil</span>, autosave = <span class="n">false</span>)</span>
+    has_one</a>
+    
+  
+
+
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../Lustra/Model/HasValidation.html">Lustra::Model::HasValidation</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasValidation.html#add_error%28column%2Creason%29-instance-method" class="tooltip">
+      <span>add_error(column, reason)<br/>add_error(reason)</span>
+    add_error</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasValidation.html#clear_errors-instance-method" class="tooltip">
+      <span>clear_errors</span>
+    clear_errors</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasValidation.html#error%3F-instance-method" class="tooltip">
+      <span>error?</span>
+    error?</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasValidation.html#errors%3AArray%28Error%29-instance-method" class="tooltip">
+      <span>errors : Array(Error)</span>
+    errors</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasValidation.html#print_errors-instance-method" class="tooltip">
+      <span>print_errors</span>
+    print_errors</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasValidation.html#valid%21-instance-method" class="tooltip">
+      <span>valid!</span>
+    valid!</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasValidation.html#valid%3F-instance-method" class="tooltip">
+      <span>valid?</span>
+    valid?</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasValidation.html#validate-instance-method" class="tooltip">
+      <span>validate</span>
+    validate</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Validation/Helper.html">Lustra::Validation::Helper</a></code></h3>
+  
+  
+    <a href="../../Lustra/Validation/Helper.html#ensure_than%28field%2Cmessage%2C%26block%29-macro" class="tooltip">
+      <span>ensure_than(field, message, &block)</span>
+    ensure_than</a>, 
+    
+  
+    <a href="../../Lustra/Validation/Helper.html#on_presence%28%2Afields%2C%26block%29-macro" class="tooltip">
+      <span>on_presence(*fields, &block)</span>
+    on_presence</a>
+    
+  
+
+
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../Lustra/Model/HasSaving.html">Lustra::Model::HasSaving</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasSaving.html#decrement%28column%3ASymbol%7CString%2Cby%3D1%29-instance-method" class="tooltip">
+      <span>decrement(column : Symbol | String, by = <span class="n">1</span>)</span>
+    decrement</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#decrement%21%28column%3ASymbol%7CString%2Cby%3D1%29-instance-method" class="tooltip">
+      <span>decrement!(column : Symbol | String, by = <span class="n">1</span>)</span>
+    decrement!</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#delete-instance-method" class="tooltip">
+      <span>delete</span>
+    delete</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#destroy-instance-method" class="tooltip">
+      <span>destroy</span>
+    destroy</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#increment%28column%3ASymbol%7CString%2Cby%3D1%29-instance-method" class="tooltip">
+      <span>increment(column : Symbol | String, by = <span class="n">1</span>)</span>
+    increment</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#increment%21%28column%3ASymbol%7CString%2Cby%3D1%29-instance-method" class="tooltip">
+      <span>increment!(column : Symbol | String, by = <span class="n">1</span>)</span>
+    increment!</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#persisted%3F%3ABool-instance-method" class="tooltip">
+      <span>persisted? : Bool</span>
+    persisted?</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#reload%3Aself-instance-method" class="tooltip">
+      <span>reload : <span class="k">self</span></span>
+    reload</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#save%28on_conflict%3ALustra%3A%3ASQL%3A%3AInsertQuery-%3E%7CNil%3Dnil%29-instance-method" class="tooltip">
+      <span>save(on_conflict : Lustra::SQL::InsertQuery ->  | Nil = <span class="n">nil</span>)<br/>save(&block)</span>
+    save</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#save%21%28on_conflict%3ALustra%3A%3ASQL%3A%3AInsertQuery-%3E%7CNil%3Dnil%29-instance-method" class="tooltip">
+      <span>save!(on_conflict : Lustra::SQL::InsertQuery ->  | Nil = <span class="n">nil</span>)<br/>save!(&block : Lustra::SQL::InsertQuery -> )</span>
+    save!</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#save_with_associations%28on_conflict%3ALustra%3A%3ASQL%3A%3AInsertQuery-%3E%7CNil%3Dnil%29-instance-method" class="tooltip">
+      <span>save_with_associations(on_conflict : Lustra::SQL::InsertQuery ->  | Nil = <span class="n">nil</span>)</span>
+    save_with_associations</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#update%28%2A%2Aargs%29-instance-method" class="tooltip">
+      <span>update(**args)</span>
+    update</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#update%21%28%2A%2Aargs%29-instance-method" class="tooltip">
+      <span>update!(**args)</span>
+    update!</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#update_column%28column%3ASymbol%7CString%2Cvalue%29-instance-method" class="tooltip">
+      <span>update_column(column : Symbol | String, value)</span>
+    update_column</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSaving.html#update_columns%28columns%3ANamedTuple%29-instance-method" class="tooltip">
+      <span>update_columns(columns : NamedTuple)<br/>update_columns(columns : Hash(String, Lustra::SQL::Any))<br/>update_columns(**columns)</span>
+    update_columns</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model/HasSerialPkey.html">Lustra::Model::HasSerialPkey</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasSerialPkey.html#add_pkey_type%28type%2C%26block%29-macro" class="tooltip">
+      <span>add_pkey_type(type, &block)</span>
+    add_pkey_type</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasSerialPkey.html#primary_key%28name%3D%22id%22%2Ctype%3D%3Abigserial%29-macro" class="tooltip">
+      <span>primary_key(name = <span class="s">&quot;id&quot;</span>, type = <span class="n">:bigserial</span>)</span>
+    primary_key</a>
+    
+  
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model/HasTimestamps.html">Lustra::Model::HasTimestamps</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasTimestamps.html#timestamps-macro" class="tooltip">
+      <span>timestamps</span>
+    timestamps</a>
+    
+  
+
+
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../Lustra/Model/HasColumns.html">Lustra::Model::HasColumns</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasColumns.html#%5B%5D%28x%29%3ALustra%3A%3ASQL%3A%3AAny-instance-method" class="tooltip">
+      <span>[](x) : Lustra::SQL::Any</span>
+    []</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasColumns.html#%5B%5D%3F%28x%29%3ALustra%3A%3ASQL%3A%3AAny-instance-method" class="tooltip">
+      <span>[]?(x) : Lustra::SQL::Any</span>
+    []?</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasColumns.html#reset%28h%3AHash%28String%2C_%29%29-instance-method" class="tooltip">
+      <span>reset(h : Hash(String, _))<br/>reset(h : Hash(Symbol, _))<br/>reset(**t : **T) forall T</span>
+    reset</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasColumns.html#set%28h%3AHash%28String%2C_%29%29-instance-method" class="tooltip">
+      <span>set(h : Hash(String, _))<br/>set(h : Hash(Symbol, _))<br/>set(**t : **T) forall T</span>
+    set</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasColumns.html#to_h%28full%3Dfalse%29-instance-method" class="tooltip">
+      <span>to_h(full = <span class="n">false</span>)</span>
+    to_h</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasColumns.html#update_h-instance-method" class="tooltip">
+      <span>update_h</span>
+    update_h</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model/HasColumns.html">Lustra::Model::HasColumns</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasColumns.html#column%28name%2Cprimary%3Dfalse%2Cconverter%3Dnil%2Ccolumn_name%3Dnil%2Cpresence%3Dtrue%2Cmass_assign%3Dtrue%29-macro" class="tooltip">
+      <span>column(name, primary = <span class="n">false</span>, converter = <span class="n">nil</span>, column_name = <span class="n">nil</span>, presence = <span class="n">true</span>, mass_assign = <span class="n">true</span>)</span>
+    column</a>
+    
+  
+
+
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../Lustra/Model/HasHooks.html">Lustra::Model::HasHooks</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasHooks.html#trigger_after_events%28event_name%29-instance-method" class="tooltip">
+      <span>trigger_after_events(event_name)</span>
+    trigger_after_events</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasHooks.html#trigger_before_events%28event_name%29-instance-method" class="tooltip">
+      <span>trigger_before_events(event_name)</span>
+    trigger_before_events</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasHooks.html#with_triggers%28event_name%2C%26%29-instance-method" class="tooltip">
+      <span>with_triggers(event_name, &)</span>
+    with_triggers</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from module <code><a href="../../Lustra/Model/HasHooks.html">Lustra::Model::HasHooks</a></code></h3>
+  
+  
+    <a href="../../Lustra/Model/HasHooks.html#after%28event_name%2Cmethod_name%29-macro" class="tooltip">
+      <span>after(event_name, method_name)</span>
+    after</a>, 
+    
+  
+    <a href="../../Lustra/Model/HasHooks.html#before%28event_name%2Cmethod_name%29-macro" class="tooltip">
+      <span>before(event_name, method_name)</span>
+    before</a>
+    
+  
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../Lustra/ErrorMessages.html">Lustra::ErrorMessages</a></code></h3>
+  
+  
+    <a href="../../Lustra/ErrorMessages.html#build_error_message%28message%3AString%2Cways_to_resolve%3ATuple%7CArray%3DTuple.new%29-instance-method" class="tooltip">
+      <span>build_error_message(message : String, ways_to_resolve : Tuple | Array = <span class="t">Tuple</span>.new)</span>
+    build_error_message</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#converter_error%28from%2Cto%29-instance-method" class="tooltip">
+      <span>converter_error(from, to)</span>
+    converter_error</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#format_width%28x%2Cw%3D80%29-instance-method" class="tooltip">
+      <span>format_width(x, w = <span class="n">80</span>)</span>
+    format_width</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#illegal_setter_access_to_undefined_column%28name%29-instance-method" class="tooltip">
+      <span>illegal_setter_access_to_undefined_column(name)</span>
+    illegal_setter_access_to_undefined_column</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#lack_of_primary_key%28model_name%29-instance-method" class="tooltip">
+      <span>lack_of_primary_key(model_name)</span>
+    lack_of_primary_key</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#migration_already_down%28number%29-instance-method" class="tooltip">
+      <span>migration_already_down(number)</span>
+    migration_already_down</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#migration_already_up%28number%29-instance-method" class="tooltip">
+      <span>migration_already_up(number)</span>
+    migration_already_up</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#migration_irreversible%28name%3Dnil%2Coperation%3Dnil%29-instance-method" class="tooltip">
+      <span>migration_irreversible(name = <span class="n">nil</span>, operation = <span class="n">nil</span>)</span>
+    migration_irreversible</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#migration_not_found%28number%29-instance-method" class="tooltip">
+      <span>migration_not_found(number)</span>
+    migration_not_found</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#migration_not_unique%28numbers%29-instance-method" class="tooltip">
+      <span>migration_not_unique(numbers)</span>
+    migration_not_unique</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#no_migration_yet%28version%29-instance-method" class="tooltip">
+      <span>no_migration_yet(version)</span>
+    no_migration_yet</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#null_column_mapping_error%28name%2Ctype%29-instance-method" class="tooltip">
+      <span>null_column_mapping_error(name, type)</span>
+    null_column_mapping_error</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#order_by_error_invalid_order%28current_order%29-instance-method" class="tooltip">
+      <span>order_by_error_invalid_order(current_order)</span>
+    order_by_error_invalid_order</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#polymorphic_nil%28through%29-instance-method" class="tooltip">
+      <span>polymorphic_nil(through)</span>
+    polymorphic_nil</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#polymorphic_unknown_class%28class_name%29-instance-method" class="tooltip">
+      <span>polymorphic_unknown_class(class_name)</span>
+    polymorphic_unknown_class</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#query_building_error%28message%29-instance-method" class="tooltip">
+      <span>query_building_error(message)</span>
+    query_building_error</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#uid_not_found%28class_name%29-instance-method" class="tooltip">
+      <span>uid_not_found(class_name)</span>
+    uid_not_found</a>, 
+    
+  
+    <a href="../../Lustra/ErrorMessages.html#uninitialized_db_connection%28connection%29-instance-method" class="tooltip">
+      <span>uninitialized_db_connection(connection)</span>
+    uninitialized_db_connection</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+  </div>
+
+  
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="build(x:NamedTuple):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>build</strong>(x : NamedTuple) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#build%28x%3ANamedTuple%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build a new empty model and fill the columns using the NamedTuple in argument.</p>
+<p>Returns the new model</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="build(x:NamedTuple,&amp;block:self-&gt;Nil):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>build</strong>(x : NamedTuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#build%28x%3ANamedTuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build a new empty model and fill the columns using the NamedTuple in argument.</p>
+<p>Returns the new model</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create(x:NamedTuple,&amp;block:self-&gt;Nil):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create</strong>(x : NamedTuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%28x%3ANamedTuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>The model may not be saved due to validation failure;
+check the returned model <code>errors?</code> and <code>persisted?</code> flags.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create(**tuple,&amp;block:self-&gt;Nil):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create</strong>(**tuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%28%2A%2Atuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>The model may not be saved due to validation failure;
+check the returned model <code>errors?</code> and <code>persisted?</code> flags.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create(x:NamedTuple):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create</strong>(x : NamedTuple) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%28x%3ANamedTuple%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>The model may not be saved due to validation failure;
+check the returned model <code>errors?</code> and <code>persisted?</code> flags.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create(**tuple):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create</strong>(**tuple) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%28%2A%2Atuple%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>The model may not be saved due to validation failure;
+check the returned model <code>errors?</code> and <code>persisted?</code> flags.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create!(x:NamedTuple,&amp;block:self-&gt;Nil):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create!</strong>(x : NamedTuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%21%28x%3ANamedTuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>Returns the newly inserted model
+Raises an exception if validation failed during the saving process.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create!(**tuple,&amp;block:self-&gt;Nil):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create!</strong>(**tuple, &block : <span class="k">self</span> -> Nil) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%21%28%2A%2Atuple%2C%26block%3Aself-%3ENil%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>Returns the newly inserted model
+Raises an exception if validation failed during the saving process.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create!(x:NamedTuple):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create!</strong>(x : NamedTuple) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%21%28x%3ANamedTuple%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>Returns the newly inserted model
+Raises an exception if validation failed during the saving process.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create!(**tuple):self-class-method">
+      <div class="signature">
+        
+        def self.<strong>create!</strong>(**tuple) : <span class="k">self</span>
+
+        <a class="method-permalink" href="#create%21%28%2A%2Atuple%29%3Aself-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build and new model and save it. Returns the model.</p>
+<p>Returns the newly inserted model
+Raises an exception if validation failed during the saving process.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="new(h:Hash(String,_),cache:Lustra::Model::QueryCache|Nil=nil,persisted=false,fetch_columns=false)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(h : Hash(String, _), cache : <a href="../../Lustra/Model/QueryCache.html">Lustra::Model::QueryCache</a> | Nil = <span class="n">nil</span>, persisted = <span class="n">false</span>, fetch_columns = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#new%28h%3AHash%28String%2C_%29%2Ccache%3ALustra%3A%3AModel%3A%3AQueryCache%7CNil%3Dnil%2Cpersisted%3Dfalse%2Cfetch_columns%3Dfalse%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="new(json:JSON::Any,cache:Lustra::Model::QueryCache|Nil=nil,persisted=false)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(json : JSON::Any, cache : <a href="../../Lustra/Model/QueryCache.html">Lustra::Model::QueryCache</a> | Nil = <span class="n">nil</span>, persisted = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#new%28json%3AJSON%3A%3AAny%2Ccache%3ALustra%3A%3AModel%3A%3AQueryCache%7CNil%3Dnil%2Cpersisted%3Dfalse%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="new(t:NamedTuple,persisted=false)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(t : NamedTuple, persisted = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#new%28t%3ANamedTuple%2Cpersisted%3Dfalse%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="new-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>
+
+        <a class="method-permalink" href="#new-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+  
+  <h2>
+    <a id="class-method-detail" class="anchor" href="#class-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Class Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="build(**tuple:**T)forallT-class-method">
+      <div class="signature">
+        
+        def self.<strong>build</strong>(**tuple : **T) forall T
+
+        <a class="method-permalink" href="#build%28%2A%2Atuple%3A%2A%2AT%29forallT-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build a new empty model and fill the columns using the NamedTuple in argument.</p>
+<p>Returns the new model</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="build(**tuple)-class-method">
+      <div class="signature">
+        
+        def self.<strong>build</strong>(**tuple)
+
+        <a class="method-permalink" href="#build%28%2A%2Atuple%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build a new empty model and fill the columns using the NamedTuple in argument.</p>
+<p>Returns the new model</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="build(**tuple,&amp;)-class-method">
+      <div class="signature">
+        
+        def self.<strong>build</strong>(**tuple, &)
+
+        <a class="method-permalink" href="#build%28%2A%2Atuple%2C%26%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Build a new empty model and fill the columns using the NamedTuple in argument.</p>
+<p>Returns the new model</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="columns-class-method">
+      <div class="signature">
+        
+        def self.<strong>columns</strong>
+
+        <a class="method-permalink" href="#columns-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="connection:String-class-method">
+      <div class="signature">
+        
+        def self.<strong>connection</strong> : String
+
+        <a class="method-permalink" href="#connection%3AString-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Define on which connection the model is living. Useful in case of models living in different databases.</p>
+<p>Is set to &quot;default&quot; by default.</p>
+<p>See <code><a href="../../Lustra/SQL.html#init%28name%3AString%2Curl%3AString%29-instance-method">Lustra::SQL#init(URI, *opts)</a></code> for more information about multi-connections.</p>
+<p>Example:</p>
+<pre><code class="language-crystal"><span class="t">Lustra</span><span class="t">::</span><span class="t">SQL</span>.init(<span class="s">&quot;postgres://postgres@localhost/database_1&quot;</span>)
+<span class="t">Lustra</span><span class="t">::</span><span class="t">SQL</span>.init(<span class="s">&quot;secondary&quot;</span>, <span class="s">&quot;postgres://postgres@localhost/database_2&quot;</span>)
+
+<span class="k">class</span> <span class="t">ModelA</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="c"># Performs all the queries on `database_1`</span>
+  <span class="c"># self.connection = &quot;default&quot;</span>
+  column id : <span class="t">Int32</span>, primary: <span class="n">true</span>, presence: <span class="n">false</span>
+  column title : <span class="t">String</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="t">ModelB</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="c"># Performs all the queries on `database_2`</span>
+  <span class="k">self</span>.connection <span class="o">=</span> <span class="s">&quot;secondary&quot;</span>
+
+  column id : <span class="t">Int32</span>, primary: <span class="n">true</span>, presence: <span class="n">false</span>
+<span class="k">end</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="connection=(connection:String)-class-method">
+      <div class="signature">
+        
+        def self.<strong>connection=</strong>(connection : String)
+
+        <a class="method-permalink" href="#connection%3D%28connection%3AString%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Define on which connection the model is living. Useful in case of models living in different databases.</p>
+<p>Is set to &quot;default&quot; by default.</p>
+<p>See <code><a href="../../Lustra/SQL.html#init%28name%3AString%2Curl%3AString%29-instance-method">Lustra::SQL#init(URI, *opts)</a></code> for more information about multi-connections.</p>
+<p>Example:</p>
+<pre><code class="language-crystal"><span class="t">Lustra</span><span class="t">::</span><span class="t">SQL</span>.init(<span class="s">&quot;postgres://postgres@localhost/database_1&quot;</span>)
+<span class="t">Lustra</span><span class="t">::</span><span class="t">SQL</span>.init(<span class="s">&quot;secondary&quot;</span>, <span class="s">&quot;postgres://postgres@localhost/database_2&quot;</span>)
+
+<span class="k">class</span> <span class="t">ModelA</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="c"># Performs all the queries on `database_1`</span>
+  <span class="c"># self.connection = &quot;default&quot;</span>
+  column id : <span class="t">Int32</span>, primary: <span class="n">true</span>, presence: <span class="n">false</span>
+  column title : <span class="t">String</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="t">ModelB</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="c"># Performs all the queries on `database_2`</span>
+  <span class="k">self</span>.connection <span class="o">=</span> <span class="s">&quot;secondary&quot;</span>
+
+  column id : <span class="t">Int32</span>, primary: <span class="n">true</span>, presence: <span class="n">false</span>
+<span class="k">end</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create_from_json(string_or_io:String|IO,trusted:Bool=false)-class-method">
+      <div class="signature">
+        
+        def self.<strong>create_from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#create_from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Create a new model from json and save it. Returns the model.</p>
+<p>The model may not be saved due to validation failure;
+check the returned model <code>errors?</code> and <code>persisted?</code> flags.
+Trusted flag set to true will allow mass assignment without protection, FALSE by default</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="create_from_json!(string_or_io:String|IO,trusted:Bool=false)-class-method">
+      <div class="signature">
+        
+        def self.<strong>create_from_json!</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#create_from_json%21%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Create a new model from json and save it. Returns the model.</p>
+<p>Returns the newly inserted model
+Raises an exception if validation failed during the saving process.
+Trusted flag set to true will allow mass assignment without protection, FALSE by default</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find(ids:Array)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find</strong>(ids : Array)
+
+        <a class="method-permalink" href="#find%28ids%3AArray%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Find multiple models by an array of primary keys.
+Returns an array of models (may be empty if none found).</p>
+<pre><code class="language-crystal">users <span class="o">=</span> <span class="t">User</span>.find([<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>])
+users.size <span class="c"># =&gt; 0..3 depending on how many were found</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find(x)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find</strong>(x)
+
+        <a class="method-permalink" href="#find%28x%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns a model using primary key equality
+Returns <code>nil</code> if not found.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find!(ids:Array)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find!</strong>(ids : Array)
+
+        <a class="method-permalink" href="#find%21%28ids%3AArray%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Find multiple models by an array of primary keys.
+Raises error if ANY of the IDs are not found.</p>
+<pre><code class="language-crystal">users <span class="o">=</span> <span class="t">User</span>.find!([<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]) <span class="c"># Raises if any ID is not found</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find!(x)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find!</strong>(x)
+
+        <a class="method-permalink" href="#find%21%28x%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns a model using primary key equality.
+Raises error if the model is not found.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find_by(tuple:NamedTuple)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find_by</strong>(tuple : NamedTuple)
+
+        <a class="method-permalink" href="#find_by%28tuple%3ANamedTuple%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Find a model by column values. Returns <code>nil</code> if not found.
+This is an alias for <code>query.find(**tuple)</code> with better naming.</p>
+<pre><code class="language-crystal">user <span class="o">=</span> <span class="t">User</span>.find_by(email: <span class="s">&quot;test@example.com&quot;</span>)
+user <span class="o">=</span> <span class="t">User</span>.find_by(first_name: <span class="s">&quot;John&quot;</span>, last_name: <span class="s">&quot;Doe&quot;</span>)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find_by(**tuple)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find_by</strong>(**tuple)
+
+        <a class="method-permalink" href="#find_by%28%2A%2Atuple%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Find a model by column values. Returns <code>nil</code> if not found.
+This is an alias for <code>query.find(**tuple)</code> with better naming.</p>
+<pre><code class="language-crystal">user <span class="o">=</span> <span class="t">User</span>.find_by(email: <span class="s">&quot;test@example.com&quot;</span>)
+user <span class="o">=</span> <span class="t">User</span>.find_by(first_name: <span class="s">&quot;John&quot;</span>, last_name: <span class="s">&quot;Doe&quot;</span>)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find_by!(tuple:NamedTuple)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find_by!</strong>(tuple : NamedTuple)
+
+        <a class="method-permalink" href="#find_by%21%28tuple%3ANamedTuple%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Find a model by column values. Raises error if not found.
+This is an alias for <code>query.find!(**tuple)</code> with better naming.</p>
+<pre><code class="language-crystal">user <span class="o">=</span> <span class="t">User</span>.find_by!(email: <span class="s">&quot;test@example.com&quot;</span>)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="find_by!(**tuple)-class-method">
+      <div class="signature">
+        
+        def self.<strong>find_by!</strong>(**tuple)
+
+        <a class="method-permalink" href="#find_by%21%28%2A%2Atuple%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Find a model by column values. Raises error if not found.
+This is an alias for <code>query.find!(**tuple)</code> with better naming.</p>
+<pre><code class="language-crystal">user <span class="o">=</span> <span class="t">User</span>.find_by!(email: <span class="s">&quot;test@example.com&quot;</span>)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="from_json(string_or_io:String|IO,trusted:Bool=false)-class-method">
+      <div class="signature">
+        
+        def self.<strong>from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Create a new empty model and fill the columns from json. Returns the new model</p>
+<p>Trusted flag set to true will allow mass assignment without protection, FALSE by default</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="full_table_name-class-method">
+      <div class="signature">
+        
+        def self.<strong>full_table_name</strong>
+
+        <a class="method-permalink" href="#full_table_name-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>returns the fully qualified and escaped name for this table.
+add schema if schema is different from 'public' (default schema)</p>
+<p>ex: &quot;schema&quot;.&quot;table&quot;</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="import(array:Enumerable(self),on_conflict:Lustra::SQL::InsertQuery-&gt;|Nil=nil)-class-method">
+      <div class="signature">
+        
+        def self.<strong>import</strong>(array : Enumerable(<span class="k">self</span>), on_conflict : <a href="../../Lustra/SQL/InsertQuery.html">Lustra::SQL::InsertQuery</a> ->  | Nil = <span class="n">nil</span>)
+
+        <a class="method-permalink" href="#import%28array%3AEnumerable%28self%29%2Con_conflict%3ALustra%3A%3ASQL%3A%3AInsertQuery-%3E%7CNil%3Dnil%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Import a bulk of models in one SQL insert query.
+Each model must be non-persisted.</p>
+<p><code>on_conflict</code> callback can be optionnaly turned on
+to manage constraints of the database.</p>
+<p>Note: Old models are not modified. This method return a copy of the
+models as saved in the database.</p>
+<h2><a id="example" class="anchor" href="#example">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>Example:</h2>
+<pre><code class="language-crystal">users <span class="o">=</span> [<span class="t">User</span>.new(id: <span class="n">1</span>), <span class="t">User</span>.new(id: <span class="n">2</span>), <span class="t">User</span>.new(id: <span class="n">3</span>)]
+users <span class="o">=</span> <span class="t">User</span>.import(users)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="polymorphic?:Bool-class-method">
+      <div class="signature">
+        
+        def self.<strong>polymorphic?</strong> : Bool
+
+        <a class="method-permalink" href="#polymorphic%3F%3ABool-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="public-class-method">
+      <div class="signature">
+        
+        def self.<strong>public</strong>
+
+        <a class="method-permalink" href="#public-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L16" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="query-class-method">
+      <div class="signature">
+        
+        def self.<strong>query</strong>
+
+        <a class="method-permalink" href="#query-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Return a new query <code>SELECT * FROM [my_model_table]</code>. Can be refined after that.
+Automatically applies default_scope if defined.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="read_only=(read_only:Bool)-class-method">
+      <div class="signature">
+        
+        def self.<strong>read_only=</strong>(read_only : Bool)
+
+        <a class="method-permalink" href="#read_only%3D%28read_only%3ABool%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="read_only?:Bool-class-method">
+      <div class="signature">
+        
+        def self.<strong>read_only?</strong> : Bool
+
+        <a class="method-permalink" href="#read_only%3F%3ABool-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="register_counter_cache(association_model:Class,counter_column:String,foreign_key:String)-class-method">
+      <div class="signature">
+        
+        def self.<strong>register_counter_cache</strong>(association_model : Class, counter_column : String, foreign_key : String)
+
+        <a class="method-permalink" href="#register_counter_cache%28association_model%3AClass%2Ccounter_column%3AString%2Cforeign_key%3AString%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Register a counter cache for this model using model class</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset_counters(id,*counter_models)-class-method">
+      <div class="signature">
+        
+        def self.<strong>reset_counters</strong>(id, *counter_models)
+
+        <a class="method-permalink" href="#reset_counters%28id%2C%2Acounter_models%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Reset counter cache columns to their correct values.
+This is useful when counter caches become out of sync due to direct SQL operations.</p>
+<p>Example:</p>
+<pre><code class="language-crystal"><span class="t">User</span>.reset_counters(user.id, <span class="t">Post</span>)
+<span class="t">User</span>.reset_counters(user.id, <span class="t">Post</span>, <span class="t">Comment</span>)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="schema:Lustra::SQL::Symbolic|Nil-class-method">
+      <div class="signature">
+        
+        def self.<strong>schema</strong> : <a href="../../Lustra/SQL/Symbolic.html">Lustra::SQL::Symbolic</a> | Nil
+
+        <a class="method-permalink" href="#schema%3ALustra%3A%3ASQL%3A%3ASymbolic%7CNil-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Define the current schema used in PostgreSQL. The value is <code>nil</code> by default, which lead to non-specified
+schema during the querying, and usage of &quot;public&quot; by PostgreSQL.</p>
+<p>This property can be redefined on initialization. Example:</p>
+<pre><code class="language-crystal"><span class="k">class</span> <span class="t">MyModel</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="k">self</span>.schema <span class="o">=</span> <span class="s">&quot;my_schema&quot;</span>
+<span class="k">end</span>
+<span class="t">MyModel</span>.query.to_sql <span class="c"># SELECT * FROM &quot;my_schema&quot;.&quot;my_models&quot;</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="schema=(schema:Lustra::SQL::Symbolic|Nil)-class-method">
+      <div class="signature">
+        
+        def self.<strong>schema=</strong>(schema : <a href="../../Lustra/SQL/Symbolic.html">Lustra::SQL::Symbolic</a> | Nil)
+
+        <a class="method-permalink" href="#schema%3D%28schema%3ALustra%3A%3ASQL%3A%3ASymbolic%7CNil%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Define the current schema used in PostgreSQL. The value is <code>nil</code> by default, which lead to non-specified
+schema during the querying, and usage of &quot;public&quot; by PostgreSQL.</p>
+<p>This property can be redefined on initialization. Example:</p>
+<pre><code class="language-crystal"><span class="k">class</span> <span class="t">MyModel</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="k">self</span>.schema <span class="o">=</span> <span class="s">&quot;my_schema&quot;</span>
+<span class="k">end</span>
+<span class="t">MyModel</span>.query.to_sql <span class="c"># SELECT * FROM &quot;my_schema&quot;.&quot;my_models&quot;</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table:Lustra::SQL::Symbolic-class-method">
+      <div class="signature">
+        
+        def self.<strong>table</strong> : <a href="../../Lustra/SQL/Symbolic.html">Lustra::SQL::Symbolic</a>
+
+        <a class="method-permalink" href="#table%3ALustra%3A%3ASQL%3A%3ASymbolic-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Return the table name setup for this model.
+By convention, the class name is by default equals to the pluralized underscored string form of the model name.
+Example:</p>
+<pre><code class="language-crystal"><span class="t">MyModel</span> <span class="o">=&gt;</span> <span class="s">&quot;my_models&quot;</span>
+<span class="t">Person</span> <span class="o">=&gt;</span> <span class="s">&quot;people&quot;</span>
+<span class="t">Project</span><span class="t">::</span><span class="t">Info</span> <span class="o">=&gt;</span> <span class="s">&quot;project_infos&quot;</span></code></pre>
+<p>The property can be updated at initialization to a custom table name:</p>
+<pre><code class="language-crystal"><span class="k">class</span> <span class="t">MyModel</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="k">self</span>.table <span class="o">=</span> <span class="s">&quot;another_table_name&quot;</span>
+<span class="k">end</span>
+<span class="t">MyModel</span>.query.to_sql <span class="c"># SELECT * FROM &quot;another_table_name&quot;</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table=(table:Lustra::SQL::Symbolic)-class-method">
+      <div class="signature">
+        
+        def self.<strong>table=</strong>(table : <a href="../../Lustra/SQL/Symbolic.html">Lustra::SQL::Symbolic</a>)
+
+        <a class="method-permalink" href="#table%3D%28table%3ALustra%3A%3ASQL%3A%3ASymbolic%29-class-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Return the table name setup for this model.
+By convention, the class name is by default equals to the pluralized underscored string form of the model name.
+Example:</p>
+<pre><code class="language-crystal"><span class="t">MyModel</span> <span class="o">=&gt;</span> <span class="s">&quot;my_models&quot;</span>
+<span class="t">Person</span> <span class="o">=&gt;</span> <span class="s">&quot;people&quot;</span>
+<span class="t">Project</span><span class="t">::</span><span class="t">Info</span> <span class="o">=&gt;</span> <span class="s">&quot;project_infos&quot;</span></code></pre>
+<p>The property can be updated at initialization to a custom table name:</p>
+<pre><code class="language-crystal"><span class="k">class</span> <span class="t">MyModel</span>
+  <span class="k">include</span> <span class="t">Lustra</span><span class="t">::</span><span class="t">Model</span>
+
+  <span class="k">self</span>.table <span class="o">=</span> <span class="s">&quot;another_table_name&quot;</span>
+<span class="k">end</span>
+<span class="t">MyModel</span>.query.to_sql <span class="c"># SELECT * FROM &quot;another_table_name&quot;</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="tables_only-class-method">
+      <div class="signature">
+        
+        def self.<strong>tables_only</strong>
+
+        <a class="method-permalink" href="#tables_only-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L18" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="views_only-class-method">
+      <div class="signature">
+        
+        def self.<strong>views_only</strong>
+
+        <a class="method-permalink" href="#views_only-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L19" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+  
+
+  
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="add_built_association(association_name:String,model:Lustra::Model)-instance-method">
+      <div class="signature">
+        
+        def <strong>add_built_association</strong>(association_name : String, model : <a href="../../Lustra/Model.html">Lustra::Model</a>)
+
+        <a class="method-permalink" href="#add_built_association%28association_name%3AString%2Cmodel%3ALustra%3A%3AModel%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Add a built association to track for autosave</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="attributes:Hash(String,Lustra::SQL::Any)-instance-method">
+      <div class="signature">
+        
+        def <strong>attributes</strong> : Hash(String, <a href="../../Lustra/SQL/Any.html">Lustra::SQL::Any</a>)
+
+        <a class="method-permalink" href="#attributes%3AHash%28String%2CLustra%3A%3ASQL%3A%3AAny%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Attributes, used when fetch_columns is true</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="built_associations:Hash(String,Array(Lustra::Model))-instance-method">
+      <div class="signature">
+        
+        def <strong>built_associations</strong> : Hash(String, Array(<a href="../../Lustra/Model.html">Lustra::Model</a>))
+
+        <a class="method-permalink" href="#built_associations%3AHash%28String%2CArray%28Lustra%3A%3AModel%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Track built associations for autosave functionality</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="built_associations=(built_associations:Hash(String,Array(Lustra::Model)))-instance-method">
+      <div class="signature">
+        
+        def <strong>built_associations=</strong>(built_associations : Hash(String, Array(<a href="../../Lustra/Model.html">Lustra::Model</a>)))
+
+        <a class="method-permalink" href="#built_associations%3D%28built_associations%3AHash%28String%2CArray%28Lustra%3A%3AModel%29%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Track built associations for autosave functionality</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="cache:Lustra::Model::QueryCache|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>cache</strong> : <a href="../../Lustra/Model/QueryCache.html">Lustra::Model::QueryCache</a> | Nil
+
+        <a class="method-permalink" href="#cache%3ALustra%3A%3AModel%3A%3AQueryCache%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="changed:Array(String)-instance-method">
+      <div class="signature">
+        
+        def <strong>changed</strong> : Array(String)
+
+        <a class="method-permalink" href="#changed%3AArray%28String%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns an array of names of all changed attributes.</p>
+<pre><code class="language-crystal">user.email <span class="o">=</span> <span class="s">&quot;new@test.com&quot;</span>
+user.first_name <span class="o">=</span> <span class="s">&quot;John&quot;</span>
+user.changed  <span class="c"># =&gt; [&quot;email&quot;, &quot;first_name&quot;]</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="changed?-instance-method">
+      <div class="signature">
+        
+        def <strong>changed?</strong>
+
+        <a class="method-permalink" href="#changed%3F-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Return <code>true</code> if the model is dirty (e.g. one or more fields
+have been changed.). Return <code>false</code> otherwise.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="changes:Hash(String,Tuple(Lustra::SQL::Any,Lustra::SQL::Any))-instance-method">
+      <div class="signature">
+        
+        def <strong>changes</strong> : Hash(String, Tuple(<a href="../../Lustra/SQL/Any.html">Lustra::SQL::Any</a>, <a href="../../Lustra/SQL/Any.html">Lustra::SQL::Any</a>))
+
+        <a class="method-permalink" href="#changes%3AHash%28String%2CTuple%28Lustra%3A%3ASQL%3A%3AAny%2CLustra%3A%3ASQL%3A%3AAny%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns a hash of all changed attributes with their [old_value, new_value].</p>
+<pre><code class="language-crystal">user.email <span class="o">=</span> <span class="s">&quot;new@test.com&quot;</span>
+user.first_name <span class="o">=</span> <span class="s">&quot;John&quot;</span>
+user.changes  <span class="c"># =&gt; {&quot;email&quot; =&gt; [&quot;old@test.com&quot;, &quot;new@test.com&quot;], &quot;first_name&quot; =&gt; [nil, &quot;John&quot;]}</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="clear_built_associations-instance-method">
+      <div class="signature">
+        
+        def <strong>clear_built_associations</strong>
+
+        <a class="method-permalink" href="#clear_built_associations-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Clear all built associations (called after successful save)</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="clear_change_flags-instance-method">
+      <div class="signature">
+        
+        def <strong>clear_change_flags</strong>
+
+        <a class="method-permalink" href="#clear_change_flags-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Reset the <code><a href="../../Lustra/Reflection/Table.html#changed%3F-instance-method">#changed?</a></code> flag on all columns</p>
+<p>The model behave like its not dirty anymore
+and call to save would apply no changes.</p>
+<p>Returns <code>self</code></p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="columns:Lustra::Reflection::Column::Collection-instance-method">
+      <div class="signature">
+        
+        def <strong>columns</strong> : <a href="../../Lustra/Reflection/Column/Collection.html">Lustra::Reflection::Column::Collection</a>
+
+        <a class="method-permalink" href="#columns%3ALustra%3A%3AReflection%3A%3AColumn%3A%3ACollection-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>The method columns is a <code>has_many</code> relation to Lustra::Reflection::Column</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="has_built_associations?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>has_built_associations?</strong> : Bool
+
+        <a class="method-permalink" href="#has_built_associations%3F%3ABool-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Check if there are any pending built associations</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="indexes:Hash(String,Array(String))-instance-method">
+      <div class="signature">
+        
+        def <strong>indexes</strong> : Hash(String, Array(String))
+
+        <a class="method-permalink" href="#indexes%3AHash%28String%2CArray%28String%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>List all the indexes related to the current table.
+return an hash where the key is the name of the column
+and the value is an array containing all the indexes related to this specific
+field.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L27" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="invalidate_caching:self-instance-method">
+      <div class="signature">
+        
+        def <strong>invalidate_caching</strong> : <span class="k">self</span>
+
+        <a class="method-permalink" href="#invalidate_caching%3Aself-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Force to clean-up the caches for the relations
+connected to this model.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset(h:Hash(Symbol,_))-instance-method">
+      <div class="signature">
+        
+        def <strong>reset</strong>(h : Hash(Symbol, _))
+
+        <a class="method-permalink" href="#reset%28h%3AHash%28Symbol%2C_%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Set the columns from hash</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset(h:Hash(String,_))-instance-method">
+      <div class="signature">
+        
+        def <strong>reset</strong>(h : Hash(String, _))
+
+        <a class="method-permalink" href="#reset%28h%3AHash%28String%2C_%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Set the model fields from hash</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset(t:NamedTuple)-instance-method">
+      <div class="signature">
+        
+        def <strong>reset</strong>(t : NamedTuple)
+
+        <a class="method-permalink" href="#reset%28t%3ANamedTuple%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset(from_json:JSON::Any)-instance-method">
+      <div class="signature">
+        
+        def <strong>reset</strong>(from_json : JSON::Any)
+
+        <a class="method-permalink" href="#reset%28from_json%3AJSON%3A%3AAny%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset(**t:**T)forallT-instance-method">
+      <div class="signature">
+        
+        def <strong>reset</strong>(**t : **T) forall T
+
+        <a class="method-permalink" href="#reset%28%2A%2At%3A%2A%2AT%29forallT-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>reset flavors</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset_counters(*counter_models)-instance-method">
+      <div class="signature">
+        
+        def <strong>reset_counters</strong>(*counter_models)
+
+        <a class="method-permalink" href="#reset_counters%28%2Acounter_models%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Reset counter cache columns</p>
+<p>Example:</p>
+<pre><code class="language-crystal">user <span class="o">=</span> <span class="t">User</span>.find(<span class="n">1</span>)
+user.reset_counters(<span class="t">Post</span>)
+user.reset_counters(<span class="t">Post</span>, <span class="t">Comment</span>)</code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/model/reflection/table.cr#L4" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="set(h:Hash(Symbol,_))-instance-method">
+      <div class="signature">
+        
+        def <strong>set</strong>(h : Hash(Symbol, _))
+
+        <a class="method-permalink" href="#set%28h%3AHash%28Symbol%2C_%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Set the columns from hash</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="set(h:Hash(String,_))-instance-method">
+      <div class="signature">
+        
+        def <strong>set</strong>(h : Hash(String, _))
+
+        <a class="method-permalink" href="#set%28h%3AHash%28String%2C_%29%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Set the model fields from hash</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="set(t:NamedTuple)-instance-method">
+      <div class="signature">
+        
+        def <strong>set</strong>(t : NamedTuple)
+
+        <a class="method-permalink" href="#set%28t%3ANamedTuple%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="set(from_json:JSON::Any)-instance-method">
+      <div class="signature">
+        
+        def <strong>set</strong>(from_json : JSON::Any)
+
+        <a class="method-permalink" href="#set%28from_json%3AJSON%3A%3AAny%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="set(**t:**T)forallT-instance-method">
+      <div class="signature">
+        
+        def <strong>set</strong>(**t : **T) forall T
+
+        <a class="method-permalink" href="#set%28%2A%2At%3A%2A%2AT%29forallT-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+            <div class="doc-inherited">
+              Description copied from module <a href="../../Lustra/Model/HasColumns.html">Lustra::Model::HasColumns</a>
+            </div>
+          
+          <p>Set one or multiple columns to a specific value
+This two are equivalents:</p>
+<pre><code class="language-crystal">model.set(a: <span class="n">1</span>)
+model.a <span class="o">=</span> <span class="n">1</span></code></pre>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="set_from_json(string_or_io:String|IO,trusted:Bool=false)-instance-method">
+      <div class="signature">
+        
+        def <strong>set_from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#set_from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Set the fields from json passed as argument
+Trusted flag set to true will allow mass assignment without protection, FALSE by default</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_catalog:String-instance-method">
+      <div class="signature">
+        
+        def <strong>table_catalog</strong> : String
+
+        <a class="method-permalink" href="#table_catalog%3AString-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_catalog%3AString-instance-method">#table_catalog</a></code> column or throw an exception if the column is not defined.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_catalog=(x:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_catalog=</strong>(x : String)
+
+        <a class="method-permalink" href="#table_catalog%3D%28x%3AString%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_catalog%3AString-instance-method">#table_catalog</a></code> column.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_catalog_column:Lustra::Model::Column(String,Lustra::Model::Converter::StringConverter)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_catalog_column</strong> : <a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a>(String, <a href="../../Lustra/Model/Converter/StringConverter.html">Lustra::Model::Converter::StringConverter</a>)
+
+        <a class="method-permalink" href="#table_catalog_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_catalog%3AString-instance-method">#table_catalog</a></code> field</p>
+<p>See <code><a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a></code></p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_name:String-instance-method">
+      <div class="signature">
+        
+        def <strong>table_name</strong> : String
+
+        <a class="method-permalink" href="#table_name%3AString-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_name%3AString-instance-method">#table_name</a></code> column or throw an exception if the column is not defined.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_name=(x:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_name=</strong>(x : String)
+
+        <a class="method-permalink" href="#table_name%3D%28x%3AString%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_name%3AString-instance-method">#table_name</a></code> column.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_name_column:Lustra::Model::Column(String,Lustra::Model::Converter::StringConverter)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_name_column</strong> : <a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a>(String, <a href="../../Lustra/Model/Converter/StringConverter.html">Lustra::Model::Converter::StringConverter</a>)
+
+        <a class="method-permalink" href="#table_name_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_name%3AString-instance-method">#table_name</a></code> field</p>
+<p>See <code><a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a></code></p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_schema:String-instance-method">
+      <div class="signature">
+        
+        def <strong>table_schema</strong> : String
+
+        <a class="method-permalink" href="#table_schema%3AString-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_schema%3AString-instance-method">#table_schema</a></code> column or throw an exception if the column is not defined.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_schema=(x:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_schema=</strong>(x : String)
+
+        <a class="method-permalink" href="#table_schema%3D%28x%3AString%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_schema%3AString-instance-method">#table_schema</a></code> column.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_schema_column:Lustra::Model::Column(String,Lustra::Model::Converter::StringConverter)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_schema_column</strong> : <a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a>(String, <a href="../../Lustra/Model/Converter/StringConverter.html">Lustra::Model::Converter::StringConverter</a>)
+
+        <a class="method-permalink" href="#table_schema_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_schema%3AString-instance-method">#table_schema</a></code> field</p>
+<p>See <code><a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a></code></p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_type:String-instance-method">
+      <div class="signature">
+        
+        def <strong>table_type</strong> : String
+
+        <a class="method-permalink" href="#table_type%3AString-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the value of <code><a href="../../Lustra/Reflection/Table.html#table_type%3AString-instance-method">#table_type</a></code> column or throw an exception if the column is not defined.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_type=(x:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_type=</strong>(x : String)
+
+        <a class="method-permalink" href="#table_type%3D%28x%3AString%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Setter for <code><a href="../../Lustra/Reflection/Table.html#table_type%3AString-instance-method">#table_type</a></code> column.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="table_type_column:Lustra::Model::Column(String,Lustra::Model::Converter::StringConverter)-instance-method">
+      <div class="signature">
+        
+        def <strong>table_type_column</strong> : <a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a>(String, <a href="../../Lustra/Model/Converter/StringConverter.html">Lustra::Model::Converter::StringConverter</a>)
+
+        <a class="method-permalink" href="#table_type_column%3ALustra%3A%3AModel%3A%3AColumn%28String%2CLustra%3A%3AModel%3A%3AConverter%3A%3AStringConverter%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns the column object used to manage <code><a href="../../Lustra/Reflection/Table.html#table_type%3AString-instance-method">#table_type</a></code> field</p>
+<p>See <code><a href="../../Lustra/Model/Column.html">Lustra::Model::Column</a></code></p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="to_h(full=false):Hash(String,Lustra::SQL::Any)-instance-method">
+      <div class="signature">
+        
+        def <strong>to_h</strong>(full = <span class="n">false</span>) : Hash(String, <a href="../../Lustra/SQL/Any.html">Lustra::SQL::Any</a>)
+
+        <a class="method-permalink" href="#to_h%28full%3Dfalse%29%3AHash%28String%2CLustra%3A%3ASQL%3A%3AAny%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Return a hash version of the columns of this model.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="to_json(emit_nulls:Bool=false)-instance-method">
+      <div class="signature">
+        
+        def <strong>to_json</strong>(emit_nulls : Bool = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#to_json%28emit_nulls%3ABool%3Dfalse%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="to_json(json,emit_nulls=false)-instance-method">
+      <div class="signature">
+        
+        def <strong>to_json</strong>(json, emit_nulls = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#to_json%28json%2Cemit_nulls%3Dfalse%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="update_from_json(string_or_io:String|IO,trusted:Bool=false)-instance-method">
+      <div class="signature">
+        
+        def <strong>update_from_json</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#update_from_json%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Set the fields from json passed as argument and call <code>save</code> on the object
+Trusted flag set to true will allow mass assignment without protection, FALSE by default</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="update_from_json!(string_or_io:String|IO,trusted:Bool=false)-instance-method">
+      <div class="signature">
+        
+        def <strong>update_from_json!</strong>(string_or_io : String | IO, trusted : Bool = <span class="n">false</span>)
+
+        <a class="method-permalink" href="#update_from_json%21%28string_or_io%3AString%7CIO%2Ctrusted%3ABool%3Dfalse%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Set the fields from json passed as argument and call <code>save!</code> on the object
+Trusted flag set to true will allow mass assignment without protection, FALSE by default</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="update_h:Hash(String,Lustra::SQL::Any)-instance-method">
+      <div class="signature">
+        
+        def <strong>update_h</strong> : Hash(String, <a href="../../Lustra/SQL/Any.html">Lustra::SQL::Any</a>)
+
+        <a class="method-permalink" href="#update_h%3AHash%28String%2CLustra%3A%3ASQL%3A%3AAny%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Generate the hash for update request (like during save)</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="validate_fields_presence-instance-method">
+      <div class="signature">
+        
+        def <strong>validate_fields_presence</strong>
+
+        <a class="method-permalink" href="#validate_fields_presence-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>For each column, ensure than when needed the column has present
+information into it.</p>
+<p>This method is called on validation.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
+
+
+</div>
+
+</body>
+</html>

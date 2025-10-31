@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Crystal Docs 1.17.1">
+<meta name="crystal_docs.project_version" content="develop">
+<meta name="crystal_docs.project_name" content="lustra">
+
+
+
+<link href="../../../css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../../../js/doc.js"></script>
+
+  <meta name="repository-name" content="lustra">
+  <title>Lustra::Expression::Node::InArray - lustra develop</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "../../../";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill="currentColor" fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<input type="checkbox" id="sidebar-btn">
+<label for="sidebar-btn" id="sidebar-btn-label">
+  <svg class="open" xmlns="http://www.w3.org/2000/svg" height="2em" width="2em" viewBox="0 0 512 512"><title>Open Sidebar</title><path fill="currentColor" d="M80 96v64h352V96H80zm0 112v64h352v-64H80zm0 112v64h352v-64H80z"></path></svg>
+  <svg class="close" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 512 512"><title>Close Sidebar</title><path fill="currentColor" d="m118.6 73.4-45.2 45.2L210.7 256 73.4 393.4l45.2 45.2L256 301.3l137.4 137.3 45.2-45.2L301.3 256l137.3-137.4-45.2-45.2L256 210.7Z"></path></svg>
+</label>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="../../../index.html">
+          lustra
+        </a>
+      </h1>
+
+      <span class="project-version">
+        develop
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class=" " data-id="lustra/toplevel" data-name="top level namespace">
+      <a href="../../../toplevel.html">Top Level Namespace</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/BigDecimal" data-name="bigdecimal">
+      <a href="../../../BigDecimal.html">BigDecimal</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Char" data-name="char">
+      <a href="../../../Char.html">Char</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Citext" data-name="citext">
+      <a href="../../../Citext.html">Citext</a>
+      
+    </li>
+  
+  <li class="parent open current" data-id="lustra/Lustra" data-name="lustra">
+      <a href="../../../Lustra.html">Lustra</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI" data-name="lustra::cli">
+      <a href="../../../Lustra/CLI.html">CLI</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Base" data-name="lustra::cli::base">
+      <a href="../../../Lustra/CLI/Base.html">Base</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Base/Arguments" data-name="lustra::cli::base::arguments">
+      <a href="../../../Lustra/CLI/Base/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Base/Flags" data-name="lustra::cli::base::flags">
+      <a href="../../../Lustra/CLI/Base/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Command" data-name="lustra::cli::command">
+      <a href="../../../Lustra/CLI/Command.html">Command</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Generator" data-name="lustra::cli::generator">
+      <a href="../../../Lustra/CLI/Generator.html">Generator</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Arguments" data-name="lustra::cli::generator::arguments">
+      <a href="../../../Lustra/CLI/Generator/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Flags" data-name="lustra::cli::generator::flags">
+      <a href="../../../Lustra/CLI/Generator/Flags.html">Flags</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Generator/Migration" data-name="lustra::cli::generator::migration">
+      <a href="../../../Lustra/CLI/Generator/Migration.html">Migration</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Migration/Arguments" data-name="lustra::cli::generator::migration::arguments">
+      <a href="../../../Lustra/CLI/Generator/Migration/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Migration/Flags" data-name="lustra::cli::generator::migration::flags">
+      <a href="../../../Lustra/CLI/Generator/Migration/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Generator/Model" data-name="lustra::cli::generator::model">
+      <a href="../../../Lustra/CLI/Generator/Model.html">Model</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Model/Arguments" data-name="lustra::cli::generator::model::arguments">
+      <a href="../../../Lustra/CLI/Generator/Model/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Model/Flags" data-name="lustra::cli::generator::model::flags">
+      <a href="../../../Lustra/CLI/Generator/Model/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Generator/Record" data-name="lustra::cli::generator::record">
+      <a href="../../../Lustra/CLI/Generator/Record.html">Record</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration" data-name="lustra::cli::migration">
+      <a href="../../../Lustra/CLI/Migration.html">Migration</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Arguments" data-name="lustra::cli::migration::arguments">
+      <a href="../../../Lustra/CLI/Migration/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Down" data-name="lustra::cli::migration::down">
+      <a href="../../../Lustra/CLI/Migration/Down.html">Down</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Down/Arguments" data-name="lustra::cli::migration::down::arguments">
+      <a href="../../../Lustra/CLI/Migration/Down/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Down/Flags" data-name="lustra::cli::migration::down::flags">
+      <a href="../../../Lustra/CLI/Migration/Down/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Flags" data-name="lustra::cli::migration::flags">
+      <a href="../../../Lustra/CLI/Migration/Flags.html">Flags</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Migrate" data-name="lustra::cli::migration::migrate">
+      <a href="../../../Lustra/CLI/Migration/Migrate.html">Migrate</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Migrate/Arguments" data-name="lustra::cli::migration::migrate::arguments">
+      <a href="../../../Lustra/CLI/Migration/Migrate/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Migrate/Flags" data-name="lustra::cli::migration::migrate::flags">
+      <a href="../../../Lustra/CLI/Migration/Migrate/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Rollback" data-name="lustra::cli::migration::rollback">
+      <a href="../../../Lustra/CLI/Migration/Rollback.html">Rollback</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Rollback/Arguments" data-name="lustra::cli::migration::rollback::arguments">
+      <a href="../../../Lustra/CLI/Migration/Rollback/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Rollback/Flags" data-name="lustra::cli::migration::rollback::flags">
+      <a href="../../../Lustra/CLI/Migration/Rollback/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Seed" data-name="lustra::cli::migration::seed">
+      <a href="../../../Lustra/CLI/Migration/Seed.html">Seed</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Seed/Arguments" data-name="lustra::cli::migration::seed::arguments">
+      <a href="../../../Lustra/CLI/Migration/Seed/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Seed/Flags" data-name="lustra::cli::migration::seed::flags">
+      <a href="../../../Lustra/CLI/Migration/Seed/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Set" data-name="lustra::cli::migration::set">
+      <a href="../../../Lustra/CLI/Migration/Set.html">Set</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Set/Arguments" data-name="lustra::cli::migration::set::arguments">
+      <a href="../../../Lustra/CLI/Migration/Set/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Set/Flags" data-name="lustra::cli::migration::set::flags">
+      <a href="../../../Lustra/CLI/Migration/Set/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Status" data-name="lustra::cli::migration::status">
+      <a href="../../../Lustra/CLI/Migration/Status.html">Status</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Status/Arguments" data-name="lustra::cli::migration::status::arguments">
+      <a href="../../../Lustra/CLI/Migration/Status/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Status/Flags" data-name="lustra::cli::migration::status::flags">
+      <a href="../../../Lustra/CLI/Migration/Status/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Migration/Up" data-name="lustra::cli::migration::up">
+      <a href="../../../Lustra/CLI/Migration/Up.html">Up</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Up/Arguments" data-name="lustra::cli::migration::up::arguments">
+      <a href="../../../Lustra/CLI/Migration/Up/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Migration/Up/Flags" data-name="lustra::cli::migration::up::flags">
+      <a href="../../../Lustra/CLI/Migration/Up/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/CLI/Seed" data-name="lustra::cli::seed">
+      <a href="../../../Lustra/CLI/Seed.html">Seed</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Seed/Arguments" data-name="lustra::cli::seed::arguments">
+      <a href="../../../Lustra/CLI/Seed/Arguments.html">Arguments</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/CLI/Seed/Flags" data-name="lustra::cli::seed::flags">
+      <a href="../../../Lustra/CLI/Seed/Flags.html">Flags</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Enum" data-name="lustra::enum">
+      <a href="../../../Lustra/Enum.html">Enum</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Enum/Converter" data-name="lustra::enum::converter(t)">
+      <a href="../../../Lustra/Enum/Converter.html">Converter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/ErrorMessages" data-name="lustra::errormessages">
+      <a href="../../../Lustra/ErrorMessages.html">ErrorMessages</a>
+      
+    </li>
+  
+  <li class="parent open current" data-id="lustra/Lustra/Expression" data-name="lustra::expression">
+      <a href="../../../Lustra/Expression.html">Expression</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/AvailableLiteral" data-name="lustra::expression::availableliteral">
+      <a href="../../../Lustra/Expression/AvailableLiteral.html">AvailableLiteral</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/JSONB" data-name="lustra::expression::jsonb">
+      <a href="../../../Lustra/Expression/JSONB.html">JSONB</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/JSONB/Node" data-name="lustra::expression::jsonb::node">
+      <a href="../../../Lustra/Expression/JSONB/Node.html">Node</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Literal" data-name="lustra::expression::literal">
+      <a href="../../../Lustra/Expression/Literal.html">Literal</a>
+      
+    </li>
+  
+  <li class="parent open current" data-id="lustra/Lustra/Expression/Node" data-name="lustra::expression::node">
+      <a href="../../../Lustra/Expression/Node.html">Node</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/Node/Between" data-name="lustra::expression::node::between">
+      <a href="../../../Lustra/Expression/Node/Between.html">Between</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Between/BetweenType" data-name="lustra::expression::node::between::betweentype">
+      <a href="../../../Lustra/Expression/Node/Between/BetweenType.html">BetweenType</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/DoubleOperator" data-name="lustra::expression::node::doubleoperator">
+      <a href="../../../Lustra/Expression/Node/DoubleOperator.html">DoubleOperator</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Function" data-name="lustra::expression::node::function">
+      <a href="../../../Lustra/Expression/Node/Function.html">Function</a>
+      
+    </li>
+  
+  <li class=" current" data-id="lustra/Lustra/Expression/Node/InArray" data-name="lustra::expression::node::inarray">
+      <a href="../../../Lustra/Expression/Node/InArray.html">InArray</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/InRange" data-name="lustra::expression::node::inrange">
+      <a href="../../../Lustra/Expression/Node/InRange.html">InRange</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/InSelect" data-name="lustra::expression::node::inselect">
+      <a href="../../../Lustra/Expression/Node/InSelect.html">InSelect</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/Node/JSONB" data-name="lustra::expression::node::jsonb">
+      <a href="../../../Lustra/Expression/Node/JSONB.html">JSONB</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/JSONB/ArrayContains" data-name="lustra::expression::node::jsonb::arraycontains">
+      <a href="../../../Lustra/Expression/Node/JSONB/ArrayContains.html">ArrayContains</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/JSONB/Equality" data-name="lustra::expression::node::jsonb::equality">
+      <a href="../../../Lustra/Expression/Node/JSONB/Equality.html">Equality</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/JSONB/Field" data-name="lustra::expression::node::jsonb::field">
+      <a href="../../../Lustra/Expression/Node/JSONB/Field.html">Field</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Literal" data-name="lustra::expression::node::literal">
+      <a href="../../../Lustra/Expression/Node/Literal.html">Literal</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Minus" data-name="lustra::expression::node::minus">
+      <a href="../../../Lustra/Expression/Node/Minus.html">Minus</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/NodeArray" data-name="lustra::expression::node::nodearray">
+      <a href="../../../Lustra/Expression/Node/NodeArray.html">NodeArray</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Not" data-name="lustra::expression::node::not">
+      <a href="../../../Lustra/Expression/Node/Not.html">Not</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Expression/Node/NotBetween" data-name="lustra::expression::node::notbetween">
+      <a href="../../../Lustra/Expression/Node/NotBetween.html">NotBetween</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/NotBetween/BetweenType" data-name="lustra::expression::node::notbetween::betweentype">
+      <a href="../../../Lustra/Expression/Node/NotBetween/BetweenType.html">BetweenType</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Null" data-name="lustra::expression::node::null">
+      <a href="../../../Lustra/Expression/Node/Null.html">Null</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/PGArray" data-name="lustra::expression::node::pgarray(t)">
+      <a href="../../../Lustra/Expression/Node/PGArray.html">PGArray</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Raw" data-name="lustra::expression::node::raw">
+      <a href="../../../Lustra/Expression/Node/Raw.html">Raw</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/Node/Variable" data-name="lustra::expression::node::variable">
+      <a href="../../../Lustra/Expression/Node/Variable.html">Variable</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Expression/UnsafeSql" data-name="lustra::expression::unsafesql">
+      <a href="../../../Lustra/Expression/UnsafeSql.html">UnsafeSql</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/IllegalEnumValueError" data-name="lustra::illegalenumvalueerror">
+      <a href="../../../Lustra/IllegalEnumValueError.html">IllegalEnumValueError</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Interval" data-name="lustra::interval">
+      <a href="../../../Lustra/Interval.html">Interval</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Interval/Converter" data-name="lustra::interval::converter">
+      <a href="../../../Lustra/Interval/Converter.html">Converter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Migration" data-name="lustra::migration">
+      <a href="../../../Lustra/Migration.html">Migration</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/AddColumn" data-name="lustra::migration::addcolumn">
+      <a href="../../../Lustra/Migration/AddColumn.html">AddColumn</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/AddTable" data-name="lustra::migration::addtable">
+      <a href="../../../Lustra/Migration/AddTable.html">AddTable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/ChangeColumnType" data-name="lustra::migration::changecolumntype">
+      <a href="../../../Lustra/Migration/ChangeColumnType.html">ChangeColumnType</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/CreateEnum" data-name="lustra::migration::createenum">
+      <a href="../../../Lustra/Migration/CreateEnum.html">CreateEnum</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/CreateIndex" data-name="lustra::migration::createindex">
+      <a href="../../../Lustra/Migration/CreateIndex.html">CreateIndex</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Direction" data-name="lustra::migration::direction">
+      <a href="../../../Lustra/Migration/Direction.html">Direction</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/DropEnum" data-name="lustra::migration::dropenum">
+      <a href="../../../Lustra/Migration/DropEnum.html">DropEnum</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/DropTable" data-name="lustra::migration::droptable">
+      <a href="../../../Lustra/Migration/DropTable.html">DropTable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Execute" data-name="lustra::migration::execute">
+      <a href="../../../Lustra/Migration/Execute.html">Execute</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/FullTextSearchableHelpers" data-name="lustra::migration::fulltextsearchablehelpers">
+      <a href="../../../Lustra/Migration/FullTextSearchableHelpers.html">FullTextSearchableHelpers</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Migration/FullTextSearchableOperation" data-name="lustra::migration::fulltextsearchableoperation">
+      <a href="../../../Lustra/Migration/FullTextSearchableOperation.html">FullTextSearchableOperation</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/FullTextSearchableOperation/Priority" data-name="lustra::migration::fulltextsearchableoperation::priority">
+      <a href="../../../Lustra/Migration/FullTextSearchableOperation/Priority.html">Priority</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/FullTextSearchableTableHelpers" data-name="lustra::migration::fulltextsearchabletablehelpers">
+      <a href="../../../Lustra/Migration/FullTextSearchableTableHelpers.html">FullTextSearchableTableHelpers</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Helper" data-name="lustra::migration::helper">
+      <a href="../../../Lustra/Migration/Helper.html">Helper</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/IrreversibleMigration" data-name="lustra::migration::irreversiblemigration">
+      <a href="../../../Lustra/Migration/IrreversibleMigration.html">IrreversibleMigration</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Manager" data-name="lustra::migration::manager">
+      <a href="../../../Lustra/Migration/Manager.html">Manager</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Operation" data-name="lustra::migration::operation">
+      <a href="../../../Lustra/Migration/Operation.html">Operation</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/RemoveColumn" data-name="lustra::migration::removecolumn">
+      <a href="../../../Lustra/Migration/RemoveColumn.html">RemoveColumn</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/RenameColumn" data-name="lustra::migration::renamecolumn">
+      <a href="../../../Lustra/Migration/RenameColumn.html">RenameColumn</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Migration/Table" data-name="lustra::migration::table">
+      <a href="../../../Lustra/Migration/Table.html">Table</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Table/ColumnOperation" data-name="lustra::migration::table::columnoperation">
+      <a href="../../../Lustra/Migration/Table/ColumnOperation.html">ColumnOperation</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Table/FkeyOperation" data-name="lustra::migration::table::fkeyoperation">
+      <a href="../../../Lustra/Migration/Table/FkeyOperation.html">FkeyOperation</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Migration/Table/IndexOperation" data-name="lustra::migration::table::indexoperation">
+      <a href="../../../Lustra/Migration/Table/IndexOperation.html">IndexOperation</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model" data-name="lustra::model">
+      <a href="../../../Lustra/Model.html">Model</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/ClassMethods" data-name="lustra::model::classmethods">
+      <a href="../../../Lustra/Model/ClassMethods.html">ClassMethods</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/CollectionBase" data-name="lustra::model::collectionbase(t)">
+      <a href="../../../Lustra/Model/CollectionBase.html">CollectionBase</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Column" data-name="lustra::model::column(t, c)">
+      <a href="../../../Lustra/Model/Column.html">Column</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Column/UnknownClass" data-name="lustra::model::column::unknownclass">
+      <a href="../../../Lustra/Model/Column/UnknownClass.html">UnknownClass</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Connection" data-name="lustra::model::connection">
+      <a href="../../../Lustra/Model/Connection.html">Connection</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Converter" data-name="lustra::model::converter">
+      <a href="../../../Lustra/Model/Converter.html">Converter</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterBool" data-name="lustra::model::converter::arrayconverterbool">
+      <a href="../../../Lustra/Model/Converter/ArrayConverterBool.html">ArrayConverterBool</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterFloat32" data-name="lustra::model::converter::arrayconverterfloat32">
+      <a href="../../../Lustra/Model/Converter/ArrayConverterFloat32.html">ArrayConverterFloat32</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterFloat64" data-name="lustra::model::converter::arrayconverterfloat64">
+      <a href="../../../Lustra/Model/Converter/ArrayConverterFloat64.html">ArrayConverterFloat64</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterInt32" data-name="lustra::model::converter::arrayconverterint32">
+      <a href="../../../Lustra/Model/Converter/ArrayConverterInt32.html">ArrayConverterInt32</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterInt64" data-name="lustra::model::converter::arrayconverterint64">
+      <a href="../../../Lustra/Model/Converter/ArrayConverterInt64.html">ArrayConverterInt64</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/ArrayConverterString" data-name="lustra::model::converter::arrayconverterstring">
+      <a href="../../../Lustra/Model/Converter/ArrayConverterString.html">ArrayConverterString</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Base" data-name="lustra::model::converter::base">
+      <a href="../../../Lustra/Model/Converter/Base.html">Base</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BcryptPasswordConverter" data-name="lustra::model::converter::bcryptpasswordconverter">
+      <a href="../../../Lustra/Model/Converter/BcryptPasswordConverter.html">BcryptPasswordConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BigDecimalConverter" data-name="lustra::model::converter::bigdecimalconverter">
+      <a href="../../../Lustra/Model/Converter/BigDecimalConverter.html">BigDecimalConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BigFloatConverter" data-name="lustra::model::converter::bigfloatconverter">
+      <a href="../../../Lustra/Model/Converter/BigFloatConverter.html">BigFloatConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BigIntConverter" data-name="lustra::model::converter::bigintconverter">
+      <a href="../../../Lustra/Model/Converter/BigIntConverter.html">BigIntConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/BoolConverter" data-name="lustra::model::converter::boolconverter">
+      <a href="../../../Lustra/Model/Converter/BoolConverter.html">BoolConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Float32Converter" data-name="lustra::model::converter::float32converter">
+      <a href="../../../Lustra/Model/Converter/Float32Converter.html">Float32Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Float64Converter" data-name="lustra::model::converter::float64converter">
+      <a href="../../../Lustra/Model/Converter/Float64Converter.html">Float64Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int16Converter" data-name="lustra::model::converter::int16converter">
+      <a href="../../../Lustra/Model/Converter/Int16Converter.html">Int16Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int32Converter" data-name="lustra::model::converter::int32converter">
+      <a href="../../../Lustra/Model/Converter/Int32Converter.html">Int32Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int64Converter" data-name="lustra::model::converter::int64converter">
+      <a href="../../../Lustra/Model/Converter/Int64Converter.html">Int64Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/Int8Converter" data-name="lustra::model::converter::int8converter">
+      <a href="../../../Lustra/Model/Converter/Int8Converter.html">Int8Converter</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Converter/JSON" data-name="lustra::model::converter::json">
+      <a href="../../../Lustra/Model/Converter/JSON.html">JSON</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/JSON/AnyConverter" data-name="lustra::model::converter::json::anyconverter">
+      <a href="../../../Lustra/Model/Converter/JSON/AnyConverter.html">AnyConverter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/StringConverter" data-name="lustra::model::converter::stringconverter">
+      <a href="../../../Lustra/Model/Converter/StringConverter.html">StringConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/TimeConverter" data-name="lustra::model::converter::timeconverter">
+      <a href="../../../Lustra/Model/Converter/TimeConverter.html">TimeConverter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt16Converter" data-name="lustra::model::converter::uint16converter">
+      <a href="../../../Lustra/Model/Converter/UInt16Converter.html">UInt16Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt32Converter" data-name="lustra::model::converter::uint32converter">
+      <a href="../../../Lustra/Model/Converter/UInt32Converter.html">UInt32Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt64Converter" data-name="lustra::model::converter::uint64converter">
+      <a href="../../../Lustra/Model/Converter/UInt64Converter.html">UInt64Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UInt8Converter" data-name="lustra::model::converter::uint8converter">
+      <a href="../../../Lustra/Model/Converter/UInt8Converter.html">UInt8Converter</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Converter/UUIDConverter" data-name="lustra::model::converter::uuidconverter">
+      <a href="../../../Lustra/Model/Converter/UUIDConverter.html">UUIDConverter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Error" data-name="lustra::model::error">
+      <a href="../../../Lustra/Model/Error.html">Error</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/EventManager" data-name="lustra::model::eventmanager">
+      <a href="../../../Lustra/Model/EventManager.html">EventManager</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/EventManager/EventKey" data-name="lustra::model::eventmanager::eventkey">
+      <a href="../../../Lustra/Model/EventManager/EventKey.html">EventKey</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/EventManager/HookFunction" data-name="lustra::model::eventmanager::hookfunction">
+      <a href="../../../Lustra/Model/EventManager/HookFunction.html">HookFunction</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/Factory" data-name="lustra::model::factory">
+      <a href="../../../Lustra/Model/Factory.html">Factory</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Factory/Base" data-name="lustra::model::factory::base">
+      <a href="../../../Lustra/Model/Factory/Base.html">Base</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Factory/PolymorphicFactory" data-name="lustra::model::factory::polymorphicfactory(t)">
+      <a href="../../../Lustra/Model/Factory/PolymorphicFactory.html">PolymorphicFactory</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Factory/SimpleFactory" data-name="lustra::model::factory::simplefactory(t)">
+      <a href="../../../Lustra/Model/Factory/SimpleFactory.html">SimpleFactory</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/FullTextSearchable" data-name="lustra::model::fulltextsearchable">
+      <a href="../../../Lustra/Model/FullTextSearchable.html">FullTextSearchable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasColumns" data-name="lustra::model::hascolumns">
+      <a href="../../../Lustra/Model/HasColumns.html">HasColumns</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasFactory" data-name="lustra::model::hasfactory">
+      <a href="../../../Lustra/Model/HasFactory.html">HasFactory</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/HasHooks" data-name="lustra::model::hashooks">
+      <a href="../../../Lustra/Model/HasHooks.html">HasHooks</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasHooks/ClassMethods" data-name="lustra::model::hashooks::classmethods">
+      <a href="../../../Lustra/Model/HasHooks/ClassMethods.html">ClassMethods</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasRelations" data-name="lustra::model::hasrelations">
+      <a href="../../../Lustra/Model/HasRelations.html">HasRelations</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasSaving" data-name="lustra::model::hassaving">
+      <a href="../../../Lustra/Model/HasSaving.html">HasSaving</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasScope" data-name="lustra::model::hasscope">
+      <a href="../../../Lustra/Model/HasScope.html">HasScope</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasSerialPkey" data-name="lustra::model::hasserialpkey">
+      <a href="../../../Lustra/Model/HasSerialPkey.html">HasSerialPkey</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasTimestamps" data-name="lustra::model::hastimestamps">
+      <a href="../../../Lustra/Model/HasTimestamps.html">HasTimestamps</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Model/HasValidation" data-name="lustra::model::hasvalidation">
+      <a href="../../../Lustra/Model/HasValidation.html">HasValidation</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Model/HasValidation/Error" data-name="lustra::model::hasvalidation::error">
+      <a href="../../../Lustra/Model/HasValidation/Error.html">Error</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/InvalidError" data-name="lustra::model::invaliderror">
+      <a href="../../../Lustra/Model/InvalidError.html">InvalidError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/JSONDeserialize" data-name="lustra::model::jsondeserialize">
+      <a href="../../../Lustra/Model/JSONDeserialize.html">JSONDeserialize</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/QueryCache" data-name="lustra::model::querycache">
+      <a href="../../../Lustra/Model/QueryCache.html">QueryCache</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/ReadOnlyError" data-name="lustra::model::readonlyerror">
+      <a href="../../../Lustra/Model/ReadOnlyError.html">ReadOnlyError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Model/Relations" data-name="lustra::model::relations">
+      <a href="../../../Lustra/Model/Relations.html">Relations</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Reflection" data-name="lustra::reflection">
+      <a href="../../../Lustra/Reflection.html">Reflection</a>
+      
+        <ul>
+  
+  <li class="parent " data-id="lustra/Lustra/Reflection/Column" data-name="lustra::reflection::column">
+      <a href="../../../Lustra/Reflection/Column.html">Column</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Reflection/Column/Collection" data-name="lustra::reflection::column::collection">
+      <a href="../../../Lustra/Reflection/Column/Collection.html">Collection</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Reflection/Table" data-name="lustra::reflection::table">
+      <a href="../../../Lustra/Reflection/Table.html">Table</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Reflection/Table/Collection" data-name="lustra::reflection::table::collection">
+      <a href="../../../Lustra/Reflection/Table/Collection.html">Collection</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL" data-name="lustra::sql">
+      <a href="../../../Lustra/SQL.html">SQL</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Any" data-name="lustra::sql::any">
+      <a href="../../../Lustra/SQL/Any.html">Any</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/CancelTransactionError" data-name="lustra::sql::canceltransactionerror">
+      <a href="../../../Lustra/SQL/CancelTransactionError.html">CancelTransactionError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Column" data-name="lustra::sql::column">
+      <a href="../../../Lustra/SQL/Column.html">Column</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/ConnectionPool" data-name="lustra::sql::connectionpool">
+      <a href="../../../Lustra/SQL/ConnectionPool.html">ConnectionPool</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/DeleteQuery" data-name="lustra::sql::deletequery">
+      <a href="../../../Lustra/SQL/DeleteQuery.html">DeleteQuery</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Error" data-name="lustra::sql::error">
+      <a href="../../../Lustra/SQL/Error.html">Error</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/ExecutionError" data-name="lustra::sql::executionerror">
+      <a href="../../../Lustra/SQL/ExecutionError.html">ExecutionError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Fragment" data-name="lustra::sql::fragment">
+      <a href="../../../Lustra/SQL/Fragment.html">Fragment</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/From" data-name="lustra::sql::from">
+      <a href="../../../Lustra/SQL/From.html">From</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/InsertQuery" data-name="lustra::sql::insertquery">
+      <a href="../../../Lustra/SQL/InsertQuery.html">InsertQuery</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/InsertQuery/Inserable" data-name="lustra::sql::insertquery::inserable">
+      <a href="../../../Lustra/SQL/InsertQuery/Inserable.html">Inserable</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Join" data-name="lustra::sql::join">
+      <a href="../../../Lustra/SQL/Join.html">Join</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/JSONB" data-name="lustra::sql::jsonb">
+      <a href="../../../Lustra/SQL/JSONB.html">JSONB</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/JSONB/JSONBHash" data-name="lustra::sql::jsonb::jsonbhash">
+      <a href="../../../Lustra/SQL/JSONB/JSONBHash.html">JSONBHash</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/JSONB/JSONBKey" data-name="lustra::sql::jsonb::jsonbkey">
+      <a href="../../../Lustra/SQL/JSONB/JSONBKey.html">JSONBKey</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Logger" data-name="lustra::sql::logger">
+      <a href="../../../Lustra/SQL/Logger.html">Logger</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/OperationNotPermittedError" data-name="lustra::sql::operationnotpermittederror">
+      <a href="../../../Lustra/SQL/OperationNotPermittedError.html">OperationNotPermittedError</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query" data-name="lustra::sql::query">
+      <a href="../../../Lustra/SQL/Query.html">Query</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Aggregate" data-name="lustra::sql::query::aggregate">
+      <a href="../../../Lustra/SQL/Query/Aggregate.html">Aggregate</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/BeforeQuery" data-name="lustra::sql::query::beforequery">
+      <a href="../../../Lustra/SQL/Query/BeforeQuery.html">BeforeQuery</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Change" data-name="lustra::sql::query::change">
+      <a href="../../../Lustra/SQL/Query/Change.html">Change</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Connection" data-name="lustra::sql::query::connection">
+      <a href="../../../Lustra/SQL/Query/Connection.html">Connection</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/CTE" data-name="lustra::sql::query::cte">
+      <a href="../../../Lustra/SQL/Query/CTE.html">CTE</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Execute" data-name="lustra::sql::query::execute">
+      <a href="../../../Lustra/SQL/Query/Execute.html">Execute</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Fetch" data-name="lustra::sql::query::fetch">
+      <a href="../../../Lustra/SQL/Query/Fetch.html">Fetch</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/From" data-name="lustra::sql::query::from">
+      <a href="../../../Lustra/SQL/Query/From.html">From</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/GroupBy" data-name="lustra::sql::query::groupby">
+      <a href="../../../Lustra/SQL/Query/GroupBy.html">GroupBy</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Having" data-name="lustra::sql::query::having">
+      <a href="../../../Lustra/SQL/Query/Having.html">Having</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Join" data-name="lustra::sql::query::join">
+      <a href="../../../Lustra/SQL/Query/Join.html">Join</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Lock" data-name="lustra::sql::query::lock">
+      <a href="../../../Lustra/SQL/Query/Lock.html">Lock</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/OffsetLimit" data-name="lustra::sql::query::offsetlimit">
+      <a href="../../../Lustra/SQL/Query/OffsetLimit.html">OffsetLimit</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query/OnConflict" data-name="lustra::sql::query::onconflict">
+      <a href="../../../Lustra/SQL/Query/OnConflict.html">OnConflict</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/OnConflict/OnConflictWhereClause" data-name="lustra::sql::query::onconflict::onconflictwhereclause">
+      <a href="../../../Lustra/SQL/Query/OnConflict/OnConflictWhereClause.html">OnConflictWhereClause</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query/OrderBy" data-name="lustra::sql::query::orderby">
+      <a href="../../../Lustra/SQL/Query/OrderBy.html">OrderBy</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/OrderBy/Record" data-name="lustra::sql::query::orderby::record">
+      <a href="../../../Lustra/SQL/Query/OrderBy/Record.html">Record</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Pluck" data-name="lustra::sql::query::pluck">
+      <a href="../../../Lustra/SQL/Query/Pluck.html">Pluck</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Select" data-name="lustra::sql::query::select">
+      <a href="../../../Lustra/SQL/Query/Select.html">Select</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Where" data-name="lustra::sql::query::where">
+      <a href="../../../Lustra/SQL/Query/Where.html">Where</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Query/Window" data-name="lustra::sql::query::window">
+      <a href="../../../Lustra/SQL/Query/Window.html">Window</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/Window/WindowDeclaration" data-name="lustra::sql::query::window::windowdeclaration">
+      <a href="../../../Lustra/SQL/Query/Window/WindowDeclaration.html">WindowDeclaration</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Query/WithPagination" data-name="lustra::sql::query::withpagination">
+      <a href="../../../Lustra/SQL/Query/WithPagination.html">WithPagination</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/QueryBuildingError" data-name="lustra::sql::querybuildingerror">
+      <a href="../../../Lustra/SQL/QueryBuildingError.html">QueryBuildingError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/RecordNotFoundError" data-name="lustra::sql::recordnotfounderror">
+      <a href="../../../Lustra/SQL/RecordNotFoundError.html">RecordNotFoundError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/RollbackError" data-name="lustra::sql::rollbackerror">
+      <a href="../../../Lustra/SQL/RollbackError.html">RollbackError</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Selectable" data-name="lustra::sql::selectable">
+      <a href="../../../Lustra/SQL/Selectable.html">Selectable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/SelectBuilder" data-name="lustra::sql::selectbuilder">
+      <a href="../../../Lustra/SQL/SelectBuilder.html">SelectBuilder</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/SelectQuery" data-name="lustra::sql::selectquery">
+      <a href="../../../Lustra/SQL/SelectQuery.html">SelectQuery</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Symbolic" data-name="lustra::sql::symbolic">
+      <a href="../../../Lustra/SQL/Symbolic.html">Symbolic</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/Transaction" data-name="lustra::sql::transaction">
+      <a href="../../../Lustra/SQL/Transaction.html">Transaction</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/Transaction/Level" data-name="lustra::sql::transaction::level">
+      <a href="../../../Lustra/SQL/Transaction/Level.html">Level</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/SQL/UpdateQuery" data-name="lustra::sql::updatequery">
+      <a href="../../../Lustra/SQL/UpdateQuery.html">UpdateQuery</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/UpdateQuery/Updatable" data-name="lustra::sql::updatequery::updatable">
+      <a href="../../../Lustra/SQL/UpdateQuery/Updatable.html">Updatable</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/SQL/UpdateQuery/UpdateInstruction" data-name="lustra::sql::updatequery::updateinstruction">
+      <a href="../../../Lustra/SQL/UpdateQuery/UpdateInstruction.html">UpdateInstruction</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/TimeInDay" data-name="lustra::timeinday">
+      <a href="../../../Lustra/TimeInDay.html">TimeInDay</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/TimeInDay/Converter" data-name="lustra::timeinday::converter">
+      <a href="../../../Lustra/TimeInDay/Converter.html">Converter</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/TSVector" data-name="lustra::tsvector">
+      <a href="../../../Lustra/TSVector.html">TSVector</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/TSVector/Converter" data-name="lustra::tsvector::converter">
+      <a href="../../../Lustra/TSVector/Converter.html">Converter</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/TSVector/Lexem" data-name="lustra::tsvector::lexem">
+      <a href="../../../Lustra/TSVector/Lexem.html">Lexem</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/TSVector/Lexem/Position" data-name="lustra::tsvector::lexem::position">
+      <a href="../../../Lustra/TSVector/Lexem/Position.html">Position</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/Util" data-name="lustra::util">
+      <a href="../../../Lustra/Util.html">Util</a>
+      
+    </li>
+  
+  <li class="parent " data-id="lustra/Lustra/Validation" data-name="lustra::validation">
+      <a href="../../../Lustra/Validation.html">Validation</a>
+      
+        <ul>
+  
+  <li class=" " data-id="lustra/Lustra/Validation/Helper" data-name="lustra::validation::helper">
+      <a href="../../../Lustra/Validation/Helper.html">Helper</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Lustra/View" data-name="lustra::view">
+      <a href="../../../Lustra/View.html">View</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Slice" data-name="slice(t)">
+      <a href="../../../Slice.html">Slice</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/Time" data-name="time">
+      <a href="../../../Time.html">Time</a>
+      
+    </li>
+  
+  <li class=" " data-id="lustra/UUID" data-name="uuid">
+      <a href="../../../UUID.html">UUID</a>
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">
+    class
+  </span> Lustra::<wbr>Expression::<wbr>Node::<wbr>InArray
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../../Lustra/Expression/Node/InArray.html">Lustra::Expression::Node::InArray</a></li><li class="superclass"><a href="../../../Lustra/Expression/Node.html">Lustra::Expression::Node</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
+
+
+
+
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>A node managing the rendering of array in Postgres.</p>
+<ul>
+<li>It renders <code>val IN (...)</code>.</li>
+<li>If the array passed as argument is empty, it renders <code>FALSE</code> instead.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+    
+      <a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/expression/nodes/in_array.cr#L6" target="_blank">
+        lustra/expression/nodes/in_array.cr
+      </a>
+    
+    <br/>
+  
+
+
+
+
+
+  
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new%28target%3ANode%2Carray%3AArray%28String%29%29-class-method" class="signature"><strong>.new</strong>(target : Node, array : Array(String))</a>
+        
+      </li>
+    
+  </ul>
+
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#resolve%3AString-instance-method" class="signature"><strong>#resolve</strong> : String</a>
+        
+      </li>
+    
+  </ul>
+
+
+
+  <div class="methods-inherited">
+    
+      
+
+  <h3>Instance methods inherited from class <code><a href="../../../Lustra/Expression/Node.html">Lustra::Expression::Node</a></code></h3>
+  
+  
+    <a href="../../../Lustra/Expression/Node.html#%21%3D%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>!=(any : Node) : Node<br/>!=(some_nil : Nil) : Node<br/>!=(any : T) : Node forall T</span>
+    !=</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%21~%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>!~(any : Node) : Node<br/>!~(regexp : Regex) : Node</span>
+    !~</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%26%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>&(any : Node) : Node<br/>&(any : T) : Node forall T</span>
+    &</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%2A%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>*(any : Node) : Node<br/>*(any : T) : Node forall T</span>
+    *</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%2B%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>+(any : Node) : Node<br/>+(any : T) : Node forall T</span>
+    +</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#-%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>-(any : Node) : Node<br/>-(any : T) : Node forall T<br/>-</span>
+    -</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#/%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>/(any : Node) : Node<br/>/(any : T) : Node forall T</span>
+    /</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%3C%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span><(any : Node) : Node<br/><(any : T) : Node forall T</span>
+    <</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%3C%3D%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span><=(any : Node) : Node<br/><=(any : T) : Node forall T</span>
+    <=</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%3D%3D%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>==(any : Node) : Node<br/>==(some_nil : Nil) : Node<br/>==(any : T) : Node forall T</span>
+    ==</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%3D~%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>=~(any : Node) : Node<br/>=~(regexp : Regex) : Node</span>
+    =~</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%3E%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>>(any : Node) : Node<br/>>(any : T) : Node forall T</span>
+    ></a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%3E%3D%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>>=(any : Node) : Node<br/>>=(any : T) : Node forall T</span>
+    >=</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#%7C%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>|(any : Node) : Node<br/>|(any : T) : Node forall T</span>
+    |</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#~-instance-method" class="tooltip">
+      <span>~</span>
+    ~</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#between%28a%2Cb%29-instance-method" class="tooltip">
+      <span>between(a, b)</span>
+    between</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#ilike%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>ilike(any : Node) : Node<br/>ilike(any : T) : Node forall T</span>
+    ilike</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#in%3F%28range%3ARange%28B%2CE%29%29forallB%2CE-instance-method" class="tooltip">
+      <span>in?(range : Range(B, E)) forall B, E<br/>in?(arr : Array(T)) forall T<br/>in?(tuple : Tuple(<span class="o">*</span><span class="t">T</span>)) forall T<br/>in?(request : Lustra::SQL::SelectBuilder)</span>
+    in?</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#like%28any%3ANode%29%3ANode-instance-method" class="tooltip">
+      <span>like(any : Node) : Node<br/>like(any : T) : Node forall T</span>
+    like</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/Node.html#resolve%3AString-instance-method" class="tooltip">
+      <span>resolve : String</span>
+    resolve</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+  <h3>Macros inherited from class <code><a href="../../../Lustra/Expression/Node.html">Lustra::Expression::Node</a></code></h3>
+  
+  
+    <a href="../../../Lustra/Expression/Node.html#define_operator%28op_name%2Csql_name%2Cnull%3Dfalse%29-macro" class="tooltip">
+      <span>define_operator(op_name, sql_name, null = <span class="n">false</span>)</span>
+    define_operator</a>
+    
+  
+
+
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../../Lustra/Expression/JSONB/Node.html">Lustra::Expression::JSONB::Node</a></code></h3>
+  
+  
+    <a href="../../../Lustra/Expression/JSONB/Node.html#jsonb%28key%3AString%29-instance-method" class="tooltip">
+      <span>jsonb(key : String)</span>
+    jsonb</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/JSONB/Node.html#jsonb_all_keys_exists%3F%28keys%3AArray%28T%29%29forallT-instance-method" class="tooltip">
+      <span>jsonb_all_keys_exists?(keys : Array(T)) forall T</span>
+    jsonb_all_keys_exists?</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/JSONB/Node.html#jsonb_any_key_exists%3F%28keys%3AArray%28T%29%29forallT-instance-method" class="tooltip">
+      <span>jsonb_any_key_exists?(keys : Array(T)) forall T</span>
+    jsonb_any_key_exists?</a>, 
+    
+  
+    <a href="../../../Lustra/Expression/JSONB/Node.html#jsonb_key_exists%3F%28key%3AString%29-instance-method" class="tooltip">
+      <span>jsonb_key_exists?(key : String)</span>
+    jsonb_key_exists?</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+  </div>
+
+  
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new(target:Node,array:Array(String))-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(target : <a href="../../../Lustra/Expression/Node.html">Node</a>, array : Array(String))
+
+        <a class="method-permalink" href="#new%28target%3ANode%2Carray%3AArray%28String%29%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/expression/nodes/in_array.cr#L7" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="resolve:String-instance-method">
+      <div class="signature">
+        
+        def <strong>resolve</strong> : String
+
+        <a class="method-permalink" href="#resolve%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/crystal-garage/lustra/blob/a1021aef1ec35416184320deb48ca3b55575a92a/src/lustra/expression/nodes/in_array.cr#L9" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+
+</div>
+
+</body>
+</html>
