@@ -59,14 +59,18 @@ module Lustra::Model::GeometricScopes
   # - For Cartesian coordinates: distance in whatever units your coordinate system uses
   # Note: This does NOT account for Earth's curvature. For real-world GPS distances,
   # consider using PostGIS geography types or apply geographic distance formulas.
-  def distance_to(other_location)
+  # Returns nil if either location has NULL coordinates or if the record is not found.
+  def distance_to(other_location) : Float64?
     # Use raw SQL for precise distance calculation
     result = self.class.query
       .select("coordinates <-> point(#{other_location.coordinates.x},#{other_location.coordinates.y}) as distance")
       .where(id: self.id)
       .to_a(fetch_columns: true)
-      .first
-    result.not_nil!["distance"].as(Float64)
+      .first?
+
+    return nil unless result
+
+    result["distance"].as(Float64)
   end
 
   def within_radius?(center_point, radius)
@@ -74,10 +78,15 @@ module Lustra::Model::GeometricScopes
       .select("coordinates <-> point(#{center_point.x},#{center_point.y}) as distance")
       .where(id: self.id)
       .to_a(fetch_columns: true)
-      .first
-      .not_nil!["distance"].as(Float64)
+      .first?
 
-    distance_to_center <= radius
+    return false unless distance_to_center
+
+    distance = distance_to_center["distance"].as(Float64)
+
+    return false unless distance
+
+    distance <= radius
   end
 
   def nearby_locations(radius = 1000.0, max_results = 10)
