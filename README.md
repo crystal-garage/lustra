@@ -95,6 +95,7 @@ ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name
 - Array columns (strings, integers, booleans)
 - UUID columns and primary keys
 - Enum support with type-safe database integration
+- **PostgreSQL Geometric Types** (Point, Circle, Polygon, Box, Line, Path, LineSegment)
 - Custom data type converters
 - Null handling and presence validation
 
@@ -1237,6 +1238,205 @@ t.references to: "users", on_delete: "cascade", null: false
 There's no plan to offer on Crystal level the `on_delete` feature, like
 `dependent` in ActiveRecord. That's a standard PG feature, just set it
 up in migration
+
+### PostgreSQL Geometric Types
+
+Lustra provides comprehensive support for PostgreSQL's geometric data types, enabling you to work with spatial data using PostgreSQL's native geometric operators and functions.
+
+#### Supported Geometric Types
+
+Lustra supports all PostgreSQL geometric types through the crystal-pg library:
+
+- **Point** (`PG::Geo::Point`) - A point in 2D space
+- **Circle** (`PG::Geo::Circle`) - A circle with center point and radius
+- **Polygon** (`PG::Geo::Polygon`) - A closed polygon with multiple vertices
+- **Box** (`PG::Geo::Box`) - A rectangular box defined by two corner points
+- **Line** (`PG::Geo::Line`) - An infinite line defined by linear equation
+- **Path** (`PG::Geo::Path`) - A series of connected points (open or closed)
+- **LineSegment** (`PG::Geo::LineSegment`) - A line segment between two points
+
+#### Geometric Column Definitions
+
+Use standard column syntax for clean model definitions:
+
+```crystal
+class Location
+  include Lustra::Model
+
+  column id : Int64, primary: true
+  column name : String
+
+  # Standard column syntax with PostgreSQL geometric types
+  column coordinates : PG::Geo::Point
+  column coverage_area : PG::Geo::Circle?
+  column service_boundary : PG::Geo::Polygon?
+  column bounding_box : PG::Geo::Box?
+  column trajectory : PG::Geo::Line?
+  column delivery_route : PG::Geo::Path?
+  column connection : PG::Geo::LineSegment?
+end
+
+#### Geometric Operations in Expression Engine
+
+The expression engine provides natural syntax for spatial queries using PostgreSQL geometric operators:
+
+```crystal
+# Distance operations (<-> operator)
+Location.query.where { coordinates.distance_from(target_point) <= 1000.0 }
+Location.query.where { coordinates.within_distance?(center_point, 500.0) }
+
+# Containment operations (@> operator)
+Store.query.where { delivery_area.contains?(customer_location) }
+Location.query.where { coordinates.contained_by?(search_polygon) }
+
+# Overlap operations (&& operator)
+Location.query.where { coverage_area.overlaps?(competitor_area) }
+
+# Intersection operations (?# operator)
+Route.query.where { path.intersects?(road_segment) }
+
+# Positioning operations (<<, >>, |>>, <<| operators)
+Location.query.where { coordinates.left_of?(reference_point) }
+Location.query.where { coordinates.above?(baseline_point) }
+
+# Combining geometric operations
+Location.query.where {
+  coordinates.distance_from(target) <= max_distance &
+  coverage_area.contains?(user_location) &
+  service_boundary.overlaps?(search_area)
+}
+```
+
+#### Geometric Scopes
+
+Include `Lustra::Model::GeometricScopes` in your models to get convenient spatial scopes:
+
+```crystal
+class Location
+  include Lustra::Model
+  include Lustra::Model::GeometricScopes  # Add geometric scopes
+
+  column coordinates : PG::Geo::Point
+  column coverage_area : PG::Geo::Circle?
+  column service_area : PG::Geo::Polygon?
+end
+
+# Using geometric scopes
+Location.within_distance(user_point, 1000.0)      # Within 1000 units
+Location.nearest_to(target_point, 10)             # 10 nearest locations
+Location.within_bounds(search_polygon)            # Within polygon boundary
+Location.overlapping(competitor_coverage)         # Overlapping areas
+Location.intersecting(highway_path)               # Intersecting with path
+Location.within_circle(center, 500.0)             # Within circular area
+
+# Positioning scopes
+Location.left_of(reference_point)
+Location.right_of(reference_point)
+Location.above(reference_point)
+Location.below(reference_point)
+```
+
+#### Instance Methods for Geometric Operations
+
+Models with geometric columns get helpful instance methods:
+
+```crystal
+location = Location.first
+
+# Calculate distance to another location
+distance = location.distance_to(other_location)  # Returns Float64
+
+# Check if within radius
+in_range = location.within_radius?(center_point, 1000.0)  # Returns Bool
+
+# Find nearby locations
+nearby = location.nearby_locations(radius: 500.0, limit: 5)  # Returns Array(Location)
+
+# Find closest and farthest
+closest = location.closest_to(target_point)     # Returns Location?
+farthest = location.farthest_from(target_point) # Returns Location?
+```
+
+#### Real-World Examples
+
+**Store Locator with Delivery Areas:**
+
+```crystal
+class Store
+  include Lustra::Model
+  include Lustra::Model::GeometricScopes
+
+  column name : String
+  column location : PG::Geo::Point
+  column delivery_area : PG::Geo::Polygon?
+  column pickup_radius : PG::Geo::Circle?
+
+  # Find stores that can deliver to a location
+  scope("can_deliver_to") do |location|
+    where { delivery_area.contains?(location) }
+  end
+
+  # Find stores within pickup distance
+  scope("pickup_available") do |location|
+    where { pickup_radius.contains?(location) }
+  end
+end
+
+# Usage
+customer_location = PG::Geo::Point.new(40.7128, -74.0060)  # NYC coordinates
+
+# Find delivery options
+delivery_stores = Store.can_deliver_to(customer_location)
+
+# Find pickup options within 5 miles
+pickup_stores = Store.pickup_available(customer_location)
+
+# Find nearest 3 stores
+nearest_stores = Store.nearest_to(customer_location, 3)
+```
+
+**Spatial Analysis Queries:**
+
+```crystal
+# Complex spatial query combining multiple operations
+results = Location.query
+  .where { coordinates.within_distance?(city_center, 10_000.0) }  # Within 10km of center
+  .where { service_area.overlaps?(target_neighborhood) }          # Overlaps target area
+  .where { coverage_radius >= 1000.0 }                           # Minimum coverage
+  .order("coordinates <-> ?", city_center)                       # Order by distance
+  .limit(20)
+
+# Find potential service gaps
+uncovered_areas = ServiceArea.query
+  .where { active == true }
+  .where.not { coverage_area.overlaps?(competitor_areas.any) }
+```
+
+**Migration with Geometric Constraints:**
+
+```crystal
+class CreateLocationsTable
+  include Lustra::Migration
+
+  def change(dir)
+    create_table :locations do |t|
+      t.column "coordinates", "point", null: false
+      t.column "coverage_area", "circle"
+
+      # Create spatial indexes
+      t.index("coordinates", using: "gist")
+      t.index("coverage_area", using: "gist")
+
+      t.timestamps
+    end
+
+    # Add exclusion constraint to prevent overlapping coverage areas
+    add_exclusion_constraint("locations", "coverage_area")
+  end
+end
+```
+
+The geometric extension seamlessly integrates with Lustra's existing features like scopes, associations, validations, and the expression engine, providing a powerful toolkit for spatial data applications.
 
 ## Licensing
 
