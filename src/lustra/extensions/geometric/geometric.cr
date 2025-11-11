@@ -37,6 +37,58 @@ require "./scopes"
 require "./migration"
 require "./converters"
 
+# Implement to_sql methods for PostgreSQL geometric types
+# This allows them to be properly converted to PostgreSQL format when used as parameters
+# in the expression engine. We return UnsafeSql to avoid automatic quoting.
+
+struct PG::Geo::Point
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("point(#{x},#{y})")
+  end
+end
+
+struct PG::Geo::Circle
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("circle(point(#{x},#{y}),#{radius})")
+  end
+end
+
+struct PG::Geo::Polygon
+  def to_sql
+    points_str = points.map { |p| "(#{p.x},#{p.y})" }.join(",")
+    Lustra::Expression::UnsafeSql.new("polygon'(#{points_str})'")
+  end
+end
+
+struct PG::Geo::Box
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("box(point(#{x1},#{y1}),point(#{x2},#{y2}))")
+  end
+end
+
+struct PG::Geo::Line
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("line'{#{a},#{b},#{c}}'")
+  end
+end
+
+struct PG::Geo::Path
+  def to_sql
+    points_str = points.map { |p| "(#{p.x},#{p.y})" }.join(",")
+    if closed?
+      Lustra::Expression::UnsafeSql.new("path'((#{points_str}))'")
+    else
+      Lustra::Expression::UnsafeSql.new("path'[(#{points_str})]'")
+    end
+  end
+end
+
+struct PG::Geo::LineSegment
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("lseg(point(#{x1},#{y1}),point(#{x2},#{y2}))")
+  end
+end
+
 module Lustra::SQL::Geometric
   extend self
 

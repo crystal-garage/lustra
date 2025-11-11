@@ -72,51 +72,59 @@ module GeometricSpec
       end
     end
 
-    it "performs complex spatial queries" do
+    it "validates geometric expression engine work correctly" do
       temporary do
         reinit_example_models
 
         Location.create!(
           name: "NYC Store",
-          coordinates: PG::Geo::Point.new(40.7128, -74.0060),         # NYC coordinates
-          coverage_area: PG::Geo::Circle.new(40.7128, -74.0060, 0.1), # ~10km radius
+          coordinates: PG::Geo::Point.new(40.7128, -74.0060),
+          coverage_area: PG::Geo::Circle.new(40.7128, -74.0060, 0.1),
           service_boundary: PG::Geo::Polygon.new([
-          PG::Geo::Point.new(40.7, -74.1),
-          PG::Geo::Point.new(40.8, -74.1),
-          PG::Geo::Point.new(40.8, -74.0),
-          PG::Geo::Point.new(40.7, -74.0),
-        ])
+            PG::Geo::Point.new(40.7, -74.1),
+            PG::Geo::Point.new(40.8, -74.1),
+            PG::Geo::Point.new(40.8, -74.0),
+            PG::Geo::Point.new(40.7, -74.0),
+          ])
         )
 
-        Location.create!(
-          name: "Boston Store",
-          coordinates: PG::Geo::Point.new(42.3601, -71.0589),          # Boston coordinates
-          coverage_area: PG::Geo::Circle.new(42.3601, -71.0589, 0.08), # ~8km radius
-          service_boundary: PG::Geo::Polygon.new([
-          PG::Geo::Point.new(42.3, -71.1),
-          PG::Geo::Point.new(42.4, -71.1),
-          PG::Geo::Point.new(42.4, -71.0),
-          PG::Geo::Point.new(42.3, -71.0),
-        ])
-        )
+        # Test variables
+        target_point = PG::Geo::Point.new(40.713, -74.006)
+        max_distance = 1000.0
+        user_location = PG::Geo::Point.new(40.72, -74.01) # Inside NYC coverage area
 
-        target_point = PG::Geo::Point.new(40.713, -74.006)     # Near NYC
-        user_location = PG::Geo::Point.new(40.72, -74.01)      # Within NYC area
-        search_area = PG::Geo::Circle.new(40.71, -74.00, 0.05) # Small search area
+        # Test: Individual geometric operations work
+        distance_query = Location.query.where { coordinates.distance_from(target_point) <= max_distance }
+        distance_query.to_sql.should contain("<-> point(40.713,-74.006)")
+        distance_query.to_sql.should contain("<= 1000.0")
+        distance_results = distance_query.to_a
+        distance_results.size.should eq(1)
 
-        # Test simple distance queries that work (using raw SQL for now)
-        nearby_locations = Location.query.where("coordinates <-> point(40.713, -74.006) <= 1000.0")
+        # Test: Containment operations work
+        containment_query = Location.query.where { coverage_area.contains?(user_location) }
+        containment_query.to_sql.should contain("@> point(40.72,-74.01)")
+        containment_results = containment_query.to_a
+        containment_results.size.should eq(1)
 
-        # Verify we get results
-        locations = nearby_locations.to_a
-        locations.should_not be_empty
-        locations.map(&.name).should contain("NYC Store")
+        # Test: Complex combined query
+        # Note: Using points that are actually within the geometric shapes
+        point_in_polygon = PG::Geo::Point.new(40.75, -74.05) # Inside the service boundary
 
-        # Test that our geometric data was properly saved and retrieved
-        nyc_store = Location.query.where(name: "NYC Store").first!
-        nyc_store.coordinates.x.should be_close(40.7128, 0.001)
-        nyc_store.coverage_area.should_not be_nil
-        nyc_store.coverage_area.not_nil!.radius.should be_close(0.1, 0.001)
+        combined_query = Location.query.where {
+          (coordinates.distance_from(target_point) <= max_distance) &
+            (coverage_area.contains?(user_location)) &
+            (service_boundary.contains?(point_in_polygon))
+        }
+
+        # Verify the SQL is correctly generated with proper operators and PostgreSQL format
+        sql = combined_query.to_sql
+        sql.should contain("<-> point(40.713,-74.006)")
+        sql.should contain("@> point(40.72,-74.01)")
+        sql.should contain("@> point(40.75,-74.05)")
+        sql.should contain("AND") # Verify the query executes successfully
+        combined_results = combined_query.to_a
+        combined_results.size.should eq(1)
+        combined_results.first.name.should eq("NYC Store")
       end
     end
   end
