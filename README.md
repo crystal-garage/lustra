@@ -1301,9 +1301,9 @@ Location.query.where { coordinates.above?(baseline_point) }
 
 # Combining geometric operations
 Location.query.where do
-  coordinates.distance_from(target) <= max_distance &
-  coverage_area.contains?(user_location) &
-  service_boundary.overlaps?(search_area)
+  (coordinates.distance_from(target) <= max_distance) &
+    (coverage_area.contains?(user_location)) &
+    (service_boundary.overlaps?(search_area))
 end
 ```
 
