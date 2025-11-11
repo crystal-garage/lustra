@@ -34,7 +34,6 @@
 require "./expression"
 require "./node"
 require "./scopes"
-require "./migration"
 require "./converters"
 
 # Implement to_sql methods for PostgreSQL geometric types
