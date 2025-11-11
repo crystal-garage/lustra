@@ -361,6 +361,10 @@ class ModelSpecMigration123
       t.column "service_boundary", "polygon", null: true
       t.column "bounding_box", "box", null: true
 
+      # Create spatial indexes using standard syntax
+      t.index("coordinates", using: "gist")
+      t.index("coverage_area", using: "gist")
+
       t.timestamps
     end
 
@@ -370,6 +374,10 @@ class ModelSpecMigration123
       t.column "location", "point", null: false
       t.column "delivery_area", "polygon", null: true
       t.column "pickup_radius", "circle", null: true
+
+      # Create spatial indexes using standard syntax
+      t.index("location", using: "gist")
+      t.index("delivery_area", using: "gist")
 
       t.timestamps
     end
@@ -383,13 +391,8 @@ class ModelSpecMigration123
       t.timestamps
     end
 
-    # Add spatial indexes for geometric columns
-    execute "CREATE INDEX locations_coordinates_gist_idx ON locations USING GIST (coordinates)"
-    execute "CREATE INDEX locations_coverage_area_gist_idx ON locations USING GIST (coverage_area)"
-    execute "CREATE INDEX stores_location_gist_idx ON stores USING GIST (location)"
-    execute "CREATE INDEX stores_delivery_area_gist_idx ON stores USING GIST (delivery_area)"
-    # NOTE: PATH type doesn't have default GiST operator class, so we skip this index
-    # execute "CREATE INDEX routes_route_path_gist_idx ON routes USING GIST (route_path)"
+    # Add exclusion constraint to prevent overlapping store delivery areas
+    add_exclusion_constraint("stores", "delivery_area")
   end
 end
 
