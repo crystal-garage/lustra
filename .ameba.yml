@@ -19,7 +19,7 @@ Lint/NotNil:
 
 Performance/AnyInsteadOfEmpty:
   Excluded:
-  - spec/model/relations/has_many_spec.cr
+  - spec/**/*
   Enabled: true
   Severity: Warning
 
