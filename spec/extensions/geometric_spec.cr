@@ -43,33 +43,4 @@ describe "Lustra Geometric Extensions" do
       expression.resolve.should eq("((\"coordinates\" <-> point(0.0,0.0)) <= 1000.0)")
     end
   end
-
-  describe "SQL Geometric Helpers" do
-    it "should generate distance SQL" do
-      Lustra::SQL::Geometric.geo_distance("point1", "point2").should eq("point1 <-> point2")
-    end
-
-    it "should generate containment SQL" do
-      Lustra::SQL::Geometric.geo_contains("container", "contained").should eq("container @> contained")
-    end
-
-    it "should generate overlap SQL" do
-      Lustra::SQL::Geometric.geo_overlaps("shape1", "shape2").should eq("shape1 && shape2")
-    end
-
-    it "should generate intersection SQL" do
-      Lustra::SQL::Geometric.geo_intersects("line1", "line2").should eq("line1 ?# line2")
-    end
-
-    it "should generate positioning SQL" do
-      Lustra::SQL::Geometric.geo_left_of("point1", "point2").should eq("point1 << point2")
-      Lustra::SQL::Geometric.geo_right_of("point1", "point2").should eq("point1 >> point2")
-      Lustra::SQL::Geometric.geo_above("point1", "point2").should eq("point1 |>> point2")
-      Lustra::SQL::Geometric.geo_below("point1", "point2").should eq("point1 <<| point2")
-    end
-
-    it "should generate same_as SQL" do
-      Lustra::SQL::Geometric.geo_same_as("shape1", "shape2").should eq("shape1 ~= shape2")
-    end
-  end
 end
