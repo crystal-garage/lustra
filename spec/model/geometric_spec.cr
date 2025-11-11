@@ -109,11 +109,11 @@ module GeometricSpec
         # Note: Using points that are actually within the geometric shapes
         point_in_polygon = PG::Geo::Point.new(40.75, -74.05) # Inside the service boundary
 
-        combined_query = Location.query.where {
+        combined_query = Location.query.where do
           (coordinates.distance_from(target_point) <= max_distance) &
             (coverage_area.contains?(user_location)) &
             (service_boundary.contains?(point_in_polygon))
-        }
+        end
 
         # Verify the SQL is correctly generated with proper operators and PostgreSQL format
         sql = combined_query.to_sql

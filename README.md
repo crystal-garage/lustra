@@ -1300,11 +1300,11 @@ Location.query.where { coordinates.left_of?(reference_point) }
 Location.query.where { coordinates.above?(baseline_point) }
 
 # Combining geometric operations
-Location.query.where {
+Location.query.where do
   coordinates.distance_from(target) <= max_distance &
   coverage_area.contains?(user_location) &
   service_boundary.overlaps?(search_area)
-}
+end
 ```
 
 #### Geometric Scopes
