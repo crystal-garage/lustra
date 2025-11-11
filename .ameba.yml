@@ -13,7 +13,7 @@ Lint/NotNil:
   Description: Identifies usage of `not_nil!` calls
   Excluded:
   - src/lustra/extensions/full_text_searchable/tsvector.cr
-  - spec/model/geometric_spec.cr
+  - spec/**/*
   Enabled: true
   Severity: Warning
 
