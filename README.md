@@ -1336,27 +1336,6 @@ Location.above(reference_point)
 Location.below(reference_point)
 ```
 
-#### Instance Methods for Geometric Operations
-
-Models with geometric columns get helpful instance methods:
-
-```crystal
-location = Location.first
-
-# Calculate distance to another location
-distance = location.distance_to(other_location)  # Returns Float64?
-
-# Check if within radius
-in_range = location.within_radius?(center_point, 1000.0)  # Returns Bool
-
-# Find nearby locations
-nearby = location.nearby_locations(radius: 500.0, limit: 5)  # Returns Array(Location)
-
-# Find closest and farthest
-closest = location.closest_to(target_point)     # Returns Location?
-farthest = location.farthest_from(target_point) # Returns Location?
-```
-
 #### Real-World Examples
 
 **Store Locator with Delivery Areas:**

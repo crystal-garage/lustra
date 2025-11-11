@@ -31,10 +31,7 @@
 # # WHERE search_area @> user_location
 # ```
 
-require "./expression"
-require "./node"
-require "./scopes"
-require "./converters"
+require "./*"
 
 module Lustra::SQL::Geometric
   extend self
