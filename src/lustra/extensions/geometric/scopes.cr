@@ -16,8 +16,8 @@ module Lustra::Model::GeometricScopes
     }
 
     # Scope for finding nearest records to a point, ordered by distance
-    scope("nearest_to") { |point, limit|
-      order("coordinates <-> ?", point).limit(limit)
+    scope("nearest_to") { |point, max_results|
+      order_by("coordinates <-> point(#{point.x},#{point.y})").limit(max_results)
     }
 
     # Scope for finding records to the left of a reference object
@@ -54,40 +54,44 @@ module Lustra::Model::GeometricScopes
   # Instance methods for geometric operations
   def distance_to(other_location)
     # Use raw SQL for precise distance calculation
-    self.class.query
-      .select("coordinates <-> ? as distance", other_location.coordinates)
+    result = self.class.query
+      .select("coordinates <-> point(#{other_location.coordinates.x},#{other_location.coordinates.y}) as distance")
       .where(id: self.id)
-      .first!["distance"].as(Float64)
+      .to_a(fetch_columns: true)
+      .first
+    result.not_nil!["distance"].as(Float64)
   end
 
   def within_radius?(center_point, radius)
     distance_to_center = self.class.query
-      .select("coordinates <-> ? as distance", center_point)
+      .select("coordinates <-> point(#{center_point.x},#{center_point.y}) as distance")
       .where(id: self.id)
-      .first!["distance"].as(Float64)
+      .to_a(fetch_columns: true)
+      .first
+      .not_nil!["distance"].as(Float64)
 
     distance_to_center <= radius
   end
 
-  def nearby_locations(radius = 1000.0, limit = 10)
+  def nearby_locations(radius = 1000.0, max_results = 10)
     self.class.query
-      .where { coordinates.distance_from(self.coordinates) <= radius }
-      .where { id != self.id }
-      .order("coordinates <-> ?", self.coordinates)
-      .limit(limit)
+      .where("coordinates <-> point(#{self.coordinates.x},#{self.coordinates.y}) <= ?", radius)
+      .where("id != ?", self.id)
+      .order_by("coordinates <-> point(#{self.coordinates.x},#{self.coordinates.y})")
+      .limit(max_results)
   end
 
   def closest_to(target_point)
     self.class.query
-      .where { id != self.id }
-      .order("coordinates <-> ?", target_point)
+      .where("id != ?", self.id)
+      .order_by("coordinates <-> point(#{target_point.x},#{target_point.y})")
       .first?
   end
 
   def farthest_from(target_point)
     self.class.query
-      .where { id != self.id }
-      .order("coordinates <-> ? DESC", target_point)
+      .where("id != ?", self.id)
+      .order_by("coordinates <-> point(#{target_point.x},#{target_point.y})", :desc)
       .first?
   end
 end
