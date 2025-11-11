@@ -52,6 +52,13 @@ module Lustra::Model::GeometricScopes
   end
 
   # Instance methods for geometric operations
+
+  # Calculate Euclidean distance to another location using PostgreSQL's <-> operator.
+  # Returns distance in coordinate system units:
+  # - For lat/lng coordinates: distance in degrees (NOT geographic distance)
+  # - For Cartesian coordinates: distance in whatever units your coordinate system uses
+  # Note: This does NOT account for Earth's curvature. For real-world GPS distances,
+  # consider using PostGIS geography types or apply geographic distance formulas.
   def distance_to(other_location)
     # Use raw SQL for precise distance calculation
     result = self.class.query
