@@ -361,7 +361,7 @@ class ModelSpecMigration123
       t.column "service_boundary", "polygon", null: true
       t.column "bounding_box", "box", null: true
 
-      # Create spatial indexes using standard syntax
+      # Create spatial indexes
       t.index("coordinates", using: "gist")
       t.index("coverage_area", using: "gist")
 
@@ -375,7 +375,7 @@ class ModelSpecMigration123
       t.column "delivery_area", "polygon", null: true
       t.column "pickup_radius", "circle", null: true
 
-      # Create spatial indexes using standard syntax
+      # Create spatial indexes
       t.index("location", using: "gist")
       t.index("delivery_area", using: "gist")
 
