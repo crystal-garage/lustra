@@ -1,7 +1,5 @@
 require "../spec_helper"
 require "../data/example_models"
-require "../../src/lustra/extensions/geometric/geometric"
-require "../../src/lustra/extensions/geometric/scopes"
 
 module GeometricInstanceMethodsSpec
   describe "Geometric Instance Methods" do

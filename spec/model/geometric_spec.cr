@@ -1,6 +1,5 @@
 require "../spec_helper"
 require "../data/example_models"
-require "../../src/lustra/extensions/geometric/geometric"
 
 module GeometricSpec
   describe "PostgreSQL Geometric Types Complete Test Suite" do
