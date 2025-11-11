@@ -1307,35 +1307,6 @@ Location.query.where do
 end
 ```
 
-#### Geometric Scopes
-
-Include `Lustra::Model::GeometricScopes` in your models to get convenient spatial scopes:
-
-```crystal
-class Location
-  include Lustra::Model
-  include Lustra::Model::GeometricScopes  # Add geometric scopes
-
-  column coordinates : PG::Geo::Point
-  column coverage_area : PG::Geo::Circle?
-  column service_boundary : PG::Geo::Polygon?
-end
-
-# Using geometric scopes
-Location.within_distance(user_point, 1000.0)      # Within 1000 units
-Location.nearest_to(target_point, 10)             # 10 nearest locations
-Location.within_bounds(search_polygon)            # Within polygon boundary
-Location.overlapping(competitor_coverage)         # Overlapping areas
-Location.intersecting(highway_path)               # Intersecting with path
-Location.within_circle(center_point, 500.0)       # Within circular area
-
-# Positioning scopes
-Location.left_of(reference_point)
-Location.right_of(reference_point)
-Location.above(reference_point)
-Location.below(reference_point)
-```
-
 #### Real-World Examples
 
 **Store Locator with Delivery Areas:**
@@ -1343,7 +1314,6 @@ Location.below(reference_point)
 ```crystal
 class Store
   include Lustra::Model
-  include Lustra::Model::GeometricScopes
 
   column name : String
   column coordinates : PG::Geo::Point
@@ -1370,8 +1340,10 @@ delivery_stores = Store.can_deliver_to(customer_location)
 # Find pickup options within 5 miles
 pickup_stores = Store.pickup_available(customer_location)
 
-# Find nearest 3 stores
-nearest_stores = Store.nearest_to(customer_location, 3)
+# Find nearest 3 stores using ordering by distance
+nearest_stores = Store.query
+  .order_by("coordinates <-> point(#{customer_location.x},#{customer_location.y})")
+  .limit(3)
 ```
 
 **Spatial Analysis Queries:**

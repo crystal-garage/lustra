@@ -188,7 +188,6 @@ end
 # Geometric test models
 class Location
   include Lustra::Model
-  include Lustra::Model::GeometricScopes
 
   primary_key
 
@@ -205,7 +204,6 @@ end
 
 class Store
   include Lustra::Model
-  include Lustra::Model::GeometricScopes
 
   primary_key
 
