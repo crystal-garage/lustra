@@ -1,39 +1,4 @@
 module Lustra::Migration::GeometricHelpers
-  # Add a point column
-  def add_point_column(table : String, column : String, null : Bool = true)
-    add_column(table, column, "POINT", null: null)
-  end
-
-  # Add a circle column
-  def add_circle_column(table : String, column : String, null : Bool = true)
-    add_column(table, column, "CIRCLE", null: null)
-  end
-
-  # Add a polygon column
-  def add_polygon_column(table : String, column : String, null : Bool = true)
-    add_column(table, column, "POLYGON", null: null)
-  end
-
-  # Add a box column
-  def add_box_column(table : String, column : String, null : Bool = true)
-    add_column(table, column, "BOX", null: null)
-  end
-
-  # Add a line column
-  def add_line_column(table : String, column : String, null : Bool = true)
-    add_column(table, column, "LINE", null: null)
-  end
-
-  # Add a path column
-  def add_path_column(table : String, column : String, null : Bool = true)
-    add_column(table, column, "PATH", null: null)
-  end
-
-  # Add a line segment column
-  def add_line_segment_column(table : String, column : String, null : Bool = true)
-    add_column(table, column, "LSEG", null: null)
-  end
-
   # Create spatial index for geometric columns
   def add_gist_index(table : String, column : String, name : String? = nil)
     index_name = name || "#{table}_#{column}_gist_idx"
