@@ -1301,7 +1301,7 @@ Location.query.where { coordinates.above?(baseline_point) }
 
 # Combining geometric operations
 Location.query.where do
-  (coordinates.distance_from(target) <= max_distance) &
+  (coordinates.distance_from(target_point) <= max_distance) &
     (coverage_area.contains?(user_location)) &
     (service_boundary.overlaps?(search_area))
 end
@@ -1318,7 +1318,7 @@ class Location
 
   column coordinates : PG::Geo::Point
   column coverage_area : PG::Geo::Circle?
-  column service_area : PG::Geo::Polygon?
+  column service_boundary : PG::Geo::Polygon?
 end
 
 # Using geometric scopes
@@ -1327,7 +1327,7 @@ Location.nearest_to(target_point, 10)             # 10 nearest locations
 Location.within_bounds(search_polygon)            # Within polygon boundary
 Location.overlapping(competitor_coverage)         # Overlapping areas
 Location.intersecting(highway_path)               # Intersecting with path
-Location.within_circle(center, 500.0)             # Within circular area
+Location.within_circle(center_point, 500.0)       # Within circular area
 
 # Positioning scopes
 Location.left_of(reference_point)
@@ -1344,7 +1344,7 @@ Models with geometric columns get helpful instance methods:
 location = Location.first
 
 # Calculate distance to another location
-distance = location.distance_to(other_location)  # Returns Float64
+distance = location.distance_to(other_location)  # Returns Float64?
 
 # Check if within radius
 in_range = location.within_radius?(center_point, 1000.0)  # Returns Bool
@@ -1367,18 +1367,18 @@ class Store
   include Lustra::Model::GeometricScopes
 
   column name : String
-  column location : PG::Geo::Point
+  column coordinates : PG::Geo::Point
   column delivery_area : PG::Geo::Polygon?
   column pickup_radius : PG::Geo::Circle?
 
   # Find stores that can deliver to a location
-  scope("can_deliver_to") do |location|
-    where { delivery_area.contains?(location) }
+  scope("can_deliver_to") do |location_point|
+    where { delivery_area.contains?(location_point) }
   end
 
   # Find stores within pickup distance
-  scope("pickup_available") do |location|
-    where { pickup_radius.contains?(location) }
+  scope("pickup_available") do |location_point|
+    where { pickup_radius.contains?(location_point) }
   end
 end
 
@@ -1401,7 +1401,7 @@ nearest_stores = Store.nearest_to(customer_location, 3)
 # Complex spatial query combining multiple operations
 results = Location.query
   .where { coordinates.within_distance?(city_center, 10_000.0) }  # Within 10km of center
-  .where { service_area.overlaps?(target_neighborhood) }          # Overlaps target area
+  .where { service_boundary.overlaps?(target_neighborhood) }      # Overlaps target area
   .where { coverage_radius >= 1000.0 }                           # Minimum coverage
   .order("coordinates <-> ?", city_center)                       # Order by distance
   .limit(20)
