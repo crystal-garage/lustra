@@ -20,6 +20,8 @@ module GeometricInstanceMethodsSpec
         # Test distance_to method
         distance = location1.distance_to(location2)
 
+        distance.should_not be_nil
+        distance = distance.not_nil!
         distance.should be_a(Float64)
         distance.should be > 0.0
         distance.should be < 1.0 # Should be less than 1 degree
@@ -177,6 +179,29 @@ module GeometricInstanceMethodsSpec
         farthest.should_not be_nil
         farthest.not_nil!.id.should_not eq(reference.id)
         farthest.not_nil!.name.should eq("Other")
+      end
+    end
+
+    it "tests distance_to with non-existent record returns nil" do
+      temporary do
+        reinit_example_models
+
+        location = Location.create!(
+          name: "Test Location",
+          coordinates: PG::Geo::Point.new(40.0, -74.0)
+        )
+
+        other_location = Location.create!(
+          name: "Other Location",
+          coordinates: PG::Geo::Point.new(40.01, -74.01)
+        )
+
+        # Delete the location to simulate non-existent record
+        location.delete
+
+        # distance_to should return nil for deleted/non-existent records
+        distance = location.distance_to(other_location)
+        distance.should be_nil
       end
     end
   end
