@@ -185,6 +185,65 @@ class ModelWithinAnotherSchema
   column title : String?
 end
 
+# Geometric test models
+class Location
+  include Lustra::Model
+  include Lustra::Model::GeometricScopes
+
+  primary_key
+
+  column name : String
+
+  # Using standard column syntax with PostgreSQL geometric types
+  column coordinates : PG::Geo::Point
+  column coverage_area : PG::Geo::Circle?
+  column service_boundary : PG::Geo::Polygon?
+  column bounding_box : PG::Geo::Box?
+
+  timestamps
+end
+
+class Store
+  include Lustra::Model
+  include Lustra::Model::GeometricScopes
+
+  primary_key
+
+  column name : String
+  column address : String?
+
+  # Store location and delivery areas
+  column location : PG::Geo::Point
+  column delivery_area : PG::Geo::Polygon?
+  column pickup_radius : PG::Geo::Circle?
+
+  # Custom scopes
+  scope("can_deliver_to") do |location|
+    where { delivery_area.contains?(location) }
+  end
+
+  scope("pickup_available") do |location|
+    where { pickup_radius.contains?(location) }
+  end
+
+  timestamps
+end
+
+class Route
+  include Lustra::Model
+
+  primary_key
+
+  column name : String
+  column description : String?
+
+  # Route geometry
+  column route_path : PG::Geo::Path
+  column main_segment : PG::Geo::LineSegment?
+
+  timestamps
+end
+
 class ModelSpecMigration123
   include Lustra::Migration
 
@@ -293,6 +352,44 @@ class ModelSpecMigration123
 
       t.timestamps
     end
+
+    # Geometric test tables
+    create_table :locations do |t|
+      t.column "name", "string", null: false
+      t.column "coordinates", "point", null: false
+      t.column "coverage_area", "circle", null: true
+      t.column "service_boundary", "polygon", null: true
+      t.column "bounding_box", "box", null: true
+
+      t.timestamps
+    end
+
+    create_table :stores do |t|
+      t.column "name", "string", null: false
+      t.column "address", "string", null: true
+      t.column "location", "point", null: false
+      t.column "delivery_area", "polygon", null: true
+      t.column "pickup_radius", "circle", null: true
+
+      t.timestamps
+    end
+
+    create_table :routes do |t|
+      t.column "name", "string", null: false
+      t.column "description", "string", null: true
+      t.column "route_path", "path", null: false
+      t.column "main_segment", "lseg", null: true
+
+      t.timestamps
+    end
+
+    # Add spatial indexes for geometric columns
+    execute "CREATE INDEX locations_coordinates_gist_idx ON locations USING GIST (coordinates)"
+    execute "CREATE INDEX locations_coverage_area_gist_idx ON locations USING GIST (coverage_area)"
+    execute "CREATE INDEX stores_location_gist_idx ON stores USING GIST (location)"
+    execute "CREATE INDEX stores_delivery_area_gist_idx ON stores USING GIST (delivery_area)"
+    # NOTE: PATH type doesn't have default GiST operator class, so we skip this index
+    # execute "CREATE INDEX routes_route_path_gist_idx ON routes USING GIST (route_path)"
   end
 end
 

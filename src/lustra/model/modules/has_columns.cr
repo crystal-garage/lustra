@@ -487,4 +487,61 @@ module Lustra::Model::HasColumns
       return false
     end
   end
+
+  # Geometric column helpers for PostgreSQL geometric types
+  macro point_column(name, **options)
+    {% if options.empty? %}
+      column {{ name }} : PG::Geo::Point
+    {% else %}
+      column {{ name }} : PG::Geo::Point, {{ options.double_splat }}
+    {% end %}
+  end
+
+  macro circle_column(name, **options)
+    {% if options.empty? %}
+      column {{ name }} : PG::Geo::Circle
+    {% else %}
+      column {{ name }} : PG::Geo::Circle, {{ options.double_splat }}
+    {% end %}
+  end
+
+  macro polygon_column(name, **options)
+    {% if options.empty? %}
+      column {{ name }} : PG::Geo::Polygon
+    {% else %}
+      column {{ name }} : PG::Geo::Polygon, {{ options.double_splat }}
+    {% end %}
+  end
+
+  macro box_column(name, **options)
+    {% if options.empty? %}
+      column {{ name }} : PG::Geo::Box
+    {% else %}
+      column {{ name }} : PG::Geo::Box, {{ options.double_splat }}
+    {% end %}
+  end
+
+  macro line_column(name, **options)
+    {% if options.empty? %}
+      column {{ name }} : PG::Geo::Line
+    {% else %}
+      column {{ name }} : PG::Geo::Line, {{ options.double_splat }}
+    {% end %}
+  end
+
+  macro path_column(name, **options)
+    {% if options.empty? %}
+      column {{ name }} : PG::Geo::Path
+    {% else %}
+      column {{ name }} : PG::Geo::Path, {{ options.double_splat }}
+    {% end %}
+  end
+
+  macro line_segment_column(name, **options)
+    {% if options.empty? %}
+      column {{ name }} : PG::Geo::LineSegment
+    {% else %}
+      column {{ name }} : PG::Geo::LineSegment, {{ options.double_splat }}
+    {% end %}
+  end
 end
