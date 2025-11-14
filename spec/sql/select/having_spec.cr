@@ -215,6 +215,10 @@ module HavingSpec
         # Beginless range (exclusive)
         Lustra::SQL.select.from(:users).having { users.id.in?(...100) }.to_sql
           .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" < 100)"
+
+        # Full range (...) - matches all values
+        Lustra::SQL.select.from(:users).having { users.id.in?(...) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING TRUE"
       end
 
       it "InSelect" do

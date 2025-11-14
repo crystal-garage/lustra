@@ -228,6 +228,10 @@ module WhereSpec
         # Beginless range (exclusive)
         Lustra::SQL.select.from(:users).where { users.id.in?(...100) }.to_sql
           .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" < 100)"
+
+        # Full range (...) - matches all values
+        Lustra::SQL.select.from(:users).where { users.id.in?(...) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE TRUE"
       end
 
       it "in?(sub_query)" do
