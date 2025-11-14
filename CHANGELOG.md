@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.13.0] - 2025-11-14
 ### Added
 - **PostgreSQL Geometric Types** - Comprehensive support for all PostgreSQL geometric data types:
   - Point, Circle, Polygon, Box, Line, Path, LineSegment support through crystal-pg
@@ -205,6 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
+- [v0.13.0](https://github.com/crystal-garage/lustra/releases/tag/v0.13.0)
 - [v0.12.0](https://github.com/crystal-garage/lustra/releases/tag/v0.12.0)
 - [v0.11.0](https://github.com/crystal-garage/lustra/releases/tag/v0.11.0)
 - [v0.10.1](https://github.com/crystal-garage/lustra/releases/tag/v0.10.1)
