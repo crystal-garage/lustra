@@ -1273,6 +1273,7 @@ class Location
   column delivery_route : PG::Geo::Path?
   column connection : PG::Geo::LineSegment?
 end
+```
 
 #### Geometric Operations in Expression Engine
 
