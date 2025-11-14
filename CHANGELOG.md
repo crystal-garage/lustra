@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v0.13.0] - 2025-01-XX
+## [v0.13.0] - 2025-11-14
 ### Added
 - **PostgreSQL Geometric Types** - Comprehensive support for all PostgreSQL geometric data types:
   - Point, Circle, Polygon, Box, Line, Path, LineSegment support through crystal-pg
