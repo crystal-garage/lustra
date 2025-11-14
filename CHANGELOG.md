@@ -13,8 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Point, Circle, Polygon, Box, Line, Path, LineSegment support through crystal-pg
   - Expression engine with natural syntax for spatial queries
   - Distance, containment, overlap, intersection, and positioning operations
-  - Complete test coverage with 11 comprehensive test scenarios
-  - Real-world examples including store locator and spatial analysis
 
 ## [v0.12.0] - 2025-10-13
 ### Added
@@ -34,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **BREAKING:** `delete` now skips callbacks (fast deletion)
 - **BREAKING:** `destroy` triggers callbacks (safe deletion)
-- **BREAKING:** Callback event renamed: `:delete` → `:destroy`
+- **BREAKING:** Callback event renamed: `:delete` -> `:destroy`
 - Use `before(:destroy)` and `after(:destroy)` instead of `before(:delete)` and `after(:delete)`
 
 ### Dedication
@@ -42,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.11.0] - 2025-10-09
 ### Changed
-- **BREAKING:** `or_where` → `where.or` - Improved chaining syntax for OR conditions
+- **BREAKING:** `or_where` -> `where.or` - Improved chaining syntax for OR conditions
 - More consistent query builder API
 
 ## [v0.10.1] - 2025-10-09
@@ -52,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.10.0] - 2025-10-08
 ### Added
-- Handle append_operation for has_many through relationships
+- Handle `append_operation` for has_many through relationships
 - Prevent duplicate associations in relationships
 - Join a relation using association name (auto-joins)
 - Autosave functionality for associated models
@@ -68,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved supported features documentation
 
 ### Changed
-- **BREAKING:** Clear → Lustra - Complete rebranding from Clear to Lustra
+- **BREAKING:** Clear -> Lustra - Complete rebranding from Clear to Lustra
 - Removed Kemal CLI generator (no longer supported)
 - Enhanced join SQL construction with better specs
 
@@ -81,9 +79,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Touch functionality for belongs_to associations
 - Automatic timestamp updates when parent records change
 
-### Dependencies
-- Bump actions/checkout from 4 to 5
-
 ## [v0.8.23] - 2025-06-09
 ### Maintenance
 - Internal improvements and optimizations
@@ -93,12 +88,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Internal improvements and optimizations
 
 ## [v0.8.21] - 2025-01-13
-### Changed
-- Use `do`...`end` instead of curly brackets for multi-line blocks
-- Cosmetic code style improvements
+### Maintenance
+- Internal improvements and optimizations
 
 ### Fixed
-- Fix Collection#each method functionality
+- Fix `Collection#each` method functionality
 
 ## [v0.8.20] - 2024-11-05
 ### Dependencies
@@ -111,13 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better handling of nested Crystal modules
 
 ## [v0.8.18] - 2024-01-12
-### Dependencies
-- Bump actions/checkout from 2 to 4
-- Bump crazy-max/ghaction-github-pages from 2 to 3
-- Bump crazy-max/ghaction-github-pages from 3 to 4
-
-### Contributors
-- First contribution from @dependabot
+### Maintenance
+- Internal improvements and optimizations
 
 ## [v0.8.17] - 2023-06-25
 ### Dependencies
@@ -130,7 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.8.15] - 2022-11-28
 ### Added
-- Add Collection#find with parameters
+- Add `Collection#find` with parameters
 - Enhanced collection querying capabilities
 
 ## [v0.8.14] - 2022-11-27
@@ -141,7 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Code Quality
 - Avoid using `not_nil!` for better null safety
 - Add comprehensive specs
-- Refactoring (Second round) - major code improvements
+- Refactoring - major code improvements
 - Refactor relations system
 
 ## [v0.8.12] - 2022-11-08
