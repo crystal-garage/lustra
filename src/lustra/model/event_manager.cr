@@ -24,8 +24,8 @@ class Lustra::Model::EventManager
   # `mdl` - the model instance
   #
   # Callback execution order:
-  # - `:before` callbacks: Last defined → First defined (reverse order)
-  # - `:after` callbacks: First defined → Last defined (normal order)
+  # - `:before` callbacks: Last defined -> First defined (reverse order)
+  # - `:after` callbacks: First defined -> Last defined (normal order)
   #
   # This ensures that the most recently defined callbacks run first for `:before`
   # and last for `:after`, allowing for proper layering of functionality.

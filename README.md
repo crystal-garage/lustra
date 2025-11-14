@@ -1100,7 +1100,7 @@ end
 
 ##### Callback Execution Order
 
-**Before callbacks:** Last defined → First defined (reverse order)
+**Before callbacks:** Last defined -> First defined (reverse order)
 ```crystal
 before(:save) { puts "1" }
 before(:save) { puts "2" }
@@ -1108,7 +1108,7 @@ before(:save) { puts "3" }
 # Execution order: 3, 2, 1
 ```
 
-**After callbacks:** First defined → Last defined (normal order)
+**After callbacks:** First defined -> Last defined (normal order)
 ```crystal
 after(:save) { puts "1" }
 after(:save) { puts "2" }

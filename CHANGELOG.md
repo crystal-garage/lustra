@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Range Support in WHERE/HAVING Clauses** - Full support for all Crystal range types with any comparable type (Int, Time, etc.):
-  - Normal ranges: `where { age.in?(18..65) }` → `BETWEEN 18 AND 65`
-  - Exclusive ranges: `where { age.in?(18...65) }` → `>= 18 AND < 65`
-  - Endless ranges: `where { age.in?(18..) }` → `>= 18`
-  - Beginless ranges: `where { age.in?(..65) }` → `<= 65`
-  - Beginless exclusive: `where { age.in?(...65) }` → `< 65`
-  - Full range: `where { age.in?(...) }` → `TRUE` (matches all values)
+  - Normal ranges: `where { age.in?(18..65) }` -> `BETWEEN 18 AND 65`
+  - Exclusive ranges: `where { age.in?(18...65) }` -> `>= 18 AND < 65`
+  - Endless ranges: `where { age.in?(18..) }` -> `>= 18`
+  - Beginless ranges: `where { age.in?(..65) }` -> `<= 65`
+  - Beginless exclusive: `where { age.in?(...65) }` -> `< 65`
+  - Full range: `where { age.in?(...) }` -> `TRUE` (matches all values)
   - Works with Time ranges: `where { created_at.in?(start_time..end_time) }`
   - `between()` method also supports Time values: `where { created_at.between(start_time, end_time) }`
 

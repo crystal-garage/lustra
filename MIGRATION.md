@@ -63,10 +63,10 @@ That's it! This preserves all your existing migration history without any data l
 The main change is replacing all `Clear::*` references with `Lustra::*`:
 
 ### Common Replacements
-- `Clear::Model` → `Lustra::Model`
-- `Clear::Migration` → `Lustra::Migration`
-- `Clear::SQL` → `Lustra::SQL`
-- `Clear::Connection` → `Lustra::Connection`
+- `Clear::Model` -> `Lustra::Model`
+- `Clear::Migration` -> `Lustra::Migration`
+- `Clear::SQL` -> `Lustra::SQL`
+- `Clear::Connection` -> `Lustra::Connection`
 
 ### Migration Commands
 ```bash
