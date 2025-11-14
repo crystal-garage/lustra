@@ -16,18 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.12.0] - 2025-10-13
 ### Added
-- ✅ `update_all` - Bulk updates without loading models (bypasses validations and callbacks)
-- ✅ `find_by` / `find_by!` - Convenient finder methods for ActiveRecord-style querying
-- ✅ `find([ids])` - Multiple ID lookup with array of IDs
-- ✅ `increment!` / `decrement!` - Atomic counter updates for thread-safe operations
-- ✅ `update_column` / `update_columns` - Direct column updates without validations/callbacks
-- ✅ `touch` - Update timestamps without running validations/callbacks
-- ✅ `destroy` / `destroy_all` - Rails-compatible deletion with callbacks
-- ✅ `default_scope` - Automatically apply filters to all queries (soft deletes, multi-tenancy)
-- ✅ `query.unscoped` - Bypass default_scope when needed
-- ✅ Attribute change tracking - `column.change`, `changes`, `changed` for auditing
-- ✅ `ids` - Convenient shortcut for getting array of primary keys
-- ✅ `explain` / `explain_analyze` - PostgreSQL query performance analysis
+- `update_all` - Bulk updates without loading models (bypasses validations and callbacks)
+- `find_by` / `find_by!` - Convenient finder methods for ActiveRecord-style querying
+- `find([ids])` - Multiple ID lookup with array of IDs
+- `increment!` / `decrement!` - Atomic counter updates for thread-safe operations
+- `update_column` / `update_columns` - Direct column updates without validations/callbacks
+- `touch` - Update timestamps without running validations/callbacks
+- `destroy` / `destroy_all` - Rails-compatible deletion with callbacks
+- `default_scope` - Automatically apply filters to all queries (soft deletes, multi-tenancy)
+- `query.unscoped` - Bypass default_scope when needed
+- Attribute change tracking - `column.change`, `changes`, `changed` for auditing
+- `ids` - Convenient shortcut for getting array of primary keys
+- `explain` / `explain_analyze` - PostgreSQL query performance analysis
 
 ### Changed
 - **BREAKING:** `delete` now skips callbacks (fast deletion)
