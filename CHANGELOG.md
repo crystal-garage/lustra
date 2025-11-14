@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Range Support in WHERE/HAVING Clauses** - Full support for all Crystal range types:
+  - Normal ranges: `where { age.in?(18..65) }` → `BETWEEN 18 AND 65`
+  - Exclusive ranges: `where { age.in?(18...65) }` → `>= 18 AND < 65`
+  - Endless ranges: `where { age.in?(18..) }` → `>= 18`
+  - Beginless ranges: `where { age.in?(..65) }` → `<= 65`
+  - Beginless exclusive: `where { age.in?(...65) }` → `< 65`
+  - Full range: `where { age.in?(...) }` → `TRUE` (matches all values)
+
 ## [v0.13.0] - 2025-11-14
 ### Added
 - **PostgreSQL Geometric Types** - Comprehensive support for all PostgreSQL geometric data types:
