@@ -13,12 +13,13 @@ Lint/NotNil:
   Description: Identifies usage of `not_nil!` calls
   Excluded:
   - src/lustra/extensions/full_text_searchable/tsvector.cr
+  - spec/**/*
   Enabled: true
   Severity: Warning
 
 Performance/AnyInsteadOfEmpty:
   Excluded:
-  - spec/model/relations/has_many_spec.cr
+  - spec/**/*
   Enabled: true
   Severity: Warning
 

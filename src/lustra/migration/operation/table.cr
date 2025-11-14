@@ -273,5 +273,24 @@ module Lustra::Migration
 
       yield(table)
     end
+
+    # Add exclusion constraint using GIST index
+    # Commonly used for preventing overlaps in geometric data, time ranges, etc.
+    def add_exclusion_constraint(table : String, column : String, operator : String = "&&", name : String? = nil)
+      constraint_name = name || "#{table}_#{column}_exclusion"
+      execute("ALTER TABLE #{table} ADD CONSTRAINT #{constraint_name} EXCLUDE USING GIST (#{column} WITH #{operator})")
+    end
+
+    # Add check constraint for containment operations
+    # Primarily used with geometric bounds but works with any type supporting <@ operator
+    def add_containment_check(table : String, column : String, bounds, name : String? = nil)
+      constraint_name = name || "#{table}_#{column}_bounds_check"
+      execute("ALTER TABLE #{table} ADD CONSTRAINT #{constraint_name} CHECK (#{column} <@ '#{bounds}')")
+    end
+
+    # Drop any named constraint
+    def drop_constraint(table : String, constraint_name : String)
+      execute("ALTER TABLE #{table} DROP CONSTRAINT IF EXISTS #{constraint_name}")
+    end
   end
 end

@@ -47,6 +47,10 @@ struct PG::Geo::Box
       json.field("y2") { json.number y2 }
     end
   end
+
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("box(point(#{x1},#{y1}),point(#{x2},#{y2}))")
+  end
 end
 
 struct PG::Geo::LineSegment
@@ -58,6 +62,10 @@ struct PG::Geo::LineSegment
       json.field("y2") { json.number y2 }
     end
   end
+
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("lseg(point(#{x1},#{y1}),point(#{x2},#{y2}))")
+  end
 end
 
 struct PG::Geo::Point
@@ -66,6 +74,10 @@ struct PG::Geo::Point
       json.field("x") { json.number x }
       json.field("y") { json.number y }
     end
+  end
+
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("point(#{x},#{y})")
   end
 end
 
@@ -77,6 +89,10 @@ struct PG::Geo::Line
       json.field("c") { json.number c }
     end
   end
+
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("line'{#{a},#{b},#{c}}'")
+  end
 end
 
 struct PG::Geo::Circle
@@ -86,6 +102,10 @@ struct PG::Geo::Circle
       json.field("y") { json.number y }
       json.field("radius") { json.number radius }
     end
+  end
+
+  def to_sql
+    Lustra::Expression::UnsafeSql.new("circle(point(#{x},#{y}),#{radius})")
   end
 end
 
@@ -98,11 +118,25 @@ struct PG::Geo::Path
       json.field("closed") { json.bool(closed?) }
     end
   end
+
+  def to_sql
+    points_str = points.map { |p| "(#{p.x},#{p.y})" }.join(",")
+    if closed?
+      Lustra::Expression::UnsafeSql.new("path'((#{points_str}))'")
+    else
+      Lustra::Expression::UnsafeSql.new("path'[(#{points_str})]'")
+    end
+  end
 end
 
 struct PG::Geo::Polygon
   def to_json(json : JSON::Builder)
     points.to_json(json)
+  end
+
+  def to_sql
+    points_str = points.map { |p| "(#{p.x},#{p.y})" }.join(",")
+    Lustra::Expression::UnsafeSql.new("polygon'(#{points_str})'")
   end
 end
 
