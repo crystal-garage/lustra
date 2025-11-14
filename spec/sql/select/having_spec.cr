@@ -36,6 +36,12 @@ module HavingSpec
         .should eq %(SELECT * FROM "users" HAVING ("x" >= 1 AND "x" <= 4))
       Lustra::SQL.select.from(:users).having({x: 1...4}).to_sql
         .should eq %(SELECT * FROM "users" HAVING ("x" >= 1 AND "x" < 4))
+      Lustra::SQL.select.from(:users).having({x: 1..}).to_sql
+        .should eq %(SELECT * FROM "users" HAVING ("x" >= 1))
+      Lustra::SQL.select.from(:users).having({x: ..10}).to_sql
+        .should eq %(SELECT * FROM "users" HAVING ("x" <= 10))
+      Lustra::SQL.select.from(:users).having({x: ...10}).to_sql
+        .should eq %(SELECT * FROM "users" HAVING ("x" < 10))
     end
 
     it "allows prepared query" do
@@ -197,6 +203,18 @@ module HavingSpec
         Lustra::SQL.select.from(:users).having { users.id.in?(1...3) }.to_sql
           .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" >= 1" +
                      " AND \"users\".\"id\" < 3)"
+
+        # Endless range
+        Lustra::SQL.select.from(:users).having { users.id.in?(10..) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" >= 10)"
+
+        # Beginless range (inclusive)
+        Lustra::SQL.select.from(:users).having { users.id.in?(..100) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" <= 100)"
+
+        # Beginless range (exclusive)
+        Lustra::SQL.select.from(:users).having { users.id.in?(...100) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" < 100)"
       end
 
       it "InSelect" do

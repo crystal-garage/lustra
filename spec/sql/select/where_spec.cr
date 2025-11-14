@@ -42,6 +42,12 @@ module WhereSpec
         .should eq %(SELECT * FROM "users" WHERE ("x" >= 1 AND "x" <= 4))
       Lustra::SQL.select.from(:users).where({x: 1...4}).to_sql
         .should eq %(SELECT * FROM "users" WHERE ("x" >= 1 AND "x" < 4))
+      Lustra::SQL.select.from(:users).where({x: 1..}).to_sql
+        .should eq %(SELECT * FROM "users" WHERE ("x" >= 1))
+      Lustra::SQL.select.from(:users).where({x: ..10}).to_sql
+        .should eq %(SELECT * FROM "users" WHERE ("x" <= 10))
+      Lustra::SQL.select.from(:users).where({x: ...10}).to_sql
+        .should eq %(SELECT * FROM "users" WHERE ("x" < 10))
     end
 
     it "allows prepared query" do
@@ -210,6 +216,18 @@ module WhereSpec
         Lustra::SQL.select.from(:users).where { users.id.in?(1...3) }.to_sql
           .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" >= 1" +
                      " AND \"users\".\"id\" < 3)"
+
+        # Endless range
+        Lustra::SQL.select.from(:users).where { users.id.in?(10..) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" >= 10)"
+
+        # Beginless range (inclusive)
+        Lustra::SQL.select.from(:users).where { users.id.in?(..100) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" <= 100)"
+
+        # Beginless range (exclusive)
+        Lustra::SQL.select.from(:users).where { users.id.in?(...100) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" < 100)"
       end
 
       it "in?(sub_query)" do

@@ -54,8 +54,11 @@ abstract class Lustra::Expression::Node
   define_operator("|", "OR")
 
   def in?(range : Range(B, E)) forall B, E
+    range_begin = range.begin.nil? ? nil : Lustra::Expression[range.begin]
+    range_end = range.end.nil? ? nil : Lustra::Expression[range.end]
+
     Node::InRange.new(self,
-      Lustra::Expression[range.begin]..Lustra::Expression[range.end],
+      range_begin..range_end,
       range.exclusive?)
   end
 

@@ -188,6 +188,23 @@ module WhereSpec
         users = User.query.where { posts_count.in?(10...15) }
         users.size.should eq(1)
         users.first!.first_name.should eq("Bob")
+
+        # Test in? with endless range
+        users = User.query.where { posts_count.in?(15..) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Charlie")
+        users.map(&.first_name).should contain("Diana")
+
+        # Test in? with beginless range (inclusive)
+        users = User.query.where { posts_count.in?(..10) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Alice")
+        users.map(&.first_name).should contain("Bob")
+
+        # Test in? with beginless range (exclusive)
+        users = User.query.where { posts_count.in?(...10) }
+        users.size.should eq(1)
+        users.first!.first_name.should eq("Alice")
       end
     end
 

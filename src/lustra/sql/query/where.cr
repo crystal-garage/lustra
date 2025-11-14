@@ -64,6 +64,9 @@ module Lustra::SQL::Query::Where
   # ```
   # query.where({x: (1..4)})  # WHERE x >= 1 AND x <= 4
   # query.where({x: (1...4)}) # WHERE x >= 1 AND x < 4
+  # query.where({x: (1..)})   # WHERE  x >= 1
+  # query.where({x: (..10)})  # WHERE  x <= 10
+  # query.where({x: (...10)}) # WHERE x < 10
   # ```
   #
   # - You also can put another select query as argument:
@@ -82,9 +85,9 @@ module Lustra::SQL::Query::Where
         when SelectBuilder
           Lustra::Expression::Node::InSelect.new(k, v)
         when Range
-          Lustra::Expression::Node::InRange.new(k,
-            Lustra::Expression[v.begin]..Lustra::Expression[v.end],
-            v.exclusive?)
+          range_begin = v.begin.nil? ? nil : Lustra::Expression[v.begin]
+          range_end = v.end.nil? ? nil : Lustra::Expression[v.end]
+          Lustra::Expression::Node::InRange.new(k, range_begin..range_end, v.exclusive?)
         else
           Lustra::Expression::Node::DoubleOperator.new(k,
             Lustra::Expression::Node::Literal.new(v),
@@ -170,9 +173,9 @@ module Lustra::SQL::Query::Where
         when SelectBuilder
           Lustra::Expression::Node::InSelect.new(k, v)
         when Range
-          Lustra::Expression::Node::InRange.new(k,
-            Lustra::Expression[v.begin]..Lustra::Expression[v.end],
-            v.exclusive?)
+          range_begin = v.begin.nil? ? nil : Lustra::Expression[v.begin]
+          range_end = v.end.nil? ? nil : Lustra::Expression[v.end]
+          Lustra::Expression::Node::InRange.new(k, range_begin..range_end, v.exclusive?)
         else
           Lustra::Expression::Node::DoubleOperator.new(k,
             Lustra::Expression::Node::Literal.new(v),
@@ -277,9 +280,9 @@ module Lustra::SQL::Query::Where
         when SelectBuilder
           Lustra::Expression::Node::InSelect.new(k, v)
         when Range
-          Lustra::Expression::Node::InRange.new(k,
-            Lustra::Expression[v.begin]..Lustra::Expression[v.end],
-            v.exclusive?)
+          range_begin = v.begin.nil? ? nil : Lustra::Expression[v.begin]
+          range_end = v.end.nil? ? nil : Lustra::Expression[v.end]
+          Lustra::Expression::Node::InRange.new(k, range_begin..range_end, v.exclusive?)
         else
           Lustra::Expression::Node::DoubleOperator.new(k,
             Lustra::Expression::Node::Literal.new(v),
