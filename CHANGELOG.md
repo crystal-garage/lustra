@@ -6,8 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-## [v0.13.0] - 2025-11-14
 ### Added
 - **PostgreSQL Geometric Types** - Comprehensive support for all PostgreSQL geometric data types:
   - Point, Circle, Polygon, Box, Line, Path, LineSegment support through crystal-pg
@@ -16,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Complete test coverage with 11 comprehensive test scenarios
   - Real-world examples including store locator and spatial analysis
 
-## [v0.12.0] - 2024-10-13
+## [v0.12.0] - 2025-10-13
 ### Added
 - ✅ `update_all` - Bulk updates without loading models (bypasses validations and callbacks)
 - ✅ `find_by` / `find_by!` - Convenient finder methods for ActiveRecord-style querying
@@ -40,17 +38,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Dedication
 - In memory of cat Sviatoslav (26.04.2023 - 13.10.2025) 💔😿
 
-## [v0.11.0] - 2024-10-09
+## [v0.11.0] - 2025-10-09
 ### Changed
 - **BREAKING:** `or_where` → `where.or` - Improved chaining syntax for OR conditions
 - More consistent query builder API
 
-## [v0.10.1] - 2024-10-09
+## [v0.10.1] - 2025-10-09
 ### Fixed
 - Fix model without primary_key support
 - Improved handling of models that don't have primary keys defined
 
-## [v0.10.0] - 2024-10-08
+## [v0.10.0] - 2025-10-08
 ### Added
 - Handle append_operation for has_many through relationships
 - Prevent duplicate associations in relationships
@@ -61,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better association handling and relationship management
 - Enhanced join operations with automatic detection
 
-## [v0.9.0] - 2024-10-06
+## [v0.9.0] - 2025-10-06
 ### Added
 - Test callbacks implementation
 - Counter cache functionality for associations
@@ -76,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better callback system with comprehensive testing
 - Enhanced association features
 
-## [v0.8.24] - 2024-09-26
+## [v0.8.24] - 2025-09-26
 ### Added
 - Touch functionality for belongs_to associations
 - Automatic timestamp updates when parent records change
@@ -84,11 +82,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Dependencies
 - Bump actions/checkout from 4 to 5
 
-## [v0.8.23] - 2024-06-09
+## [v0.8.23] - 2025-06-09
 ### Maintenance
 - Internal improvements and optimizations
 
-## [v0.8.22] - 2024-06-09
+## [v0.8.22] - 2025-06-09
 ### Maintenance
 - Internal improvements and optimizations
 
@@ -143,6 +141,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add comprehensive specs
 - Refactoring (Second round) - major code improvements
 - Refactor relations system
+
+## [v0.8.12] - 2022-11-08
+### Maintenance
+- Version bump and internal improvements
 
 ## [v0.8.11] - 2022-10-10
 ### Maintenance
@@ -220,6 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [v0.8.15](https://github.com/crystal-garage/lustra/releases/tag/v0.8.15)
 - [v0.8.14](https://github.com/crystal-garage/lustra/releases/tag/v0.8.14)
 - [v0.8.13](https://github.com/crystal-garage/lustra/releases/tag/v0.8.13)
+- [v0.8.12](https://github.com/crystal-garage/lustra/releases/tag/v0.8.12)
 - [v0.8.11](https://github.com/crystal-garage/lustra/releases/tag/v0.8.11)
 - [v0.8.10](https://github.com/crystal-garage/lustra/releases/tag/v0.8.10)
 - [v0.8.9](https://github.com/crystal-garage/lustra/releases/tag/v0.8.9)
