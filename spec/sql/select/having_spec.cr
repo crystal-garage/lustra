@@ -36,6 +36,12 @@ module HavingSpec
         .should eq %(SELECT * FROM "users" HAVING ("x" >= 1 AND "x" <= 4))
       Lustra::SQL.select.from(:users).having({x: 1...4}).to_sql
         .should eq %(SELECT * FROM "users" HAVING ("x" >= 1 AND "x" < 4))
+      Lustra::SQL.select.from(:users).having({x: 1..}).to_sql
+        .should eq %(SELECT * FROM "users" HAVING ("x" >= 1))
+      Lustra::SQL.select.from(:users).having({x: ..10}).to_sql
+        .should eq %(SELECT * FROM "users" HAVING ("x" <= 10))
+      Lustra::SQL.select.from(:users).having({x: ...10}).to_sql
+        .should eq %(SELECT * FROM "users" HAVING ("x" < 10))
     end
 
     it "allows prepared query" do
@@ -167,6 +173,19 @@ module HavingSpec
           .to_sql.should eq(%(SELECT * HAVING NOT ("x" BETWEEN 1 AND 2)))
       end
 
+      it "Between with Time values" do
+        time_start = Time.utc(2025, 1, 1, 12, 0, 0)
+        time_end = Time.utc(2025, 1, 1, 15, 0, 0)
+
+        Lustra::SQL.select.from(:users).having { created_at.between(time_start, time_end) }
+          .to_sql.should eq("SELECT * FROM \"users\" HAVING (\"created_at\" BETWEEN " +
+                            "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
+
+        Lustra::SQL.select.from(:users).having { not(created_at.between(time_start, time_end)) }
+          .to_sql.should eq("SELECT * FROM \"users\" HAVING NOT (\"created_at\" BETWEEN " +
+                            "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
+      end
+
       it "Function" do
         Lustra::SQL.select.having { ops_transform(x, "string", raw("INTERVAL '2 seconds'")) }
           .to_sql.should eq(%(SELECT * HAVING ops_transform("x", 'string', INTERVAL '2 seconds')))
@@ -197,6 +216,22 @@ module HavingSpec
         Lustra::SQL.select.from(:users).having { users.id.in?(1...3) }.to_sql
           .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" >= 1" +
                      " AND \"users\".\"id\" < 3)"
+
+        # Endless range
+        Lustra::SQL.select.from(:users).having { users.id.in?(10..) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" >= 10)"
+
+        # Beginless range (inclusive)
+        Lustra::SQL.select.from(:users).having { users.id.in?(..100) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" <= 100)"
+
+        # Beginless range (exclusive)
+        Lustra::SQL.select.from(:users).having { users.id.in?(...100) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" < 100)"
+
+        # Full range (...) - matches all values
+        Lustra::SQL.select.from(:users).having { users.id.in?(...) }.to_sql
+          .should eq "SELECT * FROM \"users\" HAVING TRUE"
       end
 
       it "InSelect" do

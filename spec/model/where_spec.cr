@@ -188,6 +188,78 @@ module WhereSpec
         users = User.query.where { posts_count.in?(10...15) }
         users.size.should eq(1)
         users.first!.first_name.should eq("Bob")
+
+        # Test in? with endless range
+        users = User.query.where { posts_count.in?(15..) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Charlie")
+        users.map(&.first_name).should contain("Diana")
+
+        # Test in? with beginless range (inclusive)
+        users = User.query.where { posts_count.in?(..10) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Alice")
+        users.map(&.first_name).should contain("Bob")
+
+        # Test in? with beginless range (exclusive)
+        users = User.query.where { posts_count.in?(...10) }
+        users.size.should eq(1)
+        users.first!.first_name.should eq("Alice")
+
+        # Test in? with full range (...) - matches all values
+        users = User.query.where { posts_count.in?(...) }
+        users.size.should eq(4)
+        users.map(&.first_name).should contain("Alice")
+        users.map(&.first_name).should contain("Bob")
+        users.map(&.first_name).should contain("Charlie")
+        users.map(&.first_name).should contain("Diana")
+
+        # Test Range(Time, Time) support
+        base_time = Time.utc(2025, 1, 1, 12, 0, 0)
+
+        User.query.delete_all
+
+        user1 = User.create!(first_name: "Alice", posts_count: 5)
+        user1.update_column(:created_at, base_time)
+
+        user2 = User.create!(first_name: "Bob", posts_count: 10)
+        user2.update_column(:created_at, base_time + 1.hour)
+
+        user3 = User.create!(first_name: "Charlie", posts_count: 15)
+        user3.update_column(:created_at, base_time + 2.hours)
+
+        user4 = User.create!(first_name: "Diana", posts_count: 20)
+        user4.update_column(:created_at, base_time + 3.hours)
+
+        # Test in? with time range
+        time_start = base_time + 1.hour
+        time_end = base_time + 2.hours
+        users = User.query.where { created_at.in?(time_start..time_end) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Bob")
+        users.map(&.first_name).should contain("Charlie")
+
+        # Test in? with exclusive time range
+        users = User.query.where { created_at.in?(time_start...time_end) }
+        users.size.should eq(1)
+        users.first!.first_name.should eq("Bob")
+
+        # Test in? with endless time range
+        users = User.query.where { created_at.in?((base_time + 2.hours)..) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Charlie")
+        users.map(&.first_name).should contain("Diana")
+
+        # Test in? with beginless time range (inclusive)
+        users = User.query.where { created_at.in?(..(base_time + 1.hour)) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Alice")
+        users.map(&.first_name).should contain("Bob")
+
+        # Test in? with beginless time range (exclusive)
+        users = User.query.where { created_at.in?(...(base_time + 1.hour)) }
+        users.size.should eq(1)
+        users.first!.first_name.should eq("Alice")
       end
     end
 

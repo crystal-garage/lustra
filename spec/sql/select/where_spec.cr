@@ -42,6 +42,12 @@ module WhereSpec
         .should eq %(SELECT * FROM "users" WHERE ("x" >= 1 AND "x" <= 4))
       Lustra::SQL.select.from(:users).where({x: 1...4}).to_sql
         .should eq %(SELECT * FROM "users" WHERE ("x" >= 1 AND "x" < 4))
+      Lustra::SQL.select.from(:users).where({x: 1..}).to_sql
+        .should eq %(SELECT * FROM "users" WHERE ("x" >= 1))
+      Lustra::SQL.select.from(:users).where({x: ..10}).to_sql
+        .should eq %(SELECT * FROM "users" WHERE ("x" <= 10))
+      Lustra::SQL.select.from(:users).where({x: ...10}).to_sql
+        .should eq %(SELECT * FROM "users" WHERE ("x" < 10))
     end
 
     it "allows prepared query" do
@@ -180,6 +186,19 @@ module WhereSpec
           .to_sql.should eq(%(SELECT * WHERE NOT ("x" BETWEEN 1 AND 2)))
       end
 
+      it "between(a, b) with Time values" do
+        time_start = Time.utc(2025, 1, 1, 12, 0, 0)
+        time_end = Time.utc(2025, 1, 1, 15, 0, 0)
+
+        Lustra::SQL.select.from(:users).where { created_at.between(time_start, time_end) }
+          .to_sql.should eq("SELECT * FROM \"users\" WHERE (\"created_at\" BETWEEN " +
+                            "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
+
+        Lustra::SQL.select.from(:users).where { not(created_at.between(time_start, time_end)) }
+          .to_sql.should eq("SELECT * FROM \"users\" WHERE NOT (\"created_at\" BETWEEN " +
+                            "#{Lustra::Expression[time_start]} AND #{Lustra::Expression[time_end]})")
+      end
+
       it "custom functions" do
         Lustra::SQL.select.where { ops_transform(x, "string", raw("INTERVAL '2 seconds'")) }
           .to_sql.should eq(%(SELECT * WHERE ops_transform("x", 'string', INTERVAL '2 seconds')))
@@ -210,6 +229,54 @@ module WhereSpec
         Lustra::SQL.select.from(:users).where { users.id.in?(1...3) }.to_sql
           .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" >= 1" +
                      " AND \"users\".\"id\" < 3)"
+
+        # Endless range
+        Lustra::SQL.select.from(:users).where { users.id.in?(10..) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" >= 10)"
+
+        # Beginless range (inclusive)
+        Lustra::SQL.select.from(:users).where { users.id.in?(..100) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" <= 100)"
+
+        # Beginless range (exclusive)
+        Lustra::SQL.select.from(:users).where { users.id.in?(...100) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" < 100)"
+
+        # Full range (...) - matches all values
+        Lustra::SQL.select.from(:users).where { users.id.in?(...) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE TRUE"
+      end
+
+      it "in?(range) with Time values" do
+        time_start = Time.utc(2025, 1, 1, 12, 0, 0)
+        time_end = Time.utc(2025, 1, 1, 15, 0, 0)
+
+        # Normal time range
+        Lustra::SQL.select.from(:users).where { created_at.in?(time_start..time_end) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE " +
+                     "(\"created_at\" >= #{Lustra::Expression[time_start]} AND" +
+                     " \"created_at\" <= #{Lustra::Expression[time_end]})"
+
+        # Exclusive time range
+        Lustra::SQL.select.from(:users).where { created_at.in?(time_start...time_end) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE " +
+                     "(\"created_at\" >= #{Lustra::Expression[time_start]} AND" +
+                     " \"created_at\" < #{Lustra::Expression[time_end]})"
+
+        # Endless time range
+        Lustra::SQL.select.from(:users).where { created_at.in?(time_start..) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE " +
+                     "(\"created_at\" >= #{Lustra::Expression[time_start]})"
+
+        # Beginless time range (inclusive)
+        Lustra::SQL.select.from(:users).where { created_at.in?(..time_end) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE " +
+                     "(\"created_at\" <= #{Lustra::Expression[time_end]})"
+
+        # Beginless time range (exclusive)
+        Lustra::SQL.select.from(:users).where { created_at.in?(...time_end) }.to_sql
+          .should eq "SELECT * FROM \"users\" WHERE " +
+                     "(\"created_at\" < #{Lustra::Expression[time_end]})"
       end
 
       it "in?(sub_query)" do
