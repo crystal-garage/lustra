@@ -174,6 +174,17 @@ class BigDecimalData
   column num4 : BigDecimal?
 end
 
+class FloatData
+  include Lustra::Model
+
+  primary_key
+
+  column price : Float32     # PostgreSQL real type
+  column latitude : Float64? # PostgreSQL double precision type
+  column longitude : Float64?
+  column temperature : Float32?
+end
+
 class ModelWithinAnotherSchema
   include Lustra::Model
 
@@ -347,6 +358,15 @@ class ModelSpecMigration123
       t.column "num2", "numeric(18, 8)"
       t.column "num3", "numeric(9)"
       t.column "num4", "numeric(8)"
+
+      t.timestamps
+    end
+
+    create_table :float_data do |t|
+      t.column "price", "real", null: false
+      t.column "latitude", "double precision", null: true
+      t.column "longitude", "double precision", null: true
+      t.column "temperature", "real", null: true
 
       t.timestamps
     end
