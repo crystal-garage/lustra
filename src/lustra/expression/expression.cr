@@ -124,7 +124,7 @@ class Lustra::Expression
   end
 
   # Transform multiple objects into a string which is SQL-Injection safe.
-  def self.safe_literal(x : Enumerable(AvailableLiteral)) : Enumerable(String)
+  def self.safe_literal(x : Array(AvailableLiteral)) : Array(String)
     x.map { |item| safe_literal(item) }
   end
 
