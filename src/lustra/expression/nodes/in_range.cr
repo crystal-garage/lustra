@@ -30,7 +30,7 @@ class Lustra::Expression::Node::InRange < Lustra::Expression::Node
 
     # Handle full range (...) - matches all values, so return TRUE
     if range_begin.nil? && range_end.nil?
-      return "TRUE"
+      return Lustra::Expression[true]
     end
 
     # Handle beginless range (..10 or ...10)
