@@ -70,11 +70,13 @@ module Lustra
                 JSON::Any | JSON::PullParser | PG::Interval | ::Crypto::Bcrypt::Password |
                 PG::Geo::Point | PG::Geo::Line | PG::Geo::LineSegment |
                 PG::Geo::Box | PG::Geo::Circle | PG::Geo::Path | PG::Geo::Polygon |
+                Range(Int32?, Int32?) | Range(Int64?, Int64?) | Range(PG::Numeric?, PG::Numeric?) | Range(Time?, Time?) |
                 Slice(UInt8) |
                 Array(PG::BoolArray) | Array(PG::CharArray) |
                 Array(PG::Int16Array) | Array(PG::Int32Array) | Array(PG::Int64Array) |
                 Array(PG::Float32Array) | Array(PG::Float64Array) | Array(PG::NumericArray) |
                 Array(PG::StringArray) | Array(PG::TimeArray) | Array(PG::UUIDArray) |
+                Array(Range(Int32?, Int32?)) | Array(Range(Int64?, Int64?)) | Array(Range(PG::Numeric?, PG::Numeric?)) | Array(Range(Time?, Time?)) |
                 Lustra::Expression::UnsafeSql | Lustra::Expression::Literal?
 
     alias Symbolic = String | Symbol
