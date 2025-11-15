@@ -64,10 +64,10 @@ class Post
 
   column published : Bool, presence: false
 
-  # Range columns for testing
-  column int_range : Range(Int32, Int32)?
-  column big_range : Range(Int64, Int64)?
-  column time_range : Range(Time, Time)?
+  # Range columns for testing (allow unbounded bounds)
+  column int_range : Range(Int32?, Int32?)?
+  column big_range : Range(Int64?, Int64?)?
+  column time_range : Range(Time?, Time?)?
 
   scope("published") { where published: true }
 
