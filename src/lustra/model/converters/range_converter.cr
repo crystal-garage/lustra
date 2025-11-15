@@ -1,8 +1,8 @@
 require "./base"
 
 # Minimal PostgreSQL range parsing utilities tailored for Lustra converters.
-# This supports basic numeric and time ranges in the form: "[1,10)", "(2020-01-01,2020-12-31]", and handles "-infinity"/"infinity".
-def parse_pg_range(str : String, &block)
+# This supports basic numeric and time ranges in the form: "[1,10)", "(2020-01-01,2020-12-31]".
+def parse_pg_range(str : String, &)
   return nil if str.empty? || str == "empty"
 
   match = str.match(/^([\[\(])\s*(.*?)\s*,\s*(.*?)\s*([\)\]])$/)
@@ -15,8 +15,8 @@ def parse_pg_range(str : String, &block)
   end_s = match[3]
   end_incl = match[4] == "]"
 
-  begin_val = (begin_s == "" || begin_s == "-infinity") ? nil : yield(begin_s)
-  end_val = (end_s == "" || end_s == "infinity") ? nil : yield(end_s)
+  begin_val = (begin_s == "" || begin_s == "") ? nil : yield(begin_s)
+  end_val = (end_s == "" || end_s == "") ? nil : yield(end_s)
 
   # Crystal Range only supports an exclusive end flag; use right_exclusive accordingly.
   exclusive = !end_incl
@@ -25,8 +25,8 @@ def parse_pg_range(str : String, &block)
 end
 
 def range_to_string(r)
-  b = r.begin.nil? ? "-infinity" : r.begin.to_s
-  e = r.end.nil? ? "infinity" : r.end.to_s
+  b = r.begin.nil? ? "" : r.begin.to_s
+  e = r.end.nil? ? "" : r.end.to_s
 
   begin_bracket = "[" # we always output inclusive start; PostgreSQL allows exclusive start but Crystal Range can't represent it
   end_bracket = r.excludes_end? ? ")" : "]"
@@ -45,9 +45,8 @@ module Lustra::Model::Converter::RangeConverterInt32
 
       Range.new(b, e, x.excludes_end?)
     when String
-      parse_pg_range(x) { |s| s.to_i32 }
+      parse_pg_range(x, &.to_i32)
     else
-      nil
     end
   end
 
@@ -58,7 +57,6 @@ module Lustra::Model::Converter::RangeConverterInt32
     when Range
       range_to_string(x)
     else
-      nil
     end
   end
 end
@@ -74,9 +72,8 @@ module Lustra::Model::Converter::RangeConverterInt64
 
       Range.new(b, e, x.excludes_end?)
     when String
-      parse_pg_range(x) { |s| s.to_i64 }
+      parse_pg_range(x, &.to_i64)
     else
-      nil
     end
   end
 
@@ -87,7 +84,6 @@ module Lustra::Model::Converter::RangeConverterInt64
     when Range
       range_to_string(x)
     else
-      nil
     end
   end
 end
@@ -107,7 +103,6 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
     when String
       parse_pg_range(x) { |s| BigDecimal.new(s) }
     else
-      nil
     end
   end
 
@@ -116,13 +111,12 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
     when Nil
       nil
     when Range
-      b = x.begin.nil? ? "-infinity" : x.begin.to_s
-      e = x.end.nil? ? "infinity" : x.end.to_s
+      b = x.begin.nil? ? "" : x.begin.to_s
+      e = x.end.nil? ? "" : x.end.to_s
       end_bracket = x.excludes_end? ? ")" : "]"
 
       "[#{b},#{e}#{end_bracket}"
     else
-      nil
     end
   end
 end
@@ -168,7 +162,6 @@ module Lustra::Model::Converter::RangeConverterTime
       end
       r
     else
-      nil
     end
   end
 
@@ -177,14 +170,13 @@ module Lustra::Model::Converter::RangeConverterTime
     when Nil
       nil
     when Range
-      b = x.begin.nil? ? "-infinity" : x.begin.to_s
-      e = x.end.nil? ? "infinity" : x.end.to_s
+      b = x.begin.nil? ? "" : x.begin.to_s
+      e = x.end.nil? ? "" : x.end.to_s
 
       end_bracket = x.excludes_end? ? ")" : "]"
 
       "[#{b},#{e}#{end_bracket}"
     else
-      nil
     end
   end
 end
