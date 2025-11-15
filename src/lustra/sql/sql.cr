@@ -60,6 +60,8 @@ module Lustra
                 Bool | Char | Float32 | Float64 | Int8 | Int16 | Int32 | Int64 | BigDecimal | JSON::Any | JSON::PullParser | PG::Geo::Box | PG::Geo::Circle |
                 PG::Geo::Line | PG::Geo::LineSegment | PG::Geo::Path | PG::Geo::Point |
                 PG::Geo::Polygon | PG::Numeric | PG::Interval | Slice(UInt8) | String | Time |
+                Range(Int32?, Int32?) | Range(Int64?, Int64?) | Range(PG::Numeric?, PG::Numeric?) | Range(Time?, Time?) |
+                Array(Range(Int32?, Int32?)) | Array(Range(Int64?, Int64?)) | Array(Range(PG::Numeric?, PG::Numeric?)) | Array(Range(Time?, Time?)) |
                 UInt8 | UInt16 | UInt32 | UInt64 | UUID | ::Crypto::Bcrypt::Password |
                 Lustra::Expression::UnsafeSql | Lustra::Expression::Literal |
                 Nil
