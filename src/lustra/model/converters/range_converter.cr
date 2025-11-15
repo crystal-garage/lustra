@@ -39,6 +39,11 @@ module Lustra::Model::Converter::RangeConverterInt32
       nil
     when Range(Int32?, Int32?)
       x
+    when Range
+      left = x.begin.nil? ? nil : x.begin.to_s.to_i32
+      right = x.end.nil? ? nil : x.end.to_s.to_i32
+
+      Range.new(left, right, x.excludes_end?)
     when String
       r = parse_pg_range(x) { |s| s.to_i32 }
       r
@@ -53,10 +58,7 @@ module Lustra::Model::Converter::RangeConverterInt32
       nil
     when Range
       r = x
-      left = r.begin.nil? ? "-infinity" : r.begin.to_s
-      right = r.end.nil? ? "infinity" : r.end.to_s
-      right_bracket = r.excludes_end? ? ")" : "]"
-      "[#{left},#{right}#{right_bracket}"
+      pg_range_to_string(r)
     else
       nil
     end
@@ -70,6 +72,11 @@ module Lustra::Model::Converter::RangeConverterInt64
       nil
     when Range(Int64?, Int64?)
       x
+    when Range
+      left = x.begin.nil? ? nil : x.begin.to_s.to_i64
+      right = x.end.nil? ? nil : x.end.to_s.to_i64
+
+      Range.new(left, right, x.excludes_end?)
     when String
       r = parse_pg_range(x) { |s| s.to_i64 }
       r
@@ -84,10 +91,7 @@ module Lustra::Model::Converter::RangeConverterInt64
       nil
     when Range
       r = x
-      left = r.begin.nil? ? "-infinity" : r.begin.to_s
-      right = r.end.nil? ? "infinity" : r.end.to_s
-      right_bracket = r.excludes_end? ? ")" : "]"
-      "[#{left},#{right}#{right_bracket}"
+      pg_range_to_string(r)
     else
       nil
     end
@@ -101,6 +105,11 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
       nil
     when Range(PG::Numeric?, PG::Numeric?)
       x
+    when Range
+      left = x.begin.nil? ? nil : (x.begin.is_a?(PG::Numeric) ? x.begin : BigDecimal.new(x.begin.to_s))
+      right = x.end.nil? ? nil : (x.end.is_a?(PG::Numeric) ? x.end : BigDecimal.new(x.end.to_s))
+
+      Range.new(left, right, x.excludes_end?)
     when String
       r = parse_pg_range(x) { |s| BigDecimal.new(s) }
       r
@@ -118,6 +127,7 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
       left = r.begin.nil? ? "-infinity" : r.begin.to_s
       right = r.end.nil? ? "infinity" : r.end.to_s
       right_bracket = r.excludes_end? ? ")" : "]"
+
       "[#{left},#{right}#{right_bracket}"
     else
       nil
@@ -132,6 +142,28 @@ module Lustra::Model::Converter::RangeConverterTime
       nil
     when Range(Time?, Time?)
       x
+    when Range
+      left = if x.begin.nil?
+               nil.as(Time?)
+             else
+               if x.begin.is_a?(Time)
+                 x.begin.as(Time)
+               else
+                 Time::Format::RFC_3339.parse(x.begin.to_s)
+               end
+             end
+
+      right = if x.end.nil?
+                nil.as(Time?)
+              else
+                if x.end.is_a?(Time)
+                  x.end.as(Time)
+                else
+                  Time::Format::RFC_3339.parse(x.end.to_s)
+                end
+              end
+
+      Range.new(left, right, x.excludes_end?)
     when String
       r = parse_pg_range(x) do |s|
         # Try local parse for non-RFC formats, fall back to RFC_3339
@@ -171,4 +203,5 @@ module Lustra::Model::Converter
   add_converter("Range(Int32 | Nil, Int32 | Nil)", Lustra::Model::Converter::RangeConverterInt32)
   add_converter("Range(Int64 | Nil, Int64 | Nil)", Lustra::Model::Converter::RangeConverterInt64)
   add_converter("Range(Time | Nil, Time | Nil)", Lustra::Model::Converter::RangeConverterTime)
+  add_converter("Range(PG::Numeric | Nil, PG::Numeric | Nil)", Lustra::Model::Converter::RangeConverterPGNumeric)
 end
