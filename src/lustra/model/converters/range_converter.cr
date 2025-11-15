@@ -10,26 +10,28 @@ def parse_pg_range(str : String, &block)
     raise "Invalid range format: #{str}"
   end
 
-  left_incl = match[1] == "["
-  right_incl = match[4] == "]"
-  left_s = match[2]
-  right_s = match[3]
+  begin_incl = match[1] == "["
+  begin_s = match[2]
+  end_s = match[3]
+  end_incl = match[4] == "]"
 
-  left_val = (left_s == "" || left_s == "-infinity") ? nil : yield(left_s)
-  right_val = (right_s == "" || right_s == "infinity") ? nil : yield(right_s)
+  begin_val = (begin_s == "" || begin_s == "-infinity") ? nil : yield(begin_s)
+  end_val = (end_s == "" || end_s == "infinity") ? nil : yield(end_s)
 
   # Crystal Range only supports an exclusive end flag; use right_exclusive accordingly.
-  right_exclusive = !right_incl
+  exclusive = !end_incl
 
-  Range.new(left_val, right_val, right_exclusive)
+  Range.new(begin_val, end_val, exclusive)
 end
 
-def pg_range_to_string(r)
-  left = r.begin.nil? ? "-infinity" : r.begin.to_s
-  right = r.end.nil? ? "infinity" : r.end.to_s
-  left_bracket = "[" # we always output inclusive start; PostgreSQL allows exclusive start but Crystal Range can't represent it
-  right_bracket = r.excludes_end? ? ")" : "]"
-  "#{left_bracket}#{left},#{right}#{right_bracket}"
+def range_to_string(r)
+  b = r.begin.nil? ? "-infinity" : r.begin.to_s
+  e = r.end.nil? ? "infinity" : r.end.to_s
+
+  begin_bracket = "[" # we always output inclusive start; PostgreSQL allows exclusive start but Crystal Range can't represent it
+  end_bracket = r.excludes_end? ? ")" : "]"
+
+  "#{begin_bracket}#{b},#{e}#{end_bracket}"
 end
 
 module Lustra::Model::Converter::RangeConverterInt32
@@ -37,16 +39,13 @@ module Lustra::Model::Converter::RangeConverterInt32
     case x
     when Nil
       nil
-    when Range(Int32?, Int32?)
-      x
     when Range
-      left = x.begin.nil? ? nil : x.begin.to_s.to_i32
-      right = x.end.nil? ? nil : x.end.to_s.to_i32
+      b = x.begin.nil? ? nil : x.begin.to_s.to_i32
+      e = x.end.nil? ? nil : x.end.to_s.to_i32
 
-      Range.new(left, right, x.excludes_end?)
+      Range.new(b, e, x.excludes_end?)
     when String
-      r = parse_pg_range(x) { |s| s.to_i32 }
-      r
+      parse_pg_range(x) { |s| s.to_i32 }
     else
       nil
     end
@@ -57,8 +56,7 @@ module Lustra::Model::Converter::RangeConverterInt32
     when Nil
       nil
     when Range
-      r = x
-      pg_range_to_string(r)
+      range_to_string(x)
     else
       nil
     end
@@ -70,16 +68,13 @@ module Lustra::Model::Converter::RangeConverterInt64
     case x
     when Nil
       nil
-    when Range(Int64?, Int64?)
-      x
     when Range
-      left = x.begin.nil? ? nil : x.begin.to_s.to_i64
-      right = x.end.nil? ? nil : x.end.to_s.to_i64
+      b = x.begin.nil? ? nil : x.begin.to_s.to_i64
+      e = x.end.nil? ? nil : x.end.to_s.to_i64
 
-      Range.new(left, right, x.excludes_end?)
+      Range.new(b, e, x.excludes_end?)
     when String
-      r = parse_pg_range(x) { |s| s.to_i64 }
-      r
+      parse_pg_range(x) { |s| s.to_i64 }
     else
       nil
     end
@@ -90,8 +85,7 @@ module Lustra::Model::Converter::RangeConverterInt64
     when Nil
       nil
     when Range
-      r = x
-      pg_range_to_string(r)
+      range_to_string(x)
     else
       nil
     end
@@ -106,13 +100,12 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
     when Range(PG::Numeric?, PG::Numeric?)
       x
     when Range
-      left = x.begin.nil? ? nil : (x.begin.is_a?(PG::Numeric) ? x.begin : BigDecimal.new(x.begin.to_s))
-      right = x.end.nil? ? nil : (x.end.is_a?(PG::Numeric) ? x.end : BigDecimal.new(x.end.to_s))
+      b = x.begin.nil? ? nil : (x.begin.is_a?(PG::Numeric) ? x.begin : BigDecimal.new(x.begin.to_s))
+      e = x.end.nil? ? nil : (x.end.is_a?(PG::Numeric) ? x.end : BigDecimal.new(x.end.to_s))
 
-      Range.new(left, right, x.excludes_end?)
+      Range.new(b, e, x.excludes_end?)
     when String
-      r = parse_pg_range(x) { |s| BigDecimal.new(s) }
-      r
+      parse_pg_range(x) { |s| BigDecimal.new(s) }
     else
       nil
     end
@@ -123,12 +116,11 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
     when Nil
       nil
     when Range
-      r = x
-      left = r.begin.nil? ? "-infinity" : r.begin.to_s
-      right = r.end.nil? ? "infinity" : r.end.to_s
-      right_bracket = r.excludes_end? ? ")" : "]"
+      b = x.begin.nil? ? "-infinity" : x.begin.to_s
+      e = x.end.nil? ? "infinity" : x.end.to_s
+      end_bracket = x.excludes_end? ? ")" : "]"
 
-      "[#{left},#{right}#{right_bracket}"
+      "[#{b},#{e}#{end_bracket}"
     else
       nil
     end
@@ -140,30 +132,30 @@ module Lustra::Model::Converter::RangeConverterTime
     case x
     when Nil
       nil
-    when Range(Time?, Time?)
-      x
     when Range
-      left = if x.begin.nil?
-               nil.as(Time?)
-             else
-               if x.begin.is_a?(Time)
-                 x.begin.as(Time)
-               else
-                 Time::Format::RFC_3339.parse(x.begin.to_s)
-               end
-             end
+      b =
+        if x.begin.nil?
+          nil.as(Time?)
+        else
+          if x.begin.is_a?(Time)
+            x.begin.as(Time)
+          else
+            Time::Format::RFC_3339.parse(x.begin.to_s)
+          end
+        end
 
-      right = if x.end.nil?
-                nil.as(Time?)
-              else
-                if x.end.is_a?(Time)
-                  x.end.as(Time)
-                else
-                  Time::Format::RFC_3339.parse(x.end.to_s)
-                end
-              end
+      e =
+        if x.end.nil?
+          nil.as(Time?)
+        else
+          if x.end.is_a?(Time)
+            x.end.as(Time)
+          else
+            Time::Format::RFC_3339.parse(x.end.to_s)
+          end
+        end
 
-      Range.new(left, right, x.excludes_end?)
+      Range.new(b, e, x.excludes_end?)
     when String
       r = parse_pg_range(x) do |s|
         # Try local parse for non-RFC formats, fall back to RFC_3339
@@ -185,14 +177,12 @@ module Lustra::Model::Converter::RangeConverterTime
     when Nil
       nil
     when Range
-      r = x
+      b = x.begin.nil? ? "-infinity" : x.begin.to_s
+      e = x.end.nil? ? "infinity" : x.end.to_s
 
-      left = r.begin.nil? ? "-infinity" : r.begin.to_s
-      right = r.end.nil? ? "infinity" : r.end.to_s
+      end_bracket = x.excludes_end? ? ")" : "]"
 
-      right_bracket = r.excludes_end? ? ")" : "]"
-
-      "[#{left},#{right}#{right_bracket}"
+      "[#{b},#{e}#{end_bracket}"
     else
       nil
     end
