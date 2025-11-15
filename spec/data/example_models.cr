@@ -64,6 +64,11 @@ class Post
 
   column published : Bool, presence: false
 
+  # Range columns for testing (allow unbounded bounds)
+  column int_range : Range(Int32?, Int32?)?
+  column big_range : Range(Int64?, Int64?)?
+  column time_range : Range(Time?, Time?)?
+
   scope("published") { where published: true }
 
   def validate
@@ -185,6 +190,19 @@ class FloatData
   column temperature : Float32?
 end
 
+class RangeData
+  include Lustra::Model
+
+  primary_key
+
+  column name : String?
+  column int32_range : Range(Int32?, Int32?)?
+  column int64_range : Range(Int64?, Int64?)?
+  column time_range : Range(Time?, Time?)?
+
+  self.table = "range_data"
+end
+
 class ModelWithinAnotherSchema
   include Lustra::Model
 
@@ -303,6 +321,11 @@ class ModelSpecMigration123
       t.column "published", "boolean", default: "true", null: false
       t.column "content", "string", default: "''", null: false
 
+      # Range columns for testing
+      t.column "int_range", "int4range"
+      t.column "big_range", "int8range"
+      t.column "time_range", "tsrange"
+
       t.references to: "users", name: "user_id", on_delete: "cascade"
       t.references to: "categories", name: "category_id", null: true, on_delete: "set null"
     end
@@ -367,6 +390,15 @@ class ModelSpecMigration123
       t.column "latitude", "double precision", null: true
       t.column "longitude", "double precision", null: true
       t.column "temperature", "real", null: true
+
+      t.timestamps
+    end
+
+    create_table :range_data do |t|
+      t.column "name", "string", null: true
+      t.column "int32_range", "int4range", null: true
+      t.column "int64_range", "int8range", null: true
+      t.column "time_range", "tsrange", null: true
 
       t.timestamps
     end
