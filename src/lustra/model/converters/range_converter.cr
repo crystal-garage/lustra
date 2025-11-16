@@ -2,7 +2,7 @@ require "./base"
 
 # Minimal PostgreSQL range parsing utilities tailored for Lustra converters.
 # This supports basic numeric and time ranges in the form: "[1,10)", "(2020-01-01,2020-12-31]".
-def parse_pg_range(str : String, &)
+def string_to_range(str : String, &)
   return nil if str.empty? || str == "empty"
 
   match = str.match(/^([\[\(])\s*(.*?)\s*,\s*(.*?)\s*([\)\]])$/)
@@ -24,14 +24,39 @@ def parse_pg_range(str : String, &)
   Range.new(begin_val, end_val, exclusive)
 end
 
-def range_to_string(r)
-  b = r.begin.nil? ? "" : r.begin.to_s
-  e = r.end.nil? ? "" : r.end.to_s
+def format_numeric_range(range)
+  # PQ::Params.format_numeric_range(range)
+  # PQ::Param.encode(range)
+  # TODO: make it public
+  if range.begin == range.end && range.excludes_end?
+    "empty"
+  else
+    start_bracket = "["
+    end_bracket = range.excludes_end? ? ")" : "]"
 
-  begin_bracket = "[" # we always output inclusive start; PostgreSQL allows exclusive start but Crystal Range can't represent it
-  end_bracket = r.excludes_end? ? ")" : "]"
+    begin_str = range.begin.nil? ? "" : range.begin.to_s
+    end_str = range.end.nil? ? "" : range.end.to_s
 
-  "#{begin_bracket}#{b},#{e}#{end_bracket}"
+    "#{start_bracket}#{begin_str},#{end_str}#{end_bracket}"
+  end
+end
+
+def format_time(value : Time)
+  Time::Format::RFC_3339.format(value, fraction_digits: 9)
+end
+
+def format_timestamp_range(range)
+  if range.begin == range.end && range.excludes_end?
+    "empty"
+  else
+    start_bracket = "["
+    end_bracket = range.excludes_end? ? ")" : "]"
+
+    begin_str = range.begin.try { |val| format_time(val) } || ""
+    end_str = range.end.try { |val| format_time(val) } || ""
+
+    "#{start_bracket}#{begin_str},#{end_str}#{end_bracket}"
+  end
 end
 
 module Lustra::Model::Converter::RangeConverterInt32
@@ -45,7 +70,7 @@ module Lustra::Model::Converter::RangeConverterInt32
 
       Range.new(b, e, x.excludes_end?)
     when String
-      parse_pg_range(x, &.to_i32)
+      string_to_range(x, &.to_i32)
     else
     end
   end
@@ -55,7 +80,7 @@ module Lustra::Model::Converter::RangeConverterInt32
     when Nil
       nil
     when Range
-      range_to_string(x)
+      format_numeric_range(x)
     else
     end
   end
@@ -72,7 +97,7 @@ module Lustra::Model::Converter::RangeConverterInt64
 
       Range.new(b, e, x.excludes_end?)
     when String
-      parse_pg_range(x, &.to_i64)
+      string_to_range(x, &.to_i64)
     else
     end
   end
@@ -82,7 +107,7 @@ module Lustra::Model::Converter::RangeConverterInt64
     when Nil
       nil
     when Range
-      range_to_string(x)
+      format_numeric_range(x)
     else
     end
   end
@@ -101,7 +126,7 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
 
       Range.new(b, e, x.excludes_end?)
     when String
-      parse_pg_range(x) { |s| BigDecimal.new(s) }
+      string_to_range(x) { |s| BigDecimal.new(s) }
     else
     end
   end
@@ -111,11 +136,7 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
     when Nil
       nil
     when Range
-      b = x.begin.nil? ? "" : x.begin.to_s
-      e = x.end.nil? ? "" : x.end.to_s
-      end_bracket = x.excludes_end? ? ")" : "]"
-
-      "[#{b},#{e}#{end_bracket}"
+      format_numeric_range(x)
     else
     end
   end
@@ -151,7 +172,7 @@ module Lustra::Model::Converter::RangeConverterTime
 
       Range.new(b, e, x.excludes_end?)
     when String
-      r = parse_pg_range(x) do |s|
+      r = string_to_range(x) do |s|
         # Try local parse for non-RFC formats, fall back to RFC_3339
         case s
         when /[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]+/
@@ -170,12 +191,7 @@ module Lustra::Model::Converter::RangeConverterTime
     when Nil
       nil
     when Range
-      b = x.begin.nil? ? "" : x.begin.to_s
-      e = x.end.nil? ? "" : x.end.to_s
-
-      end_bracket = x.excludes_end? ? ")" : "]"
-
-      "[#{b},#{e}#{end_bracket}"
+      format_timestamp_range(x)
     else
     end
   end
