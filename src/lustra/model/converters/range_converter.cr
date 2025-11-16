@@ -24,6 +24,10 @@ def string_to_range(str : String, &)
   Range.new(begin_val, end_val, exclusive)
 end
 
+def format_time(value : Time)
+  Time::Format::RFC_3339.format(value, fraction_digits: 9)
+end
+
 def format_numeric_range(range)
   # PQ::Params.format_numeric_range(range)
   # PQ::Param.encode(range)
@@ -39,10 +43,6 @@ def format_numeric_range(range)
 
     "#{start_bracket}#{begin_str},#{end_str}#{end_bracket}"
   end
-end
-
-def format_time(value : Time)
-  Time::Format::RFC_3339.format(value, fraction_digits: 9)
 end
 
 def format_timestamp_range(range)
