@@ -64,11 +64,6 @@ class Post
 
   column published : Bool, presence: false
 
-  # Range columns for testing (allow unbounded bounds)
-  column int_range : Range(Int32?, Int32?)?
-  column big_range : Range(Int64?, Int64?)?
-  column time_range : Range(Time?, Time?)?
-
   scope("published") { where published: true }
 
   def validate
@@ -320,11 +315,6 @@ class ModelSpecMigration123
 
       t.column "published", "boolean", default: "true", null: false
       t.column "content", "string", default: "''", null: false
-
-      # Range columns for testing
-      t.column "int_range", "int4range"
-      t.column "big_range", "int8range"
-      t.column "time_range", "tsrange"
 
       t.references to: "users", name: "user_id", on_delete: "cascade"
       t.references to: "categories", name: "category_id", null: true, on_delete: "set null"
