@@ -24,41 +24,6 @@ def string_to_range(str : String, &)
   Range.new(begin_val, end_val, exclusive)
 end
 
-def format_time(value : Time)
-  Time::Format::RFC_3339.format(value, fraction_digits: 9)
-end
-
-def format_numeric_range(range)
-  # PQ::Params.format_numeric_range(range)
-  # PQ::Param.encode(range)
-  # TODO: make it public
-  if range.begin == range.end && range.excludes_end?
-    "empty"
-  else
-    start_bracket = "["
-    end_bracket = range.excludes_end? ? ")" : "]"
-
-    begin_str = range.begin.nil? ? "" : range.begin.to_s
-    end_str = range.end.nil? ? "" : range.end.to_s
-
-    "#{start_bracket}#{begin_str},#{end_str}#{end_bracket}"
-  end
-end
-
-def format_timestamp_range(range)
-  if range.begin == range.end && range.excludes_end?
-    "empty"
-  else
-    start_bracket = "["
-    end_bracket = range.excludes_end? ? ")" : "]"
-
-    begin_str = range.begin.try { |val| format_time(val) } || ""
-    end_str = range.end.try { |val| format_time(val) } || ""
-
-    "#{start_bracket}#{begin_str},#{end_str}#{end_bracket}"
-  end
-end
-
 module Lustra::Model::Converter::RangeConverterInt32
   def self.to_column(x) : Range(Int32?, Int32?)?
     case x
@@ -80,7 +45,7 @@ module Lustra::Model::Converter::RangeConverterInt32
     when Nil
       nil
     when Range
-      format_numeric_range(x)
+      Lustra::Model::Converter.format_numeric_range(x)
     else
     end
   end
@@ -107,7 +72,7 @@ module Lustra::Model::Converter::RangeConverterInt64
     when Nil
       nil
     when Range
-      format_numeric_range(x)
+      Lustra::Model::Converter.format_numeric_range(x)
     else
     end
   end
@@ -136,7 +101,7 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
     when Nil
       nil
     when Range
-      format_numeric_range(x)
+      Lustra::Model::Converter.format_numeric_range(x)
     else
     end
   end
@@ -191,7 +156,7 @@ module Lustra::Model::Converter::RangeConverterTime
     when Nil
       nil
     when Range
-      format_timestamp_range(x)
+      Lustra::Model::Converter.format_timestamp_range(x)
     else
     end
   end
