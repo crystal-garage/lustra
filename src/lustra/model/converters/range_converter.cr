@@ -3,7 +3,7 @@ require "./base"
 # Minimal PostgreSQL range parsing utilities tailored for Lustra converters.
 # This supports basic numeric and time ranges in the form: "[1,10)", "(2020-01-01,2020-12-31]".
 def string_to_range(str : String, &)
-  return nil if str.empty? || str == "empty"
+  return if str.empty? || str == "empty"
 
   match = str.match(/^([\[\(])\s*(.*?)\s*,\s*(.*?)\s*([\)\]])$/)
   unless match
