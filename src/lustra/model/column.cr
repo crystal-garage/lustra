@@ -168,8 +168,8 @@ class Lustra::Model::Column(T, C)
   # user.name_column.change  # => nil (if not changed)
   # ```
   def change : Tuple(T, T)?
-    return nil unless @changed
-    return nil if @old_value.is_a?(UnknownClass)
+    return unless @changed
+    return if @old_value.is_a?(UnknownClass)
     {@old_value.as(T), @value.as(T)}
   end
 end

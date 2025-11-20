@@ -46,7 +46,7 @@ class Lustra::Migration::Manager
   def current_version
     ensure_ready
 
-    return nil if @migrations_up.empty?
+    return if @migrations_up.empty?
 
     @migrations_up.max
   end
