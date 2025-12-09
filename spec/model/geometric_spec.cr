@@ -184,7 +184,7 @@ module GeometricSpec
           .to_a
 
         # Should find locations whose coverage area contains the test point
-        covering_locations.any?.should be_true
+        covering_locations.present?.should be_true
 
         # Test bounding box containment
         point_in_box = PG::Geo::Point.new(-74.0100, 40.7100) # Point that should be in downtown bounding box
@@ -202,7 +202,7 @@ module GeometricSpec
           .where { coverage_area.overlaps?(test_circle) }
           .to_a
 
-        overlapping_locations.any?.should be_true
+        overlapping_locations.present?.should be_true
 
         # Test positioning operations
         reference_point = PG::Geo::Point.new(-74.0000, 40.7200)
@@ -270,7 +270,7 @@ module GeometricSpec
 
         # Test custom scope: pickup_available
         pickup_stores = Store.pickup_available(customer_location).to_a
-        pickup_stores.any?.should be_true
+        pickup_stores.present?.should be_true
 
         # Test direct geometric queries on Store model
         nearby_stores = Store.query

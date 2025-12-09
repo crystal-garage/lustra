@@ -122,7 +122,7 @@ describe "Lustra::Model::Relations::HasMany" do
           Post.create!({title: "Test Post", user_id: user.id})
 
           user.posts.exists?.should be_true
-          user.posts.any?.should be_true
+          user.posts.present?.should be_true
           user.posts.empty?.should be_false
         end
       end
@@ -405,7 +405,7 @@ describe "Lustra::Model::Relations::HasMany" do
 
           user.posts.count.should eq(0)
           user.posts.first?.should be_nil
-          user.posts.any?.should be_false
+          user.posts.present?.should be_false
           user.posts.empty?.should be_true
         end
       end
