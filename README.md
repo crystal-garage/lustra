@@ -204,8 +204,12 @@ class User
 
   column encrypted_password : Crypto::Bcrypt::Password
 
-  def password=(x)
+  def password=(password : String)
     self.encrypted_password = Crypto::Bcrypt::Password.create(password)
+  end
+
+  def authenticate(password : String) : Bool
+    encrypted_password.verify(password)
   end
 end
 
