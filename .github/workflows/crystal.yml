@@ -30,7 +30,7 @@ jobs:
         run: shards install
 
       - name: Check ameba
-        run: ./bin/ameba
+        run: crystal ./bin/ameba.cr
   test:
     runs-on: ubuntu-latest
     strategy:

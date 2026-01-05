@@ -155,7 +155,7 @@ module Lustra::Model::HasRelations
         # might not yet have been defined
         types = name.type.types.map { |x| "#{x.id}" }
         # So we check for the nil type if it exists
-        nilable = types.includes?("Nil")
+        nilable = types.includes?("Nil") || types.includes?("::Nil")
 
         type = name.type.types.first
       else

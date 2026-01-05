@@ -61,8 +61,7 @@ module Lustra
                 PG::Geo::Line | PG::Geo::LineSegment | PG::Geo::Path | PG::Geo::Point |
                 PG::Geo::Polygon | PG::Numeric | PG::Interval | Slice(UInt8) | String | Time |
                 UInt8 | UInt16 | UInt32 | UInt64 | UUID | ::Crypto::Bcrypt::Password |
-                Lustra::Expression::UnsafeSql | Lustra::Expression::Literal |
-                Nil
+                Lustra::Expression::UnsafeSql | Lustra::Expression::Literal?
 
     alias Symbolic = String | Symbol
     alias Selectable = Symbolic | Lustra::SQL::SelectBuilder

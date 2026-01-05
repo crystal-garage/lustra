@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v0.14.0] - 2026-01-05
 
 ### Added
 - **Range Support in WHERE/HAVING Clauses** - Full support for all Crystal range types with any comparable type (Int, Time, etc.):
@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Full range: `where { age.in?(...) }` -> `TRUE` (matches all values)
   - Works with Time ranges: `where { created_at.in?(start_time..end_time) }`
   - `between()` method also supports Time values: `where { created_at.between(start_time, end_time) }`
+
+### Fixed
+- `belongs_to` now correctly supports optional relations (`User?`) by making the foreign key nilable and skipping presence validation.
 
 ## [v0.13.0] - 2025-11-14
 ### Added

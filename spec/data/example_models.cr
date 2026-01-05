@@ -93,6 +93,20 @@ class PostWithTouch
   timestamps
 end
 
+class PostWithOptionalUser
+  include Lustra::Model
+
+  self.table = "posts_with_optional_user"
+
+  primary_key
+
+  column title : String
+
+  column content : String, presence: false
+
+  belongs_to user : User?
+end
+
 class Tag
   include Lustra::Model
 
@@ -311,6 +325,14 @@ class ModelSpecMigration123
       t.column "title", "string", null: false
 
       t.references to: "users", name: "user_id", on_delete: "cascade"
+
+      t.timestamps
+    end
+
+    create_table "posts_with_optional_user" do |t|
+      t.column "title", "string", null: false
+
+      t.references to: "users", name: "user_id", on_delete: "cascade", null: true
 
       t.timestamps
     end

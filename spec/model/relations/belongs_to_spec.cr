@@ -168,4 +168,16 @@ module BelongsToSpec
       end
     end
   end
+
+  describe("belongs_to relation (nilable)") do
+    it "access" do
+      temporary do
+        reinit_example_models
+
+        post = PostWithOptionalUser.create!(title: "title")
+
+        post.user.should be_nil
+      end
+    end
+  end
 end
