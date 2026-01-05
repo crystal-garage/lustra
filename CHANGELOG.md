@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works with Time ranges: `where { created_at.in?(start_time..end_time) }`
   - `between()` method also supports Time values: `where { created_at.between(start_time, end_time) }`
 
+### Fixed
+- `belongs_to` now correctly supports optional relations (`User?`) by making the foreign key nilable and skipping presence validation.
+
 ## [v0.13.0] - 2025-11-14
 ### Added
 - **PostgreSQL Geometric Types** - Comprehensive support for all PostgreSQL geometric data types:
