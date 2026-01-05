@@ -90,7 +90,7 @@ class Lustra::Expression
 
   alias AvailableLiteral = Int8 | Int16 | Int32 | Int64 | Float32 | Float64 |
                            UInt8 | UInt16 | UInt32 | UInt64 |
-                           Literal | String | Symbol | Time | Bool | Nil
+                           Literal | String | Symbol | Time | Bool?
 
   # A fast way to call `self.safe_literal`
   # See `safe_literal(x : _)`

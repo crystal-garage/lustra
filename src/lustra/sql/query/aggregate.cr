@@ -42,7 +42,7 @@ module Lustra::SQL::Query::Aggregate
   # SUM through a field and return a Float64
   # Note: This function is not safe injection-wise, so beware !.
   def sum(field) : Float64
-    agg("SUM(#{field})", Union(Int64 | PG::Numeric | Nil)).try(&.to_f) || 0.0
+    agg("SUM(#{field})", Union(Int64 | PG::Numeric?)).try(&.to_f) || 0.0
   end
 
   {% for x in %w[min max avg] %}
