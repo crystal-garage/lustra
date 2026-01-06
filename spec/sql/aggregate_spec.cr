@@ -32,12 +32,17 @@ module AggregateSpec
         temporary do
           reinit_example_models
 
-          User.create({first_name: "John", posts_count: 10})
-          User.create({first_name: "Jane", posts_count: 20})
+          User.create({first_name: "John", posts_count: -10})
+          User.create({first_name: "Jane", posts_count: -20})
           User.create({first_name: "Bob", posts_count: 30})
           User.create({first_name: "Alice", posts_count: 40})
 
-          sum = User.query.where { posts_count > 20 }.sum("posts_count")
+          query = User.query
+
+          sum = query.dup.where { posts_count < 0 }.sum("posts_count")
+          sum.should eq -30.0
+
+          sum = query.dup.where { posts_count > 0 }.sum("posts_count")
           sum.should eq 70.0
         end
       end
