@@ -4,8 +4,8 @@ module Lustra::SQL::Query::OffsetLimit
     getter offset : Int64? = nil
   end
 
-  def limit(x : Int?)
-    @limit = Int64.new(x)
+  def limit(x : Int32 | Int64?)
+    @limit = x ? Int64.new(x) : nil
     change!
   end
 
@@ -19,8 +19,8 @@ module Lustra::SQL::Query::OffsetLimit
     change!
   end
 
-  def offset(x : Int?)
-    @offset = Int64.new(x)
+  def offset(x : Int32 | Int64?)
+    @offset = x ? Int64.new(x) : nil
     change!
   end
 
