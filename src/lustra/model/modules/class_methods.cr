@@ -107,6 +107,17 @@ module Lustra::Model::ClassMethods
         Collection.new.use_connection(connection).from(self.full_table_name)
       end
 
+      # Return an empty, chainable collection (Rails-like `.none`).
+      # Useful for conditional branches where no records should be returned
+      # while keeping query chaining intact.
+      #
+      # ```
+      # User.none.where { active == true }.count # => 0
+      # ```
+      def self.none
+        query.where { raw("1 = 0") }
+      end
+
       # Returns a model using primary key equality
       # Returns `nil` if not found.
       def self.find(x)

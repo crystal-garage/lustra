@@ -150,4 +150,20 @@ describe Lustra::Model::ClassMethods do
       end
     end
   end
+
+  context "#none" do
+    it "returns an empty chainable relation" do
+      temporary do
+        reinit_example_models
+
+        User.create!(first_name: "John")
+
+        none = User.none
+
+        none.count.should eq(0)
+        none.where { first_name == "John" }.count.should eq(0)
+        none.first.should be_nil
+      end
+    end
+  end
 end
