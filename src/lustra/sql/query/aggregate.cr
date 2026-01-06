@@ -36,7 +36,7 @@ module Lustra::SQL::Query::Aggregate
   #
   # This return only one row, and should not be used with `group_by` (prefer pluck or fetch)
   def agg(field, x : X.class) forall X
-    clear_select.select(field).scalar(X)
+    clear_select.clear_order_bys.select(field).scalar(X)
   end
 
   # SUM through a field and return a Float64
