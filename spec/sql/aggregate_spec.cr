@@ -61,6 +61,20 @@ module AggregateSpec
         end
       end
 
+      it "works with LIMIT and OFFSET" do
+        temporary do
+          reinit_example_models
+
+          User.create({first_name: "John", posts_count: 10})
+          User.create({first_name: "Jane", posts_count: 20})
+          User.create({first_name: "Bob", posts_count: 30})
+          User.create({first_name: "Alice", posts_count: 40})
+
+          sum = User.query.limit(2).offset(1).sum("posts_count")
+          sum.should eq 50.0
+        end
+      end
+
       it "handles zero values" do
         temporary do
           reinit_example_models
