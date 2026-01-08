@@ -183,6 +183,17 @@ User.query.use_connection("readonly").where { active == true }
 # For raw SQL queries
 Lustra::SQL.execute("readonly", "SELECT * FROM users")
 Lustra::SQL.select.from("users").where { active == true }.use_connection("readonly").to_a
+
+# For querying system tables or complex data without models
+Lustra::SQL.select("name", "abbrev").from(:pg_timezone_names).where { raw("abbrev IS NOT NULL") }.fetch do |row|
+  name = row["name"]
+  abbrev = row["abbrev"]
+  puts "#{name}: #{abbrev}"
+end
+
+# Other ways to get data from raw queries
+results = Lustra::SQL.select.from(:pg_timezone_names).to_a  # Get all results as array
+first = Lustra::SQL.select.from(:pg_timezone_names).first   # Get first result
 ```
 
 ### Model definition
