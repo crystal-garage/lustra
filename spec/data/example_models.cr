@@ -31,7 +31,7 @@ class User
 
   has_many posts : Post, autosave: true
   has_many comments : Comment
-  has_one info : UserInfo?
+  has_one info : UserInfo
   has_many categories : Category, through: Post
 
   has_many relationships : Relationship, foreign_key: "master_id"
@@ -133,6 +133,7 @@ class UserInfo
 
   belongs_to user : User, foreign_key_type: Int64?
   column registration_number : Int64
+  column bio : String?
 end
 
 class Category
@@ -356,6 +357,7 @@ class ModelSpecMigration123
       t.references to: "users", name: "user_id", on_delete: "cascade", null: true
 
       t.column "registration_number", "int64", index: true
+      t.column "bio", "string", null: true
 
       t.timestamps
     end
