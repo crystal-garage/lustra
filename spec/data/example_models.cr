@@ -164,9 +164,6 @@ end
 class Relationship
   include Lustra::Model
 
-  # No primary_key since the table is created with id: false
-  # The composite primary key is (master_id, dependency_id)
-
   belongs_to master : User, foreign_key: "master_id"
   belongs_to dependency : User, foreign_key: "dependency_id"
 end
