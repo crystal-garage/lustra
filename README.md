@@ -1360,11 +1360,12 @@ Another example - adding custom constraints:
 ```crystal
 def change(dir)
   dir.up do
-    execute "ALTER TABLE users ADD CONSTRAINT valid_email CHECK (email ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$')"
+    # Username format validation (alphanumeric + underscore, 3-32 chars, starts with letter)
+    execute "ALTER TABLE users ADD CONSTRAINT valid_username CHECK (username ~ '^[a-zA-Z][a-zA-Z0-9_]{2,31}$')"
   end
 
   dir.down do
-    execute "ALTER TABLE users DROP CONSTRAINT valid_email"
+    execute "ALTER TABLE users DROP CONSTRAINT valid_username"
   end
 end
 ```
