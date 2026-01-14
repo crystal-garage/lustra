@@ -1310,6 +1310,21 @@ def change(dir)
 end
 ```
 
+###### Column Comments
+
+```crystal
+def change(dir)
+  # Set comment (not automatically reversible)
+  change_column_comment "users", "email", "Primary email address"
+
+  # Remove comment
+  change_column_comment "users", "bio", nil
+
+  # Reversible change using from/to
+  change_column_comment "posts", "state", {from: "old_comment", to: "new_comment"}
+end
+```
+
 ##### Indexing
 
 Add indexes to improve query performance:

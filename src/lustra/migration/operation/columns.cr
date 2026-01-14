@@ -14,6 +14,7 @@ module Lustra::Migration
     @nullable : Bool
 
     @with_values : Bool
+    @comment : String?
 
     def initialize(
       @table,
@@ -23,6 +24,7 @@ module Lustra::Migration
       @constraint = nil,
       @default = nil,
       @with_values = false,
+      @comment = nil,
     )
       @datatype = Lustra::Migration::Helper.datatype(datatype.to_s)
     end
@@ -32,11 +34,18 @@ module Lustra::Migration
       default = @default
       with_values = @with_values
 
-      [[
+      statements = [[
         "ALTER TABLE", @table, "ADD", @column, @datatype, @nullable ? "NULL" : "NOT NULL",
         constraint ? "CONSTRAINT #{constraint}" : nil, default ? "DEFAULT #{default}" : nil,
         with_values ? "WITH VALUES" : nil,
       ].compact.join(" ")]
+
+      if comment = @comment
+        esc = comment.gsub("'", "''")
+        statements << "COMMENT ON COLUMN #{@table}.#{@column} IS '#{esc}'"
+      end
+
+      statements
     end
 
     def down : Array(String)
@@ -166,11 +175,51 @@ module Lustra::Migration
       str.underscore.gsub(/[^a-zA-Z0-9_]+/, "_")
     end
   end
+
+  # Set or change a column's comment
+  class ChangeColumnComment < Operation
+    @table : String
+    @column_name : String
+    @from : String?
+    @to : String?
+
+    def initialize(@table, @column_name, @from : String?, @to : String?)
+    end
+
+    private def esc(txt : String)
+      txt.gsub("'", "''")
+    end
+
+    def up : Array(String)
+      if (to = @to)
+        ["COMMENT ON COLUMN #{@table}.#{@column_name} IS '#{esc(to)}';"]
+      else
+        ["COMMENT ON COLUMN #{@table}.#{@column_name} IS NULL;"]
+      end
+    end
+
+    def down : Array(String)
+      if (from = @from)
+        ["COMMENT ON COLUMN #{@table}.#{@column_name} IS '#{esc(from)}';"]
+      else
+        ["COMMENT ON COLUMN #{@table}.#{@column_name} IS NULL;"]
+      end
+    end
+  end
 end
 
 module Lustra::Migration::Helper
   # Add a column to a specific table
-  def add_column(table, column, datatype, nullable = false, constraint = nil, default = nil, with_values = false)
+  def add_column(
+    table,
+    column,
+    datatype,
+    nullable = false,
+    constraint = nil,
+    default = nil,
+    with_values = false,
+    comment : String? = nil,
+  )
     add_operation(
       Lustra::Migration::AddColumn.new(
         table,
@@ -179,7 +228,8 @@ module Lustra::Migration::Helper
         nullable,
         constraint,
         default,
-        with_values
+        with_values,
+        comment
       )
     )
   end
@@ -211,6 +261,21 @@ module Lustra::Migration::Helper
   def add_index(table, columns, name = nil, unique = false, using = nil)
     add_operation(
       Lustra::Migration::AddIndex.new(table, columns, name, unique, using)
+    )
+  end
+
+  # Change a column's comment.
+  # - Pass a String to set comment, or nil to remove it (not auto-reversible).
+  # - Pass a NamedTuple {from: "old", to: "new"} to make the change reversible.
+  def change_column_comment(table, column, to : String?)
+    add_operation(
+      Lustra::Migration::ChangeColumnComment.new(table, column, nil, to)
+    )
+  end
+
+  def change_column_comment(table, column, changes : NamedTuple(from: String?, to: String?))
+    add_operation(
+      Lustra::Migration::ChangeColumnComment.new(table, column, changes[:from], changes[:to])
     )
   end
 end
