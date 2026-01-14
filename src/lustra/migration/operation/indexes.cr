@@ -32,7 +32,18 @@ module Lustra::Migration
     end
 
     def up : Array(String)
-      [["CREATE", print_unique, "INDEX", safe_name(@name), "ON", @table, print_using, print_columns].compact.join(" ")]
+      [
+        [
+          "CREATE",
+          print_unique,
+          "INDEX",
+          safe_name(@name),
+          "ON",
+          @table,
+          print_using,
+          print_columns,
+        ].compact.join(" "),
+      ]
     end
 
     def down : Array(String)
@@ -47,15 +58,38 @@ end
 
 module Lustra::Migration::Helper
   # Add a column to a specific table
-  def create_index(table, column, name = nil,
-                   using = nil, unique = false)
-    add_operation(Lustra::Migration::CreateIndex.new(table, fields: [column], name: name,
-      using: using, unique: unique))
+  def create_index(
+    table,
+    column,
+    name = nil,
+    using = nil,
+    unique = false,
+  )
+    add_operation(
+      Lustra::Migration::CreateIndex.new(
+        table,
+        fields: [column],
+        name: name,
+        using: using, unique: unique
+      )
+    )
   end
 
-  def create_index(table, columns : Array(String), name = nil,
-                   using = nil, unique = false)
-    add_operation(Lustra::Migration::CreateIndex.new(table, fields: columns, name: name,
-      using: using, unique: unique))
+  def create_index(
+    table,
+    columns : Array(String),
+    name = nil,
+    using = nil,
+    unique = false,
+  )
+    add_operation(
+      Lustra::Migration::CreateIndex.new(
+        table,
+        fields: columns,
+        name: name,
+        using: using,
+        unique: unique
+      )
+    )
   end
 end
