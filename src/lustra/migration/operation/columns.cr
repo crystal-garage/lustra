@@ -15,7 +15,15 @@ module Lustra::Migration
 
     @with_values : Bool
 
-    def initialize(@table, @column, datatype, @nullable = false, @constraint = nil, @default = nil, @with_values = false)
+    def initialize(
+      @table,
+      @column,
+      datatype,
+      @nullable = false,
+      @constraint = nil,
+      @default = nil,
+      @with_values = false,
+    )
       @datatype = Lustra::Migration::Helper.datatype(datatype.to_s)
     end
 
@@ -77,7 +85,12 @@ module Lustra::Migration
     @new_column_type : String
     @old_column_type : String
 
-    def initialize(@table, @column_name, old_column_type, new_column_type)
+    def initialize(
+      @table,
+      @column_name,
+      old_column_type,
+      new_column_type,
+    )
       @old_column_type = Lustra::Migration::Helper.datatype(old_column_type)
       @new_column_type = Lustra::Migration::Helper.datatype(new_column_type)
     end
@@ -141,6 +154,7 @@ module Lustra::Migration
     def up : Array(String)
       unique_keyword = @unique ? "UNIQUE " : ""
       using_clause = @using ? "USING #{@using}" : ""
+
       ["CREATE #{unique_keyword}INDEX #{@index_name} ON #{@table} #{using_clause}(#{@columns.join(", ")});".gsub(/\s+/, " ").strip]
     end
 
@@ -157,27 +171,46 @@ end
 module Lustra::Migration::Helper
   # Add a column to a specific table
   def add_column(table, column, datatype, nullable = false, constraint = nil, default = nil, with_values = false)
-    add_operation(Lustra::Migration::AddColumn.new(table, column, datatype,
-      nullable, constraint, default, with_values))
+    add_operation(
+      Lustra::Migration::AddColumn.new(
+        table,
+        column,
+        datatype,
+        nullable,
+        constraint,
+        default,
+        with_values
+      )
+    )
   end
 
   def drop_column(table, column, type)
-    add_operation(Lustra::Migration::RemoveColumn.new(table, column, type))
+    add_operation(
+      Lustra::Migration::RemoveColumn.new(table, column, type)
+    )
   end
 
   def rename_column(table, from, to)
-    add_operation(Lustra::Migration::RenameColumn.new(table, from, to))
+    add_operation(
+      Lustra::Migration::RenameColumn.new(table, from, to)
+    )
   end
 
   def change_column_type(table, column, from, to)
-    add_operation(Lustra::Migration::ChangeColumnType.new(table, column, from, to))
+    add_operation(
+      Lustra::Migration::ChangeColumnType.new(table, column, from, to)
+    )
   end
 
   def change_column_null(table, column, null : Bool, default = nil)
-    add_operation(Lustra::Migration::ChangeColumnNull.new(table, column, null, default))
+    add_operation(
+      Lustra::Migration::ChangeColumnNull.new(table, column, null, default)
+    )
   end
 
   def add_index(table, columns, name = nil, unique = false, using = nil)
-    add_operation(Lustra::Migration::AddIndex.new(table, columns, name, unique, using))
+    add_operation(
+      Lustra::Migration::AddIndex.new(table, columns, name, unique, using)
+    )
   end
 end
