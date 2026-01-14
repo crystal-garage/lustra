@@ -191,7 +191,7 @@ module Lustra::Migration
     end
 
     def up : Array(String)
-      if (to = @to)
+      if to = @to
         ["COMMENT ON COLUMN #{@table}.#{@column_name} IS '#{esc(to)}';"]
       else
         ["COMMENT ON COLUMN #{@table}.#{@column_name} IS NULL;"]
@@ -199,7 +199,7 @@ module Lustra::Migration
     end
 
     def down : Array(String)
-      if (from = @from)
+      if from = @from
         ["COMMENT ON COLUMN #{@table}.#{@column_name} IS '#{esc(from)}';"]
       else
         ["COMMENT ON COLUMN #{@table}.#{@column_name} IS NULL;"]
