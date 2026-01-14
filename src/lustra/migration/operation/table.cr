@@ -3,7 +3,7 @@ module Lustra::Migration
   class Table < Operation
     record ColumnOperation, column : String, type : String,
       null : Bool = false, default : SQL::Any = nil, primary : Bool = false,
-      array : Bool = false
+      array : Bool = false, comment : String? = nil
 
     record IndexOperation, fields : Array(String), name : String,
       using : String? = nil, unique : Bool = false
@@ -32,8 +32,15 @@ module Lustra::Migration
       add_index(["updated_at"])
     end
 
-    def references(to, name : String? = nil, on_delete = "restrict", type = "bigint",
-                   null = false, foreign_key = "id", primary = false)
+    def references(
+      to,
+      name : String? = nil,
+      on_delete = "restrict",
+      type = "bigint",
+      null = false,
+      foreign_key = "id",
+      primary = false,
+    )
       name ||= to.singularize.underscore + "_id"
 
       add_column(name, type, null: null, index: true)
@@ -42,17 +49,43 @@ module Lustra::Migration
         on_delete: on_delete.to_s, primary: primary)
     end
 
-    def add_fkey(fields : Array(String), table : String,
-                 foreign_fields : Array(String), on_delete : String, primary : Bool)
-      self.fkey_operations << FkeyOperation.new(fields: fields, table: table,
-        foreign_fields: foreign_fields, on_delete: on_delete, primary: primary)
+    def add_fkey(
+      fields : Array(String),
+      table : String,
+      foreign_fields : Array(String),
+      on_delete : String,
+      primary : Bool,
+    )
+      self.fkey_operations << FkeyOperation.new(
+        fields: fields,
+        table: table,
+        foreign_fields: foreign_fields,
+        on_delete: on_delete,
+        primary: primary
+      )
     end
 
     # Add/alter a column for this table.
-    def add_column(column, type, default = nil, null = true, primary = false,
-                   index = false, unique = false, array = false)
-      self.column_operations << ColumnOperation.new(column: column.to_s, type: type.to_s,
-        default: default, null: null, primary: primary, array: array)
+    def add_column(
+      column,
+      type,
+      default = nil,
+      null = true,
+      primary = false,
+      index = false,
+      unique = false,
+      array = false,
+      comment : String? = nil,
+    )
+      self.column_operations << ColumnOperation.new(
+        column: column.to_s,
+        type: type.to_s,
+        default: default,
+        null: null,
+        primary: primary,
+        array: array,
+        comment: comment
+      )
 
       if unique
         add_index(fields: [column.to_s], unique: true)
@@ -99,15 +132,17 @@ module Lustra::Migration
 
       content = "(#{columns_and_fkeys.join(", ")})" unless columns_and_fkeys.empty?
 
-      arr = if is_create?
-              [
-                ["CREATE TABLE", full_name, content].compact.join(" "),
-              ]
-            else
-              # To implement later
-              [] of String
-            end
-      arr + print_indexes
+      arr =
+        if is_create?
+          [
+            ["CREATE TABLE", full_name, content].compact.join(" "),
+          ]
+        else
+          # To implement later
+          [] of String
+        end
+
+      arr + print_indexes + print_comments
     end
 
     def down : Array(String)
@@ -119,14 +154,15 @@ module Lustra::Migration
     private def print_fkeys
       # FOREIGN KEY (b, c) REFERENCES other_table (c1, c2)
       fkey_operations.map do |x|
-        ["FOREIGN KEY",
-         "(" + x.fields.join(", ") + ")",
-         "REFERENCES",
-         x.table,
-         "(" + x.foreign_fields.join(", ") + ")",
-         "ON DELETE",
-         x.on_delete]
-          .compact.join(" ")
+        [
+          "FOREIGN KEY",
+          "(" + x.fields.join(", ") + ")",
+          "REFERENCES",
+          x.table,
+          "(" + x.foreign_fields.join(", ") + ")",
+          "ON DELETE",
+          x.on_delete,
+        ].compact.join(" ")
       end
     end
 
@@ -147,12 +183,24 @@ module Lustra::Migration
 
     private def print_columns
       column_operations.map do |x|
-        [x.column,
-         x.type + (x.array ? "[]" : ""),
-         x.null ? nil : "NOT NULL",
-         !x.default.nil? ? "DEFAULT #{x.default}" : nil,
-         x.primary ? "PRIMARY KEY" : nil]
-          .compact.join(" ")
+        [
+          x.column,
+          x.type + (x.array ? "[]" : ""),
+          x.null ? nil : "NOT NULL",
+          !x.default.nil? ? "DEFAULT #{x.default}" : nil,
+          x.primary ? "PRIMARY KEY" : nil,
+        ].compact.join(" ")
+      end
+    end
+
+    private def print_comments
+      column_operations.compact_map do |x|
+        next unless x.comment
+
+        col = Lustra::SQL.escape(x.column)
+        txt = x.comment.as(String).gsub("'", "''")
+
+        "COMMENT ON COLUMN #{full_name}.#{col} IS '#{txt}'"
       end
     end
 
@@ -165,24 +213,34 @@ module Lustra::Migration
     end
 
     def column(name, type, default = nil, null = true, primary = false,
-               index = false, unique = false, array = false)
-      type = case type.to_s
-             when "string"
-               "text"
-             when "int32", "integer"
-               "integer"
-             when "int64", "long"
-               "bigint"
-             when "bigdecimal", "numeric"
-               "numeric"
-             when "datetime"
-               "timestamp without time zone"
-             else
-               type.to_s
-             end
+               index = false, unique = false, array = false, comment : String? = nil)
+      type =
+        case type.to_s
+        when "string"
+          "text"
+        when "int32", "integer"
+          "integer"
+        when "int64", "long"
+          "bigint"
+        when "bigdecimal", "numeric"
+          "numeric"
+        when "datetime"
+          "timestamp without time zone"
+        else
+          type.to_s
+        end
 
-      add_column(name.to_s, type: type, default: default, null: null,
-        primary: primary, index: index, unique: unique, array: array)
+      add_column(
+        name.to_s,
+        type: type,
+        default: default,
+        null: null,
+        primary: primary,
+        index: index,
+        unique: unique,
+        array: array,
+        comment: comment
+      )
     end
   end
 

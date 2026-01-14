@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Migrations: `change_column_null` operation to toggle NULL constraints with optional default backfill.
+- Migrations: `add_index` helper supports `using` (e.g., `gin`, `gist`, `btree`) for index type selection.
+- Column comments: `add_column(..., comment: String?)` emits `COMMENT ON COLUMN` on creation.
+- Column comments: `change_column_comment(table, column, to : String?)` and `change_column_comment(table, column, changes : NamedTuple(from: String?, to: String?))` for reversible comment changes.
+
 ## [v0.15.0] - 2026-01-10
 
 ### Added
