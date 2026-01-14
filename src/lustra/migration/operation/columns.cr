@@ -90,6 +90,41 @@ module Lustra::Migration
       ["ALTER TABLE #{@table} ALTER COLUMN #{@column_name} SET DATA TYPE #{@old_column_type};"]
     end
   end
+
+  class ChangeColumnNull < Operation
+    @table : String
+    @column_name : String
+    @null : Bool
+    @default_value : String?
+
+    def initialize(@table, @column_name, @null, @default_value = nil)
+    end
+
+    def up : Array(String)
+      statements = [] of String
+
+      # If setting NOT NULL and a default value is provided, update existing NULLs first
+      if !@null && @default_value
+        statements << "UPDATE #{@table} SET #{@column_name} = #{@default_value} WHERE #{@column_name} IS NULL;"
+      end
+
+      if @null
+        statements << "ALTER TABLE #{@table} ALTER COLUMN #{@column_name} DROP NOT NULL;"
+      else
+        statements << "ALTER TABLE #{@table} ALTER COLUMN #{@column_name} SET NOT NULL;"
+      end
+
+      statements
+    end
+
+    def down : Array(String)
+      if @null
+        ["ALTER TABLE #{@table} ALTER COLUMN #{@column_name} SET NOT NULL;"]
+      else
+        ["ALTER TABLE #{@table} ALTER COLUMN #{@column_name} DROP NOT NULL;"]
+      end
+    end
+  end
 end
 
 module Lustra::Migration::Helper
@@ -109,5 +144,9 @@ module Lustra::Migration::Helper
 
   def change_column_type(table, column, from, to)
     add_operation(Lustra::Migration::ChangeColumnType.new(table, column, from, to))
+  end
+
+  def change_column_null(table, column, null : Bool, default = nil)
+    add_operation(Lustra::Migration::ChangeColumnNull.new(table, column, null, default))
   end
 end
