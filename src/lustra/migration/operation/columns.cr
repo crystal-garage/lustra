@@ -206,6 +206,37 @@ module Lustra::Migration
       end
     end
   end
+
+  # Set or change a column's default value (reversible when using from/to)
+  class ChangeColumnDefault < Operation
+    @table : String
+    @column_name : String
+    @from : String?
+    @to : String?
+
+    def initialize(@table, @column_name, @from : String?, @to : String?)
+    end
+
+    private def val(x : String?)
+      x.nil? ? nil : x
+    end
+
+    def up : Array(String)
+      if to = @to
+        ["ALTER TABLE #{@table} ALTER COLUMN #{@column_name} SET DEFAULT #{to};"]
+      else
+        ["ALTER TABLE #{@table} ALTER COLUMN #{@column_name} DROP DEFAULT;"]
+      end
+    end
+
+    def down : Array(String)
+      if from = @from
+        ["ALTER TABLE #{@table} ALTER COLUMN #{@column_name} SET DEFAULT #{from};"]
+      else
+        ["ALTER TABLE #{@table} ALTER COLUMN #{@column_name} DROP DEFAULT;"]
+      end
+    end
+  end
 end
 
 module Lustra::Migration::Helper
@@ -276,6 +307,21 @@ module Lustra::Migration::Helper
   def change_column_comment(table, column, changes : NamedTuple(from: String?, to: String?))
     add_operation(
       Lustra::Migration::ChangeColumnComment.new(table, column, changes[:from], changes[:to])
+    )
+  end
+
+  # Change a column's default value.
+  # - Pass a SQL literal as String to set the default (e.g. "'guest'", "1", "now()") or nil to drop it.
+  # - Pass a NamedTuple {from: <old>, to: <new>} to make the change reversible.
+  def change_column_default(table, column, to : String?)
+    add_operation(
+      Lustra::Migration::ChangeColumnDefault.new(table, column, nil, to)
+    )
+  end
+
+  def change_column_default(table, column, changes : NamedTuple(from: String?, to: String?))
+    add_operation(
+      Lustra::Migration::ChangeColumnDefault.new(table, column, changes[:from], changes[:to])
     )
   end
 end
