@@ -1385,6 +1385,25 @@ def change(dir)
 end
 ```
 
+##### Schema Introspection
+
+Query table schema information (columns, indexes) programmatically:
+
+```crystal
+# Get table schema snapshot
+info = Admin.schema_description
+
+# Access column details
+info.columns.each do |col|
+  puts "#{col.name} => #{col.data_type} (nullable: #{col.nullable})"
+end
+
+# Access indexes
+info.indexes.each do |idx|
+  puts "#{idx.name}: #{idx.definition}"
+end
+```
+
 Using `execute` for complex modifications:
 
 ```crystal
