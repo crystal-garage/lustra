@@ -1325,6 +1325,24 @@ def change(dir)
 end
 ```
 
+  ###### Changing Default Values
+
+  ```crystal
+  def change(dir)
+    # Set a new default (SQL literal as String)
+    change_column_default "suppliers", "qualification", "'new'"
+
+    # Numeric default
+    change_column_default "accounts", "authorized", "1"
+
+    # Drop default
+    change_column_default "users", "email", nil
+
+    # Reversible change using from/to
+    change_column_default "posts", "state", {from: nil, to: "'draft'"}
+  end
+  ```
+
 ##### Indexing
 
 Add indexes to improve query performance:

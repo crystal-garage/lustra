@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Column comments: `add_column(..., comment: String?)` emits `COMMENT ON COLUMN` on creation.
 - Column comments: `change_column_comment(table, column, to : String?)` and `change_column_comment(table, column, changes : NamedTuple(from: String?, to: String?))` for reversible comment changes.
 - Models: `schema_description` to query table columns and indexes programmatically.
+ - Migrations: `change_column_default(table, column, default_or_changes)` to set, drop, or make column default changes reversible.
 
 ## [v0.15.0] - 2026-01-10
 
