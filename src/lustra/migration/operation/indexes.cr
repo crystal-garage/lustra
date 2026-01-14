@@ -70,7 +70,8 @@ module Lustra::Migration::Helper
         table,
         fields: [column],
         name: name,
-        using: using, unique: unique
+        using: using,
+        unique: unique
       )
     )
   end
