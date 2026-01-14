@@ -253,46 +253,6 @@ module Lustra::Migration
     end
   end
 
-  class AddTable < Operation
-    getter table : String
-    getter schema : String
-
-    def initialize(@table, @schema)
-    end
-
-    def full_name
-      {Lustra::SQL.escape(@schema), Lustra::SQL.escape(@name)}.join(".")
-    end
-
-    def up : Array(String)
-      ["CREATE TABLE #{@table}"]
-    end
-
-    def down : Array(String)
-      ["DROP TABLE #{@table}"]
-    end
-  end
-
-  class DropTable < Operation
-    getter table : String
-    getter schema : String
-
-    def initialize(@table, @schema)
-    end
-
-    def full_name
-      {Lustra::SQL.escape(@schema), Lustra::SQL.escape(@name)}.join(".")
-    end
-
-    def up : Array(String)
-      ["DROP TABLE #{@table}"]
-    end
-
-    def down : Array(String)
-      ["CREATE TABLE #{@table}"]
-    end
-  end
-
   module Helper
     #
     # Helper used in migration to create a new table.
