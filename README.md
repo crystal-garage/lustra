@@ -1336,6 +1336,54 @@ def change(dir)
 end
 ```
 
+##### Raw SQL Migrations
+
+For complex operations not covered by the built-in helpers, use `execute` with `dir.up` and `dir.down`:
+
+```crystal
+def change(dir)
+  dir.up do
+    execute "ALTER TABLE users DROP CONSTRAINT users_pkey"
+    execute "ALTER TABLE users DROP COLUMN id"
+    execute "ALTER TABLE users ADD COLUMN email_hash TEXT UNIQUE"
+  end
+
+  dir.down do
+    execute "ALTER TABLE users DROP COLUMN email_hash"
+    execute "ALTER TABLE users ADD COLUMN id BIGSERIAL PRIMARY KEY"
+  end
+end
+```
+
+Another example - adding custom constraints:
+
+```crystal
+def change(dir)
+  dir.up do
+    execute "ALTER TABLE users ADD CONSTRAINT valid_email CHECK (email ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$')"
+  end
+
+  dir.down do
+    execute "ALTER TABLE users DROP CONSTRAINT valid_email"
+  end
+end
+```
+
+Using `execute` for complex modifications:
+
+```crystal
+def change(dir)
+  dir.up do
+    execute "CREATE INDEX idx_users_lower_email ON users (LOWER(email))"
+    execute "UPDATE users SET email = LOWER(email) WHERE email IS NOT NULL"
+  end
+
+  dir.down do
+    execute "DROP INDEX idx_users_lower_email"
+  end
+end
+```
+
 #### Constraints
 
 I strongly encourage to use the foreign key constraints of postgres for your references:
