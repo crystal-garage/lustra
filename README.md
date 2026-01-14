@@ -1225,6 +1225,8 @@ Migration must implement the method `change(dir : Migration::Direction)`
 Direction is the current direction of the migration (up or down).
 It provides few methods: `up?`, `down?`, `up(&block)`, `down(&block)`
 
+##### Creating Tables
+
 You can create a table:
 
 ```crystal
@@ -1237,6 +1239,100 @@ def change(dir)
 
     t.timestamps
   end
+end
+```
+
+##### Column Operations
+
+In addition to defining columns during table creation, you can also modify columns using standalone migration operations:
+
+###### Adding Columns
+
+```crystal
+def change(dir)
+  # Simple column addition
+  add_column "users", "phone", "varchar(20)"
+
+  # Column with default value
+  add_column "users", "status", "varchar", default: "'active'"
+
+  # Nullable column
+  add_column "users", "bio", "text", nullable: true
+
+  # Column with constraint
+  add_column "users", "email_verified", "boolean", default: "false", nullable: false
+
+  # Add with WITH VALUES for NOT NULL columns with existing data
+  add_column "posts", "category", "varchar", nullable: false, default: "'uncategorized'", with_values: true
+end
+```
+
+###### Removing Columns
+
+```crystal
+def change(dir)
+  drop_column "users", "phone", "varchar(20)"
+end
+```
+
+###### Renaming Columns
+
+```crystal
+def change(dir)
+  rename_column "users", "old_name", "new_name"
+end
+```
+
+###### Changing Column Types
+
+```crystal
+def change(dir)
+  # Convert integer to bigint
+  change_column_type "users", "id", "integer", "bigint"
+
+  # Convert varchar to text
+  change_column_type "posts", "description", "varchar", "text"
+end
+```
+
+###### Changing Null Constraints
+
+```crystal
+def change(dir)
+  # Add NOT NULL constraint
+  change_column_null "users", "email", false
+
+  # Add NOT NULL with value replacement for existing NULLs
+  change_column_null "posts", "content", false, "'No content provided'"
+
+  # Allow NULLs
+  change_column_null "users", "phone", true
+end
+```
+
+##### Indexing
+
+Add indexes to improve query performance:
+
+```crystal
+def change(dir)
+  # Simple index on single column
+  add_index "users", "email"
+
+  # Unique index
+  add_index "users", "email", unique: true
+
+  # Composite index on multiple columns
+  add_index "posts", ["user_id", "created_at"]
+
+  # GIN index for array/JSONB columns
+  add_index "posts", "tags", using: "gin"
+
+  # GIST index for geometric/range types
+  add_index "locations", "coordinates", using: "gist"
+
+  # Custom index name
+  add_index "users", "email", name: "idx_users_email_unique", unique: true
 end
 ```
 
