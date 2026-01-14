@@ -212,8 +212,17 @@ module Lustra::Migration
                "Tip: use instead `self.column(NAME, \"#{caller.name}\", ...)`" %}
     end
 
-    def column(name, type, default = nil, null = true, primary = false,
-               index = false, unique = false, array = false, comment : String? = nil)
+    def column(
+      name,
+      type,
+      default = nil,
+      null = true,
+      primary = false,
+      index = false,
+      unique = false,
+      array = false,
+      comment : String? = nil,
+    )
       type =
         case type.to_s
         when "string"
