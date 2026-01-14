@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrations: `add_index` helper supports `using` (e.g., `gin`, `gist`, `btree`) for index type selection.
 - Column comments: `add_column(..., comment: String?)` emits `COMMENT ON COLUMN` on creation.
 - Column comments: `change_column_comment(table, column, to : String?)` and `change_column_comment(table, column, changes : NamedTuple(from: String?, to: String?))` for reversible comment changes.
+- Models: `schema_description` to query table columns and indexes programmatically.
 
 ## [v0.15.0] - 2026-01-10
 

@@ -18,6 +18,7 @@ module Lustra::Model
   include Lustra::Model::HasRelations
   include Lustra::Model::HasScope
   include Lustra::Model::ClassMethods
+  include Lustra::Model::Introspection
   include Lustra::Model::HasFactory
   include Lustra::Model::Initializer
   include Lustra::Model::JSONDeserialize
