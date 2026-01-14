@@ -125,6 +125,33 @@ module Lustra::Migration
       end
     end
   end
+
+  class AddIndex < Operation
+    @table : String
+    @columns : Array(String)
+    @index_name : String
+    @unique : Bool
+    @using : String?
+
+    def initialize(@table, columns, name = nil, @unique = false, @using = nil)
+      @columns = columns.is_a?(Array) ? columns.map(&.to_s) : [columns.to_s]
+      @index_name = name || safe_index_name("index_#{@table}_on_#{@columns.join("_and_")}")
+    end
+
+    def up : Array(String)
+      unique_keyword = @unique ? "UNIQUE " : ""
+      using_clause = @using ? "USING #{@using}" : ""
+      ["CREATE #{unique_keyword}INDEX #{@index_name} ON #{@table} #{using_clause}(#{@columns.join(", ")});".gsub(/\s+/, " ").strip]
+    end
+
+    def down : Array(String)
+      ["DROP INDEX #{@index_name};"]
+    end
+
+    private def safe_index_name(str)
+      str.underscore.gsub(/[^a-zA-Z0-9_]+/, "_")
+    end
+  end
 end
 
 module Lustra::Migration::Helper
@@ -148,5 +175,9 @@ module Lustra::Migration::Helper
 
   def change_column_null(table, column, null : Bool, default = nil)
     add_operation(Lustra::Migration::ChangeColumnNull.new(table, column, null, default))
+  end
+
+  def add_index(table, columns, name = nil, unique = false, using = nil)
+    add_operation(Lustra::Migration::AddIndex.new(table, columns, name, unique, using))
   end
 end
