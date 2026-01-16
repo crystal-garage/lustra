@@ -47,7 +47,7 @@ module MigrationSpec
 
           Lustra::Reflection::Table.public.where { table_name == "test" }.empty?.should be_false
 
-          table = Lustra::Reflection::Table.public.find! { table_name == "test" }
+          table = Lustra::Reflection::Table.public.find_by! { table_name == "test" }
           columns = table.columns
 
           columns.dup.where { column_name == "first_name" }.empty?.should be_false
