@@ -115,13 +115,13 @@ module Lustra::Model::ClassMethods
       # User.none.where { active == true }.count # => 0
       # ```
       def self.none
-        query.where { raw("1 = 0") }
+        query.none
       end
 
       # Returns a model using primary key equality
       # Returns `nil` if not found.
       def self.find(x)
-        query.where { raw(__pkey__) == x }.first
+        query.find(x)
       end
 
       # Find multiple models by an array of primary keys.
@@ -132,13 +132,13 @@ module Lustra::Model::ClassMethods
       # users.size # => 0..3 depending on how many were found
       # ```
       def self.find(ids : Array)
-        query.where { raw(__pkey__).in?(ids) }.to_a
+        query.find(ids)
       end
 
       # Returns a model using primary key equality.
       # Raises error if the model is not found.
       def self.find!(x)
-        find(x) || raise Lustra::SQL::RecordNotFoundError.new
+        query.find!(x)
       end
 
       # Find multiple models by an array of primary keys.
@@ -148,11 +148,7 @@ module Lustra::Model::ClassMethods
       # users = User.find!([1, 2, 3]) # Raises if any ID is not found
       # ```
       def self.find!(ids : Array)
-        results = find(ids)
-        if results.size != ids.size
-          raise Lustra::SQL::RecordNotFoundError.new("Couldn't find all records with IDs: #{ids.inspect}")
-        end
-        results
+        query.find!(ids)
       end
 
       # Find a model by column values. Returns `nil` if not found.
@@ -163,12 +159,12 @@ module Lustra::Model::ClassMethods
       # user = User.find_by(first_name: "John", last_name: "Doe")
       # ```
       def self.find_by(**tuple)
-        query.find(**tuple)
+        query.find_by(**tuple)
       end
 
       # :ditto:
       def self.find_by(tuple : NamedTuple)
-        query.find(tuple)
+        query.find_by(tuple)
       end
 
       # Find a model by column values. Raises error if not found.
@@ -178,12 +174,12 @@ module Lustra::Model::ClassMethods
       # user = User.find_by!(email: "test@example.com")
       # ```
       def self.find_by!(**tuple)
-        query.find!(**tuple)
+        query.find_by!(**tuple)
       end
 
       # :ditto:
       def self.find_by!(tuple : NamedTuple)
-        query.find!(tuple)
+        query.find_by!(tuple)
       end
 
       # Build a new empty model and fill the columns using the NamedTuple in argument.

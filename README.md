@@ -350,7 +350,7 @@ user = User.find_by!(email: "test@example.com") # Raises error if not found
 user = User.find_by(first_name: "John", last_name: "Doe")
 
 # Using query with expression engine
-u : User? = User.query.find { email =~ /yacine/i }
+u : User? = User.query.find_by { email =~ /yacine/i }
 ```
 
 ##### Fetch multiple models

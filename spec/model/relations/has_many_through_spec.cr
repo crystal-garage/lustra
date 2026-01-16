@@ -69,8 +69,8 @@ describe "Lustra::Model::Relations::HasManyThrough" do
 
           PostTag.query.count.should eq(2)
 
-          post_tag1 = PostTag.query.find!({post_id: post.id, tag_id: tag1.id})
-          post_tag2 = PostTag.query.find!({post_id: post.id, tag_id: tag2.id})
+          post_tag1 = PostTag.query.find_by!({post_id: post.id, tag_id: tag1.id})
+          post_tag2 = PostTag.query.find_by!({post_id: post.id, tag_id: tag2.id})
 
           post_tag1.should_not be_nil
           post_tag2.should_not be_nil
@@ -115,7 +115,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post.tags.unlink(tag1)
 
           PostTag.query.where({post_id: post.id}).count.should eq(1)
-          PostTag.query.find({post_id: post.id, tag_id: tag1.id}).should be_nil
+          PostTag.query.find_by({post_id: post.id, tag_id: tag1.id}).should be_nil
         end
       end
 
@@ -239,11 +239,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post.tags << tag1
           post.tags << tag2
 
-          ruby_tag = post.tags.find!({name: "Ruby"})
+          ruby_tag = post.tags.find_by!({name: "Ruby"})
           ruby_tag.name.should eq("Ruby")
 
           expect_raises(Lustra::SQL::RecordNotFoundError) do
-            post.tags.find!({name: "NonExistent"})
+            post.tags.find_by!({name: "NonExistent"})
           end
         end
       end
@@ -292,7 +292,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post2.tags << tag2
 
           # Both posts should have the same tag (by ID)
-          post.tags.find!({name: "Crystal"}).id.should eq(post2.tags.find!({name: "Crystal"}).id)
+          post.tags.find_by!({name: "Crystal"}).id.should eq(post2.tags.find_by!({name: "Crystal"}).id)
 
           # But PostTag records should be separate
           PostTag.query.count.should eq(2)

@@ -134,11 +134,11 @@ describe "Lustra::Model::Relations::HasMany" do
           user = User.create!({first_name: "John", last_name: "Doe"})
           Post.create!({title: "Find Me", user_id: user.id})
 
-          found_post = user.posts.find!({title: "Find Me"})
+          found_post = user.posts.find_by!({title: "Find Me"})
           found_post.title.should eq("Find Me")
 
           expect_raises(Lustra::SQL::RecordNotFoundError) do
-            user.posts.find!({title: "Not Found"})
+            user.posts.find_by!({title: "Not Found"})
           end
         end
       end
@@ -423,7 +423,7 @@ describe "Lustra::Model::Relations::HasMany" do
           post.user_id.should eq(user.id)
 
           # Query through the relationship - compare by ID since objects are different instances
-          found_post = user.posts.find!({id: post.id})
+          found_post = user.posts.find_by!({id: post.id})
           found_post.id.should eq(post.id)
           found_post.title.should eq(post.title)
         end
