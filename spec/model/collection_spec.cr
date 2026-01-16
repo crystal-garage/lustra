@@ -656,6 +656,43 @@ module CollectionSpec
     end
 
     context "find / find!" do
+      it "with primary key" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+
+          User.query.find!(user.id).first_name.should eq("user")
+          User.query.find(999).should be_nil
+
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
+            User.query.find!(999)
+          end
+        end
+      end
+
+      it "with an array of primary keys" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create! first_name: "user1"
+          user2 = User.create! first_name: "user2"
+
+          users = User.query.find!([user1.id, user2.id])
+          users.should be_a(Array(User))
+          users.size.should eq(2)
+
+          users = User.query.find([user1.id, user2.id, 999])
+          users.size.should eq(2)
+
+          expect_raises(Lustra::SQL::RecordNotFoundError) do
+            User.query.find!([user1.id, user2.id, 999])
+          end
+        end
+      end
+    end
+
+    context "find_by / find_by!" do
       it "with block" do
         temporary do
           reinit_example_models
@@ -664,11 +701,11 @@ module CollectionSpec
             User.create! first_name: "user #{x}"
           end
 
-          User.query.find! { first_name == "user 2" }.first_name.should eq("user 2")
-          User.query.find { first_name == "not_exists" }.should be_nil
+          User.query.find_by! { first_name == "user 2" }.first_name.should eq("user 2")
+          User.query.find_by { first_name == "not_exists" }.should be_nil
 
           expect_raises(Lustra::SQL::RecordNotFoundError) do
-            User.query.find! { first_name == "not_exists" }
+            User.query.find_by! { first_name == "not_exists" }
           end
         end
       end
@@ -681,11 +718,11 @@ module CollectionSpec
             User.create! first_name: "user #{x}"
           end
 
-          User.query.find!({first_name: "user 2"}).first_name.should eq("user 2")
-          User.query.find({first_name: "not_exists"}).should be_nil
+          User.query.find_by!({first_name: "user 2"}).first_name.should eq("user 2")
+          User.query.find_by({first_name: "not_exists"}).should be_nil
 
           expect_raises(Lustra::SQL::RecordNotFoundError) do
-            User.query.find!({first_name: "not_exists"})
+            User.query.find_by!({first_name: "not_exists"})
           end
         end
       end
@@ -698,11 +735,11 @@ module CollectionSpec
             User.create!(first_name: "first #{x}", last_name: "last #{x}")
           end
 
-          User.query.find!(first_name: "first 2", last_name: "last 2").first_name.should eq("first 2")
-          User.query.find(first_name: "not_exists").should be_nil
+          User.query.find_by!(first_name: "first 2", last_name: "last 2").first_name.should eq("first 2")
+          User.query.find_by(first_name: "not_exists").should be_nil
 
           expect_raises(Lustra::SQL::RecordNotFoundError) do
-            User.query.find!(first_name: "not_exists")
+            User.query.find_by!(first_name: "not_exists")
           end
         end
       end
@@ -721,7 +758,7 @@ module CollectionSpec
           if post = Post
                .query
                .join("users") { users.id == posts.user_id }
-               .find do
+               .find_by do
                  (users.first_name == "user") &
                    (posts.title == "title 2")
                end
@@ -763,7 +800,7 @@ module CollectionSpec
             "SELECT \"posts\".* FROM \"posts\" INNER JOIN \"users\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
           )
 
-          if post = query.find { users.first_name == "user" }
+          if post = query.find_by { users.first_name == "user" }
             post.id.should eq(post2.id)
           end
         end
