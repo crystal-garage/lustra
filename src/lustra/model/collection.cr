@@ -580,6 +580,17 @@ module Lustra::Model
       offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
 
+    # Return an empty, chainable collection (Rails-like `.none`).
+    # Useful for conditional branches where no records should be returned
+    # while keeping query chaining intact.
+    #
+    # ```
+    # User.query.none.where { active == true }.count # => 0
+    # ```
+    def none
+      where { raw("1 = 0") }
+    end
+
     # A convenient way to write `where { condition }.first(fetch_columns)`
     @[Deprecated("Use `#find_by` instead.")]
     def find(fetch_columns = false, &) : T?
