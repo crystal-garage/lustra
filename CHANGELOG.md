@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.16.0] - 2026-01-16
+
 ### Added
 - Migrations: `change_column_null` operation to toggle NULL constraints with optional default backfill.
 - Migrations: `add_index` helper supports `using` (e.g., `gin`, `gist`, `btree`) for index type selection.
