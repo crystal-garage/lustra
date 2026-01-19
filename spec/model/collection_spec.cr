@@ -451,6 +451,7 @@ module CollectionSpec
 
             tag = post.tags.find_or_create(name: "Tag1")
 
+            post.tags.count.should eq(1)
             Tag.query.count.should eq(1)
             PostTag.query.count.should eq(1)
           end
