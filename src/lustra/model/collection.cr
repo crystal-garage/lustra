@@ -667,7 +667,6 @@ module Lustra::Model
     end
 
     # Find a model by column values. Returns `nil` if not found.
-    # This is an alias for `find(**tuple)` with better naming.
     #
     # ```
     # user = User.query.find_by(email: "test@example.com")
@@ -690,7 +689,6 @@ module Lustra::Model
     end
 
     # Find a model by column values. Raises error if not found.
-    # This is an alias for `find!(**tuple)` with better naming.
     #
     # ```
     # user = User.query.find_by!(email: "test@example.com")
