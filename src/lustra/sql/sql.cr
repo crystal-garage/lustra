@@ -147,7 +147,7 @@ module Lustra
           execute(connection_name, "SAVEPOINT #{sp_name}")
           yield
           execute(connection_name, "RELEASE SAVEPOINT #{sp_name}") if cnx._in_transaction?
-        rescue e : RollbackError
+        rescue RollbackError
           execute(connection_name, "ROLLBACK TO SAVEPOINT #{sp_name}") if cnx._in_transaction?
         end
       end
