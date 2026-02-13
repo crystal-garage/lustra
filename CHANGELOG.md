@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.16.0] - 2026-01-16
+
+### Added
+- Migrations: `change_column_null` operation to toggle NULL constraints with optional default backfill.
+- Migrations: `add_index` helper supports `using` (e.g., `gin`, `gist`, `btree`) for index type selection.
+- Column comments: `add_column(..., comment: String?)` emits `COMMENT ON COLUMN` on creation.
+- Column comments: `change_column_comment(table, column, to : String?)` and `change_column_comment(table, column, changes : NamedTuple(from: String?, to: String?))` for reversible comment changes.
+- Models: `schema_description` to query table columns and indexes programmatically.
+- Migrations: `change_column_default(table, column, default_or_changes)` to set, drop, or make column default changes reversible.
+- Collections: `Collection.none` added; `Model.none`/`Model.find`/`Model.find_by` now reuse collection implementations to reduce duplication.
+- Tests: additional specs covering collection helper methods and schema introspection.
+
+### Deprecated
+- Passing a NamedTuple and block to `find` is deprecated; prefer `find_by` or `Model.find(ids)` for ID arrays.
+
+## [v0.15.0] - 2026-01-10
+
+### Added
+- `has_one` eager loading with `with_<relation>` now caches results and avoids N+1 queries
+
+### Fixed
+- `has_one` now works with target models that do not define a primary key.
+
+## [v0.14.4] - 2026-01-06
+
+### Fixed
+- Aggregate functions (`sum`, `min`, `max`, `avg`, `agg`) now properly handle LIMIT and OFFSET by wrapping queries in subqueries, preventing invalid SQL generation.
+
+## [v0.14.3] - 2026-01-06
+
+### Fixed
+- `limit` and `offset` methods now accept concrete integer types (`Int32 | Int64 | Nil`) instead of abstract `Int?` which caused compiler errors.
+
+## [v0.14.2] - 2026-01-06
+
+### Added
+- `Model.none` returns an empty, chainable relation.
+
+## [v0.14.1] - 2026-01-06
+
+### Fixed
+- Aggregate functions (`sum`, `min`, `max`, `avg`, `agg`) now correctly clear ORDER BY clauses to prevent meaningless SQL.
+
+## [v0.14.0] - 2026-01-05
+
 ### Added
 - **Range Support in WHERE/HAVING Clauses** - Full support for all Crystal range types with any comparable type (Int, Time, etc.):
   - Normal ranges: `where { age.in?(18..65) }` -> `BETWEEN 18 AND 65`
@@ -17,6 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Full range: `where { age.in?(...) }` -> `TRUE` (matches all values)
   - Works with Time ranges: `where { created_at.in?(start_time..end_time) }`
   - `between()` method also supports Time values: `where { created_at.between(start_time, end_time) }`
+
+### Fixed
+- `belongs_to` now correctly supports optional relations (`User?`) by making the foreign key nilable and skipping presence validation.
 
 ## [v0.13.0] - 2025-11-14
 ### Added

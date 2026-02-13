@@ -14,9 +14,14 @@ class Lustra::Migration::FullTextSearchableOperation < Lustra::Migration::Operat
 
   getter src_fields : Array({String, Char})
 
-  def initialize(@table, @src_fields, @catalog = "pg_catalog.english",
-                 trigger_name = nil, function_name = nil,
-                 @dest_field = "full_text_vector")
+  def initialize(
+    @table,
+    @src_fields,
+    @catalog = "pg_catalog.english",
+    trigger_name = nil,
+    function_name = nil,
+    @dest_field = "full_text_vector",
+  )
     raise "Source fields cannot be empty" if @src_fields.empty?
 
     @table = table
@@ -63,8 +68,12 @@ class Lustra::Migration::FullTextSearchableOperation < Lustra::Migration::Operat
   private def print_update_current_data
     op = print_concat_rules(use_new: false)
 
-    [Lustra::SQL.update(table)
-      .set({"#{dest_field}" => Lustra::Expression.unsafe(op)}).to_sql]
+    [
+      Lustra::SQL
+        .update(table)
+        .set({"#{dest_field}" => Lustra::Expression.unsafe(op)})
+        .to_sql,
+    ]
   end
 
   private def print_delete_trigger
@@ -83,9 +92,14 @@ end
 module Lustra::Migration::FullTextSearchableHelpers
   # Add a `tsvector` field to a table.
   # Create column, index and trigger.
-  def add_full_text_searchable(table, on : Array(Tuple(String, Char)),
-                               column_name = "full_text_vector", catalog = "pg_catalog.english",
-                               trigger_name = nil, function_name = nil)
+  def add_full_text_searchable(
+    table,
+    on : Array(Tuple(String, Char)),
+    column_name = "full_text_vector",
+    catalog = "pg_catalog.english",
+    trigger_name = nil,
+    function_name = nil,
+  )
     add_column(table, column_name, "tsvector")
     create_index(table, column_name, using: "gin")
     migration.add_operation(
@@ -102,9 +116,13 @@ module Lustra::Migration::FullTextSearchableHelpers
 end
 
 module Lustra::Migration::FullTextSearchableTableHelpers
-  def full_text_searchable(on : Array(Tuple(String, Char)),
-                           column_name = "full_text_vector", catalog = "pg_catalog.english",
-                           trigger_name = nil, function_name = nil)
+  def full_text_searchable(
+    on : Array(Tuple(String, Char)),
+    column_name = "full_text_vector",
+    catalog = "pg_catalog.english",
+    trigger_name = nil,
+    function_name = nil,
+  )
     column(column_name, "tsvector", index: "gin")
 
     migration.try(&.add_operation(
@@ -119,15 +137,23 @@ module Lustra::Migration::FullTextSearchableTableHelpers
     ))
   end
 
-  def full_text_searchable(on : String, column_name = "full_text_vector",
-                           catalog = "pg_catalog.english",
-                           trigger_name = nil, function_name = nil)
+  def full_text_searchable(
+    on : String,
+    column_name = "full_text_vector",
+    catalog = "pg_catalog.english",
+    trigger_name = nil,
+    function_name = nil,
+  )
     full_text_searchable([{on, 'C'}], column_name, catalog, trigger_name, function_name)
   end
 
-  def full_text_searchable(on : Array(String), column_name = "full_text_vector",
-                           catalog = "pg_catalog.english",
-                           trigger_name = nil, function_name = nil)
+  def full_text_searchable(
+    on : Array(String),
+    column_name = "full_text_vector",
+    catalog = "pg_catalog.english",
+    trigger_name = nil,
+    function_name = nil,
+  )
     raise "cannot implement tsv_searchable because empty array was given" if on.empty?
 
     fields = on.map { |name| {name, 'C'} }

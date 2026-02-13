@@ -135,7 +135,7 @@ In `shards.yml`
 dependencies:
   lustra:
     github: crystal-garage/lustra
-    version: ">= 0.13.0"
+    version: ">= 0.16.0"
 ```
 
 Then:
@@ -183,6 +183,17 @@ User.query.use_connection("readonly").where { active == true }
 # For raw SQL queries
 Lustra::SQL.execute("readonly", "SELECT * FROM users")
 Lustra::SQL.select.from("users").where { active == true }.use_connection("readonly").to_a
+
+# For querying system tables or complex data without models
+Lustra::SQL.select("name", "abbrev").from(:pg_timezone_names).where { raw("abbrev IS NOT NULL") }.fetch do |row|
+  name = row["name"]
+  abbrev = row["abbrev"]
+  puts "#{name}: #{abbrev}"
+end
+
+# Other ways to get data from raw queries
+results = Lustra::SQL.select.from(:pg_timezone_names).to_a  # Get all results as array
+first = Lustra::SQL.select.from(:pg_timezone_names).first   # Get first result
 ```
 
 ### Model definition
@@ -204,8 +215,12 @@ class User
 
   column encrypted_password : Crypto::Bcrypt::Password
 
-  def password=(x)
+  def password=(password : String)
     self.encrypted_password = Crypto::Bcrypt::Password.create(password)
+  end
+
+  def authenticate(password : String) : Bool
+    encrypted_password.verify(password)
   end
 end
 
@@ -335,7 +350,7 @@ user = User.find_by!(email: "test@example.com") # Raises error if not found
 user = User.find_by(first_name: "John", last_name: "Doe")
 
 # Using query with expression engine
-u : User? = User.query.find { email =~ /yacine/i }
+u : User? = User.query.find_by { email =~ /yacine/i }
 ```
 
 ##### Fetch multiple models
@@ -1210,6 +1225,8 @@ Migration must implement the method `change(dir : Migration::Direction)`
 Direction is the current direction of the migration (up or down).
 It provides few methods: `up?`, `down?`, `up(&block)`, `down(&block)`
 
+##### Creating Tables
+
 You can create a table:
 
 ```crystal
@@ -1221,6 +1238,201 @@ def change(dir)
     t.index "lower(first_name || ' ' || last_name)", using: :btree
 
     t.timestamps
+  end
+end
+```
+
+##### Column Operations
+
+In addition to defining columns during table creation, you can also modify columns using standalone migration operations:
+
+###### Adding Columns
+
+```crystal
+def change(dir)
+  # Simple column addition
+  add_column "users", "phone", "varchar(20)"
+
+  # Column with default value
+  add_column "users", "status", "varchar", default: "'active'"
+
+  # Nullable column
+  add_column "users", "bio", "text", nullable: true
+
+  # Column with constraint
+  add_column "users", "email_verified", "boolean", default: "false", nullable: false
+
+  # Add with WITH VALUES for NOT NULL columns with existing data
+  add_column "posts", "category", "varchar", nullable: false, default: "'uncategorized'", with_values: true
+end
+```
+
+###### Removing Columns
+
+```crystal
+def change(dir)
+  drop_column "users", "phone", "varchar(20)"
+end
+```
+
+###### Renaming Columns
+
+```crystal
+def change(dir)
+  rename_column "users", "old_name", "new_name"
+end
+```
+
+###### Changing Column Types
+
+```crystal
+def change(dir)
+  # Convert integer to bigint
+  change_column_type "users", "id", "integer", "bigint"
+
+  # Convert varchar to text
+  change_column_type "posts", "description", "varchar", "text"
+end
+```
+
+###### Changing Null Constraints
+
+```crystal
+def change(dir)
+  # Add NOT NULL constraint
+  change_column_null "users", "email", false
+
+  # Add NOT NULL with value replacement for existing NULLs
+  change_column_null "posts", "content", false, "'No content provided'"
+
+  # Allow NULLs
+  change_column_null "users", "phone", true
+end
+```
+
+###### Column Comments
+
+```crystal
+def change(dir)
+  # Set comment (not automatically reversible)
+  change_column_comment "users", "email", "Primary email address"
+
+  # Remove comment
+  change_column_comment "users", "bio", nil
+
+  # Reversible change using from/to
+  change_column_comment "posts", "state", {from: "old_comment", to: "new_comment"}
+end
+```
+
+  ###### Changing Default Values
+
+  ```crystal
+  def change(dir)
+    # Set a new default (SQL literal as String)
+    change_column_default "suppliers", "qualification", "'new'"
+
+    # Numeric default
+    change_column_default "accounts", "authorized", "1"
+
+    # Drop default
+    change_column_default "users", "email", nil
+
+    # Reversible change using from/to
+    change_column_default "posts", "state", {from: nil, to: "'draft'"}
+  end
+  ```
+
+##### Indexing
+
+Add indexes to improve query performance:
+
+```crystal
+def change(dir)
+  # Simple index on single column
+  add_index "users", "email"
+
+  # Unique index
+  add_index "users", "email", unique: true
+
+  # Composite index on multiple columns
+  add_index "posts", ["user_id", "created_at"]
+
+  # GIN index for array/JSONB columns
+  add_index "posts", "tags", using: "gin"
+
+  # GIST index for geometric/range types
+  add_index "locations", "coordinates", using: "gist"
+
+  # Custom index name
+  add_index "users", "email", name: "idx_users_email_unique", unique: true
+end
+```
+
+##### Raw SQL Migrations
+
+For complex operations not covered by the built-in helpers, use `execute` with `dir.up` and `dir.down`:
+
+```crystal
+def change(dir)
+  dir.up do
+    execute "ALTER TABLE users DROP CONSTRAINT users_pkey"
+    execute "ALTER TABLE users DROP COLUMN id"
+    execute "ALTER TABLE users ADD COLUMN email_hash TEXT UNIQUE"
+  end
+
+  dir.down do
+    execute "ALTER TABLE users DROP COLUMN email_hash"
+    execute "ALTER TABLE users ADD COLUMN id BIGSERIAL PRIMARY KEY"
+  end
+end
+```
+
+Another example - adding custom constraints:
+
+```crystal
+def change(dir)
+  dir.up do
+    # Username format validation (alphanumeric + underscore, 3-32 chars, starts with letter)
+    execute "ALTER TABLE users ADD CONSTRAINT valid_username CHECK (username ~ '^[a-zA-Z][a-zA-Z0-9_]{2,31}$')"
+  end
+
+  dir.down do
+    execute "ALTER TABLE users DROP CONSTRAINT valid_username"
+  end
+end
+```
+
+##### Schema Introspection
+
+Query table schema information (columns, indexes) programmatically:
+
+```crystal
+# Get table schema snapshot
+info = Admin.schema_description
+
+# Access column details
+info.columns.each do |col|
+  puts "#{col.name} => #{col.data_type} (nullable: #{col.nullable})"
+end
+
+# Access indexes
+info.indexes.each do |idx|
+  puts "#{idx.name}: #{idx.definition}"
+end
+```
+
+Using `execute` for complex modifications:
+
+```crystal
+def change(dir)
+  dir.up do
+    execute "CREATE INDEX idx_users_lower_email ON users (LOWER(email))"
+    execute "UPDATE users SET email = LOWER(email) WHERE email IS NOT NULL"
+  end
+
+  dir.down do
+    execute "DROP INDEX idx_users_lower_email"
   end
 end
 ```

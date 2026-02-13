@@ -48,7 +48,7 @@ require "./tsvector"
 # Obviously, search call can be chained:
 #
 # ```
-# user = User.find! { email == "some_email@example.com" }
+# user = User.find_by! { email == "some_email@example.com" }
 # Post.query.from_user(user).search("orm")
 # ```
 #

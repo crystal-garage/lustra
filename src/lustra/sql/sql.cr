@@ -63,8 +63,7 @@ module Lustra
                 Range(Int32?, Int32?) | Range(Int64?, Int64?) | Range(PG::Numeric?, PG::Numeric?) | Range(Time?, Time?) |
                 Array(Range(Int32?, Int32?)) | Array(Range(Int64?, Int64?)) | Array(Range(PG::Numeric?, PG::Numeric?)) | Array(Range(Time?, Time?)) |
                 UInt8 | UInt16 | UInt32 | UInt64 | UUID | ::Crypto::Bcrypt::Password |
-                Lustra::Expression::UnsafeSql | Lustra::Expression::Literal |
-                Nil
+                Lustra::Expression::UnsafeSql | Lustra::Expression::Literal?
 
     alias Symbolic = String | Symbol
     alias Selectable = Symbolic | Lustra::SQL::SelectBuilder
@@ -150,7 +149,7 @@ module Lustra
           execute(connection_name, "SAVEPOINT #{sp_name}")
           yield
           execute(connection_name, "RELEASE SAVEPOINT #{sp_name}") if cnx._in_transaction?
-        rescue e : RollbackError
+        rescue RollbackError
           execute(connection_name, "ROLLBACK TO SAVEPOINT #{sp_name}") if cnx._in_transaction?
         end
       end

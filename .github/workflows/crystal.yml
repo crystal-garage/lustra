@@ -12,25 +12,21 @@ jobs:
     container: crystallang/crystal
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: shards install
 
       - name: Check format
         run: crystal tool format --check
+
   check_ameba:
     runs-on: ubuntu-latest
-    container: crystallang/crystal
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
-
-      - name: Install dependencies
-        run: shards install
-
-      - name: Check ameba
-        run: ./bin/ameba
+        uses: actions/checkout@v6
+      - name: Run Ameba linter
+        uses: crystal-ameba/github-action@master
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -56,7 +52,7 @@ jobs:
     steps:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Performs a clean installation of all dependencies in the `shard.yml` file
       - name: Install dependencies

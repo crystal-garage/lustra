@@ -35,14 +35,23 @@ module Lustra::SQL::Query::Aggregate
   # Note than COUNT, MIN, MAX, SUM and AVG are already conveniently mapped.
   #
   # This return only one row, and should not be used with `group_by` (prefer pluck or fetch)
+  # Automatically handles LIMIT/OFFSET by wrapping in a subquery.
   def agg(field, x : X.class) forall X
-    clear_select.select(field).scalar(X)
+    # In case of limit, offset, or group by,
+    # we need to wrap in a subquery so the aggregation applies to the filtered set
+    if @offset || @limit || @group_bys
+      # SELECT agg_func FROM ( $subquery ) AS subquery
+      subquery = dup.clear_order_bys
+      X.cast(Lustra::SQL.select(field).from({subquery: subquery}).scalar(X))
+    else
+      dup.clear_select.clear_order_bys.select(field).scalar(X)
+    end
   end
 
   # SUM through a field and return a Float64
   # Note: This function is not safe injection-wise, so beware !.
   def sum(field) : Float64
-    agg("SUM(#{field})", Union(Int64 | PG::Numeric | Nil)).try(&.to_f) || 0.0
+    agg("SUM(#{field})", Union(Int64 | PG::Numeric?)).try(&.to_f) || 0.0
   end
 
   {% for x in %w[min max avg] %}

@@ -1469,7 +1469,7 @@ module ModelSpec
           user1.dependencies.count.should eq(1)
           user2.dependents.count.should eq(1)
 
-          user1.dependencies.unlink(User.query.find!({first_name: "Jane"}))
+          user1.dependencies.unlink(User.query.find_by!({first_name: "Jane"}))
 
           user1.dependencies.count.should eq(0)
           user2.dependents.count.should eq(0)
@@ -1527,7 +1527,7 @@ module ModelSpec
           p.tags << Tag.new({name: "Why not"})
 
           p.tags.count.should eq(2)
-          p.tags.unlink(Tag.query.find!({name: "Awesome"}))
+          p.tags.unlink(Tag.query.find_by!({name: "Awesome"}))
           p.tags.count.should eq(1)
         end
       end
