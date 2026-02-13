@@ -255,6 +255,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
+- [v0.16.0](https://github.com/crystal-garage/lustra/releases/tag/v0.16.0)
+- [v0.15.0](https://github.com/crystal-garage/lustra/releases/tag/v0.15.0)
+- [v0.14.4](https://github.com/crystal-garage/lustra/releases/tag/v0.14.4)
+- [v0.14.3](https://github.com/crystal-garage/lustra/releases/tag/v0.14.3)
+- [v0.14.2](https://github.com/crystal-garage/lustra/releases/tag/v0.14.2)
+- [v0.14.1](https://github.com/crystal-garage/lustra/releases/tag/v0.14.1)
+- [v0.14.0](https://github.com/crystal-garage/lustra/releases/tag/v0.14.0)
 - [v0.13.0](https://github.com/crystal-garage/lustra/releases/tag/v0.13.0)
 - [v0.12.0](https://github.com/crystal-garage/lustra/releases/tag/v0.12.0)
 - [v0.11.0](https://github.com/crystal-garage/lustra/releases/tag/v0.11.0)
