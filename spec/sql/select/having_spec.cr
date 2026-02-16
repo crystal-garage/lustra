@@ -133,6 +133,11 @@ module HavingSpec
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" IS NULL)"
     end
 
+    it "use expression engine null?" do
+      r = Lustra::SQL.select.from(:users).having { users.id.null? }
+      r.to_sql.should eq "SELECT * FROM \"users\" HAVING (\"users\".\"id\" IS NULL)"
+    end
+
     describe "HAVING Expression engine Nodes" do
       it "stack with `AND` operator" do
         now = Time.local

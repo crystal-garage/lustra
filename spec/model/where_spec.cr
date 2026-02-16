@@ -329,6 +329,18 @@ module WhereSpec
         users.map(&.first_name).should contain("Alice")
         users.map(&.first_name).should contain("Charlie")
         users.map(&.first_name).should_not contain("Bob")
+
+        # Test null? (IS NULL)
+        users = User.query.where { last_name.null? }
+        users.size.should eq(1)
+        users.first!.first_name.should eq("Bob")
+
+        # Test ~null? (IS NOT NULL)
+        users = User.query.where { ~(last_name.null?) }
+        users.size.should eq(2)
+        users.map(&.first_name).should contain("Alice")
+        users.map(&.first_name).should contain("Charlie")
+        users.map(&.first_name).should_not contain("Bob")
       end
     end
 

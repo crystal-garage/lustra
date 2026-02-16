@@ -147,6 +147,11 @@ module WhereSpec
       r.to_sql.should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" IS NULL)"
     end
 
+    it "use expression engine null?" do
+      r = Lustra::SQL.select.from(:users).where { users.id.null? }
+      r.to_sql.should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" IS NULL)"
+    end
+
     describe "where expressions" do
       it "where.where" do
         now = Time.local

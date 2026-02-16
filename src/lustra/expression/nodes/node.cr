@@ -86,5 +86,9 @@ abstract class Lustra::Expression::Node
     Node::Not.new(self)
   end
 
+  def null? : Node
+    Node::DoubleOperator.new(self, Null.new, "IS")
+  end
+
   abstract def resolve : String
 end

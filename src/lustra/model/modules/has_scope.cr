@@ -61,7 +61,7 @@ module Lustra::Model::HasScope
     #
     #   column deleted_at : Time?
     #
-    #   default_scope { where { deleted_at == nil } }
+    #   default_scope { where { deleted_at.null? } }
     # end
     #
     # Post.query       # SELECT * FROM posts WHERE deleted_at IS NULL
