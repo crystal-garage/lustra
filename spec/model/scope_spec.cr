@@ -9,7 +9,7 @@ module ScopeSpec
     column value : String?
 
     # Scope with no parameters
-    scope("no_value") { where { value == nil } }
+    scope("no_value") { where { value.null? } }
 
     # Scope with one typed parameter
     scope("with_value") { |x| where { value == x } }
