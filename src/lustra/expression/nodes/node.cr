@@ -91,11 +91,11 @@ abstract class Lustra::Expression::Node
   end
 
   def true? : Node
-    Node::DoubleOperator.new(self, Literal.new(true), "IS")
+    Node::DoubleOperator.new(self, Literal.new(true), "=")
   end
 
   def false? : Node
-    Node::DoubleOperator.new(self, Literal.new(false), "IS")
+    Node::DoubleOperator.new(self, Literal.new(false), "=")
   end
 
   abstract def resolve : String
