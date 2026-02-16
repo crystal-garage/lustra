@@ -676,7 +676,7 @@ class Post
   column deleted_at : Time?
 
   # This filter is applied to ALL queries automatically
-  default_scope { where { deleted_at == nil } }
+  default_scope { where { deleted_at.null? } }
 end
 
 # All these queries automatically exclude deleted posts:

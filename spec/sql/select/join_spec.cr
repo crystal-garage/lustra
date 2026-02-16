@@ -356,7 +356,7 @@ module JoinSpec
         # Test JOIN with NULL conditions
         results = Post.query
           .inner_join(:users) { users.id == posts.user_id }
-          .where { users.last_name == nil }
+          .where { users.last_name.null? }
           .to_a
 
         results.size.should eq(1) # Only post2 (Jane's post)
