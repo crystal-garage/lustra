@@ -90,12 +90,12 @@ module WhereSpec
         User.create!(first_name: "Diana", active: false, posts_count: 20)
 
         # Test & (AND) operator
-        users = User.query.where { (active == true) & (posts_count > 10) }
+        users = User.query.where { (active.true? & (posts_count > 10)) }
         users.size.should eq(1)
         users.first!.first_name.should eq("Charlie")
 
         # Test | (OR) operator
-        users = User.query.where { (active == false) | (posts_count < 10) }
+        users = User.query.where { (active.false? | (posts_count < 10)) }
         users.size.should eq(3)
         users.map(&.first_name).should contain("Alice") # active: true, posts_count: 5
         users.map(&.first_name).should contain("Bob")   # active: false
@@ -356,7 +356,7 @@ module WhereSpec
 
         # Complex query: active users with gmail addresses and high post counts
         users = User.query.where do
-          (active == true) &
+          (active.true?) &
             (first_name.ilike("%@gmail.com")) &
             (posts_count > 10)
         end
@@ -393,7 +393,7 @@ module WhereSpec
           # Test WHERE with INNER JOIN - only posts from active users
           active_user_posts = Post.query
             .inner_join(:users) { users.id == posts.user_id }
-            .where { users.active == true }
+            .where { users.active.true? }
 
           active_user_posts.size.should eq(2)
           active_user_posts.map(&.title).should contain("John's Post")
@@ -467,18 +467,18 @@ module WhereSpec
             .inner_join(:users) { posts.user_id == users.id }
             .inner_join(:categories) { posts.category_id == categories.id }
             .where do
-              (users.active == true) &
+              (users.active.true?) &
                 (categories.name == "Technology") &
-                (posts.published == true)
+                (posts.published.true?)
             end
 
           results2 = Post.query
             .inner_join(:user)
             .inner_join(:category)
             .where do
-              (users.active == true) &
+              (users.active.true?) &
                 (categories.name == "Technology") &
-                (posts.published == true)
+                (posts.published.true?)
             end
 
           results1.to_sql.should eq(results2.to_sql)
