@@ -135,7 +135,7 @@ In `shards.yml`
 dependencies:
   lustra:
     github: crystal-garage/lustra
-    version: ">= 0.16.1"
+    version: ">= 0.16.2"
 ```
 
 Then:
@@ -178,7 +178,7 @@ At the query level:
 
 ```crystal
 # For model queries
-User.query.use_connection("readonly").where { active == true }
+User.query.use_connection("readonly").where { active.true? }
 
 # For raw SQL queries
 Lustra::SQL.execute("readonly", "SELECT * FROM users")
