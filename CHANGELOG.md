@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Expression: Added `null?` predicate to the expression engine as syntactic sugar for `== nil` (e.g. `where { deleted_at.null? }` renders as `deleted_at IS NULL`).
+
 ## [v0.16.0] - 2026-01-16
 
 ### Added
