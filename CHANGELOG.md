@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Expression: added `true?` and `false?` predicate helpers for boolean expression nodes.
+
 ## [v0.16.1] - 2026-02-16
 
 ### Added

@@ -152,7 +152,7 @@ module ModelSpec
           user.last_name.should eq("Smith")
 
           # Test find_by on collection (with chaining)
-          user = User.query.where { active == true }.find_by(last_name: "Doe")
+          user = User.query.where { active.true? }.find_by(last_name: "Doe")
           user.should_not be_nil
           # Should return John or Bob (both active with last_name Doe)
           # find_by returns first match
