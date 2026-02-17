@@ -6,6 +6,12 @@ module Lustra::Model::HasSerialPkey
   # Macro used to define serializable primary keys.
   # Currently support `bigserial`, `serial` and `uuid`.
   #
+  # Note: the `uuid` pkey type is not defined here. It is provided
+  # by the UUID extension (see src/lustra/extensions/uuid/uuid.cr) which
+  # registers a `uuid` pkey type via `Lustra::Model::HasSerialPkey.add_pkey_type`.
+  # That extension sets `UUID.random` on new records and provides the
+  # necessary converter so models can use `primary_key "id", :uuid`.
+  #
   # For `bigserial` and `serial`, let to PostgreSQL the handling of sequence numbers.
   # For `uuid`, will generate a new `UUID` number on creation.
   macro primary_key(name = "id", type = :bigserial)
