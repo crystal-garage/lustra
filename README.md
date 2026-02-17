@@ -1232,8 +1232,9 @@ You can create a table:
 ```crystal
 def change(dir)
   create_table(:test) do |t|
+    t.column :email, :string, index: true, unique: true, null: false
     t.column :first_name, :string, index: true
-    t.column :last_name, :string, unique: true
+    t.column :last_name, :string, index: true
 
     t.index "lower(first_name || ' ' || last_name)", using: :btree
 
