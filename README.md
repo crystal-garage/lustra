@@ -1561,9 +1561,11 @@ nearest_stores = Store.query
 
 ```crystal
 # Complex spatial query combining multiple operations
-results = Location.query
-  .where { coordinates.within_distance?(city_center, 10_000.0) }  # Within 10km of center
-  .where { service_boundary.overlaps?(target_neighborhood) }      # Overlaps target area
+results =
+  Location
+  .query
+  .where { coordinates.within_distance?(city_center, 10_000.0) } # Within 10km of center
+  .where { service_boundary.overlaps?(target_neighborhood) }     # Overlaps target area
   .where { coverage_radius >= 1000.0 }                           # Minimum coverage
   .order("coordinates <-> ?", city_center)                       # Order by distance
   .limit(20)
