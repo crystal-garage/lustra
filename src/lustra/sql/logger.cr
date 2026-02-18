@@ -53,11 +53,19 @@ module Lustra::SQL::Logger
     end
   end
 
+  private def instant_time
+    {% if compare_versions(Crystal::VERSION, "1.19.0") >= 0 %}
+      Time.instant
+    {% else %}
+      Time.monotonic
+    {% end %}
+  end
+
   def log_query(sql, &)
-    start_time = Time.monotonic
+    start_time = instant_time
 
     o = yield
-    elapsed_time = Time.monotonic - start_time
+    elapsed_time = instant_time - start_time
 
     Log.debug { "[" + Lustra::SQL::Logger.display_time(elapsed_time.to_f).colorize.bold.white.to_s + "] #{SQL::Logger.colorize_query(sql)}" }
 
