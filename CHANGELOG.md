@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.16.3] - 2026-02-18
+### Maintenance
+- Internal improvements and optimizations
+
+
 ## [v0.16.2] - 2026-02-16
 
 ### Added
@@ -265,7 +270,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
-- [v0.16.2](https://github.com/crystal-garage/lustra/releases/tag/v0.16.1)
+- [v0.16.3](https://github.com/crystal-garage/lustra/releases/tag/v0.16.3)
+- [v0.16.2](https://github.com/crystal-garage/lustra/releases/tag/v0.16.2)
 - [v0.16.1](https://github.com/crystal-garage/lustra/releases/tag/v0.16.1)
 - [v0.16.0](https://github.com/crystal-garage/lustra/releases/tag/v0.16.0)
 - [v0.15.0](https://github.com/crystal-garage/lustra/releases/tag/v0.15.0)
