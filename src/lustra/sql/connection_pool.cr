@@ -1,7 +1,7 @@
 class Lustra::SQL::ConnectionPool
   @@databases = {} of String => DB::Database
 
-  @@fiber_connections = {} of {String, Fiber} => DB::Connection
+  @@connections = {} of {String, Fiber} => DB::Connection
 
   def self.init(uri, name)
     @@databases[name] = DB.open(uri)
@@ -16,17 +16,18 @@ class Lustra::SQL::ConnectionPool
     database = @@databases.fetch(target) { raise Lustra::ErrorMessages.uninitialized_db_connection(target) }
 
     database.retry do
-      connection = @@fiber_connections[fiber_target]?
+      connection = @@connections[fiber_target]?
 
       if connection
         yield connection
       else
         database.using_connection do |new_connection|
           begin
-            @@fiber_connections[fiber_target] = new_connection
+            @@connections[fiber_target] = new_connection
+
             yield new_connection
           ensure
-            @@fiber_connections.delete(fiber_target)
+            @@connections.delete(fiber_target)
           end
         end
       end
