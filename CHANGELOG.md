@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.17.0] - 2026-02-19
+
 ### Fixed
 - `Lustra::SQL::ConnectionPool#with_connection`: use `DB::Database#retry`.
 
@@ -273,6 +275,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
+- [v0.17.0](https://github.com/crystal-garage/lustra/releases/tag/v0.17.0)
 - [v0.16.3](https://github.com/crystal-garage/lustra/releases/tag/v0.16.3)
 - [v0.16.2](https://github.com/crystal-garage/lustra/releases/tag/v0.16.2)
 - [v0.16.1](https://github.com/crystal-garage/lustra/releases/tag/v0.16.1)
