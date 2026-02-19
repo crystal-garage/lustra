@@ -16,10 +16,10 @@ class Lustra::SQL::ConnectionPool
     database = @@databases.fetch(target) { raise Lustra::ErrorMessages.uninitialized_db_connection(target) }
 
     database.retry do
-      cnx = @@fiber_connections[fiber_target]?
+      connection = @@fiber_connections[fiber_target]?
 
-      if cnx
-        yield cnx
+      if connection
+        yield connection
       else
         database.using_connection do |new_connection|
           begin
