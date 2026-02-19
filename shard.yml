@@ -23,9 +23,4 @@ dependencies:
     github: phoffer/inflector.cr
     version: ">= 0.1.8"
 
-development_dependencies:
-  ameba:
-    github: veelenga/ameba
-    branch: master
-
 license: MIT
