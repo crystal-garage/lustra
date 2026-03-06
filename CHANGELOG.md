@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `Lustra::SQL::ConnectionPool#with_connection`: when a fiber-cached connection raises `DB::ConnectionLost`, clear the cached connection before retrying so retries can acquire a fresh connection.
+
 ## [v0.17.0] - 2026-02-19
 
 ### Fixed
