@@ -19,7 +19,15 @@ class Lustra::SQL::ConnectionPool
       connection = @@connections[fiber_target]?
 
       if connection
-        yield connection
+        begin
+          yield connection
+        rescue ex : DB::ConnectionLost
+          # Remove the cached (lost) connection so the retry can obtain a fresh one
+          @@connections.delete(fiber_target)
+
+          # Re-raise the original exception
+          raise ex
+        end
       else
         database.using_connection do |new_connection|
           begin
