@@ -405,6 +405,11 @@ User.query.where { (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |
   # Do something with user; only 100 users will be stored in memory
   # This method is using pg cursor, so it's 100% transaction-safe
 end
+
+# Order records by a specific sequence of values (CASE-based ordering)
+# Rows not in the list sort last
+Post.query.in_order_of(:status, ["started", "enrolled", "completed"])
+Ticket.query.in_order_of(:priority, [1, 3, 2]).order_by(:created_at, :desc)
 ```
 
 ##### JOIN operations
