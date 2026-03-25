@@ -2,18 +2,18 @@ require "../../spec_helper"
 
 module OrderBySpec
   describe Lustra::SQL::Query::OrderBy do
-    it "stacks" do
+    it "stacks order by clauses" do
       qry = Lustra::SQL.select.from("users").order_by(id: :desc).order_by(name: :asc)
       qry.to_sql.should eq(%(SELECT * FROM users ORDER BY "id" DESC, "name" ASC))
     end
 
-    it "lustras" do
+    it "clears order by clauses" do
       qry = Lustra::SQL.select.from("users").order_by(id: :desc, name: :asc)
       qry.clear_order_bys.order_by(id: :asc)
         .to_sql.should eq(%(SELECT * FROM users ORDER BY "id" ASC))
     end
 
-    it "be reverted" do
+    it "can be reverted" do
       qry = Lustra::SQL.select.from("users").order_by(id: :desc).order_by(:name, :asc, :nulls_first)
 
       qry.to_sql.should eq(%(SELECT * FROM users ORDER BY "id" DESC, "name" ASC NULLS FIRST))
