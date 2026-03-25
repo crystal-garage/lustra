@@ -135,7 +135,7 @@ In `shards.yml`
 dependencies:
   lustra:
     github: crystal-garage/lustra
-    version: ">= 0.16.0"
+    version: ">= 0.17.1"
 ```
 
 Then:
@@ -178,7 +178,7 @@ At the query level:
 
 ```crystal
 # For model queries
-User.query.use_connection("readonly").where { active == true }
+User.query.use_connection("readonly").where { active.true? }
 
 # For raw SQL queries
 Lustra::SQL.execute("readonly", "SELECT * FROM users")
@@ -676,7 +676,7 @@ class Post
   column deleted_at : Time?
 
   # This filter is applied to ALL queries automatically
-  default_scope { where { deleted_at == nil } }
+  default_scope { where { deleted_at.null? } }
 end
 
 # All these queries automatically exclude deleted posts:
@@ -1232,8 +1232,9 @@ You can create a table:
 ```crystal
 def change(dir)
   create_table(:test) do |t|
+    t.column :email, :string, index: true, unique: true, null: false
     t.column :first_name, :string, index: true
-    t.column :last_name, :string, unique: true
+    t.column :last_name, :string, index: true
 
     t.index "lower(first_name || ' ' || last_name)", using: :btree
 
@@ -1561,9 +1562,11 @@ nearest_stores = Store.query
 
 ```crystal
 # Complex spatial query combining multiple operations
-results = Location.query
-  .where { coordinates.within_distance?(city_center, 10_000.0) }  # Within 10km of center
-  .where { service_boundary.overlaps?(target_neighborhood) }      # Overlaps target area
+results =
+  Location
+  .query
+  .where { coordinates.within_distance?(city_center, 10_000.0) } # Within 10km of center
+  .where { service_boundary.overlaps?(target_neighborhood) }     # Overlaps target area
   .where { coverage_radius >= 1000.0 }                           # Minimum coverage
   .order("coordinates <-> ?", city_center)                       # Order by distance
   .limit(20)

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.17.1] - 2026-03-06
+
+### Fixed
+- `Lustra::SQL::ConnectionPool#with_connection`: when a fiber-cached connection raises `DB::ConnectionLost`, clear the cached connection before retrying so retries can acquire a fresh connection.
+
+## [v0.17.0] - 2026-02-19
+
+### Fixed
+- `Lustra::SQL::ConnectionPool#with_connection`: use `DB::Database#retry`.
+
+## [v0.16.3] - 2026-02-18
+### Maintenance
+- Internal improvements and optimizations
+
+
+## [v0.16.2] - 2026-02-16
+
+### Added
+- Expression: added `true?` and `false?` predicate helpers for boolean expression nodes.
+
+## [v0.16.1] - 2026-02-16
+
+### Added
+- Expression: Added `null?` predicate to the expression engine as syntactic sugar for `== nil` (e.g. `where { deleted_at.null? }` renders as `deleted_at IS NULL`).
+
 ## [v0.16.0] - 2026-01-16
 
 ### Added
@@ -255,6 +280,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
+- [v0.17.1](https://github.com/crystal-garage/lustra/releases/tag/v0.17.1)
+- [v0.17.0](https://github.com/crystal-garage/lustra/releases/tag/v0.17.0)
+- [v0.16.3](https://github.com/crystal-garage/lustra/releases/tag/v0.16.3)
+- [v0.16.2](https://github.com/crystal-garage/lustra/releases/tag/v0.16.2)
+- [v0.16.1](https://github.com/crystal-garage/lustra/releases/tag/v0.16.1)
+- [v0.16.0](https://github.com/crystal-garage/lustra/releases/tag/v0.16.0)
+- [v0.15.0](https://github.com/crystal-garage/lustra/releases/tag/v0.15.0)
+- [v0.14.4](https://github.com/crystal-garage/lustra/releases/tag/v0.14.4)
+- [v0.14.3](https://github.com/crystal-garage/lustra/releases/tag/v0.14.3)
+- [v0.14.2](https://github.com/crystal-garage/lustra/releases/tag/v0.14.2)
+- [v0.14.1](https://github.com/crystal-garage/lustra/releases/tag/v0.14.1)
+- [v0.14.0](https://github.com/crystal-garage/lustra/releases/tag/v0.14.0)
 - [v0.13.0](https://github.com/crystal-garage/lustra/releases/tag/v0.13.0)
 - [v0.12.0](https://github.com/crystal-garage/lustra/releases/tag/v0.12.0)
 - [v0.11.0](https://github.com/crystal-garage/lustra/releases/tag/v0.11.0)

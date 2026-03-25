@@ -86,5 +86,17 @@ abstract class Lustra::Expression::Node
     Node::Not.new(self)
   end
 
+  def null? : Node
+    Node::DoubleOperator.new(self, Null.new, "IS")
+  end
+
+  def true? : Node
+    Node::DoubleOperator.new(self, Literal.new(true), "=")
+  end
+
+  def false? : Node
+    Node::DoubleOperator.new(self, Literal.new(false), "=")
+  end
+
   abstract def resolve : String
 end
