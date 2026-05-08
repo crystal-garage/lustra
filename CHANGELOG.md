@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.17.2] - 2026-05-08
+
 ### Added
 - Collections/Queries: `in_order_of(column, values)` for custom-sequence ordering via a SQL `CASE` expression (e.g. `Post.query.in_order_of(:status, ["started", "enrolled", "completed"])`).
 
@@ -286,6 +288,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
+- [v0.17.1](https://github.com/crystal-garage/lustra/releases/tag/v0.17.2)
 - [v0.17.1](https://github.com/crystal-garage/lustra/releases/tag/v0.17.1)
 - [v0.17.0](https://github.com/crystal-garage/lustra/releases/tag/v0.17.0)
 - [v0.16.3](https://github.com/crystal-garage/lustra/releases/tag/v0.16.3)
