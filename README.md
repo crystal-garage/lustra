@@ -152,11 +152,26 @@ Initialize your database connection:
 Lustra::SQL.init("postgres://user:password@localhost/database_name")
 ```
 
+For production applications, configure the connection pool explicitly through
+the database URL. Crystal DB's default pool has no maximum size, which can open
+too many PostgreSQL connections under concurrent web requests or background
+jobs.
+
+```crystal
+Lustra::SQL.init("postgres://user:password@localhost/database_name?max_pool_size=10&initial_pool_size=1&max_idle_pool_size=2&checkout_timeout=5")
+```
+
+Tune `max_pool_size` per running process. For example, if you run two web
+processes with `max_pool_size=10` and two worker processes with
+`max_pool_size=5`, the application can open up to 30 PostgreSQL connections
+before counting migrations, monitoring, console sessions, or other services.
+Keep the total comfortably below PostgreSQL's `max_connections`.
+
 For multiple database connections:
 
 ```crystal
-Lustra::SQL.init("readonly", "postgres://user:password@localhost/readonly_db")
-Lustra::SQL.init("primary", "postgres://user:password@localhost/primary_db")
+Lustra::SQL.init("readonly", "postgres://user:password@localhost/readonly_db?max_pool_size=5&initial_pool_size=1")
+Lustra::SQL.init("primary", "postgres://user:password@localhost/primary_db?max_pool_size=10&initial_pool_size=1")
 ```
 
 **Using specific connections:**
