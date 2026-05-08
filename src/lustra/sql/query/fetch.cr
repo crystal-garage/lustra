@@ -94,10 +94,12 @@ module Lustra::SQL::Query::Fetch
 
     sql = to_sql
 
-    rs = Lustra::SQL.log_query(sql) { Lustra::SQL::ConnectionPool.with_connection(connection_name, &.query(sql)) }
-
     o = [] of Hash(String, ::Lustra::SQL::Any)
-    fetch_result_set(h, rs) { |x| o << x.dup }
+
+    Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
+      rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
+      fetch_result_set(h, rs) { |x| o << x.dup }
+    end
 
     o
   end
