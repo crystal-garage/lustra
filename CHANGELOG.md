@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Collections/Queries: `in_order_of(column, values)` for custom-sequence ordering via a SQL `CASE` expression (e.g. `Post.query.in_order_of(:status, ["started", "enrolled", "completed"])`).
 
+### Fixed
+- SQL: `SelectQuery#to_a` now consumes and closes result sets inside the active connection checkout.
+
 ## [v0.17.1] - 2026-03-06
 
 ### Fixed
