@@ -769,13 +769,7 @@ module Lustra::Model
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
       query = dup
-      # Default ordering is only safe for a plain model-table query. Joins can
-      # make the primary key ambiguous, and CTE/from aliases may not expose the
-      # model table name at all.
-      if query.order_bys.empty? && query.joins.empty? && query.cte.empty? &&
-         query.froms.size == 1 && query.froms.first.to_sql == T.full_table_name
-        query.order_by("#{T.full_table_name}.#{Lustra::SQL.escape(T.__pkey__)}", :asc)
-      end
+      query.apply_default_order_for_simple_query
 
       query.limit(1).fetch do |hash|
         return Lustra::Model::Factory.build(T, hash, persisted: true, cache: query.cache, fetch_columns: fetch_columns)
@@ -794,13 +788,7 @@ module Lustra::Model
     # if not found, return `nil`
     def last(fetch_columns = false) : T?
       query = dup
-      # Default ordering is only safe for a plain model-table query. Joins can
-      # make the primary key ambiguous, and CTE/from aliases may not expose the
-      # model table name at all.
-      if query.order_bys.empty? && query.joins.empty? && query.cte.empty? &&
-         query.froms.size == 1 && query.froms.first.to_sql == T.full_table_name
-        query.order_by("#{T.full_table_name}.#{Lustra::SQL.escape(T.__pkey__)}", :asc)
-      end
+      query.apply_default_order_for_simple_query
 
       new_order = query.order_bys.map do |x|
         Lustra::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
@@ -813,6 +801,18 @@ module Lustra::Model
       end
 
       nil
+    end
+
+    protected def apply_default_order_for_simple_query
+      # Default ordering is only safe for a plain model-table query. Joins can
+      # make the primary key ambiguous, and CTE/from aliases may not expose the
+      # model table name at all.
+      if order_bys.empty? && joins.empty? && cte.empty? &&
+         froms.size == 1 && froms.first.to_sql == T.full_table_name
+        order_by("#{T.full_table_name}.#{Lustra::SQL.escape(T.__pkey__)}", :asc)
+      end
+
+      self
     end
 
     # Get the last row from the collection query.
