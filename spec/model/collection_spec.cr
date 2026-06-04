@@ -975,7 +975,7 @@ module CollectionSpec
 
         users.first!.first_name.should eq("user 9")
         users.to_sql.should eq(sql)
-        users.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" }.reverse)
+        users.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" }.reverse!)
       end
     end
 
@@ -1013,7 +1013,7 @@ module CollectionSpec
 
         users.last!.first_name.should eq("user 0")
         users.to_sql.should eq(sql)
-        users.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" }.reverse)
+        users.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" }.reverse!)
       end
     end
 
