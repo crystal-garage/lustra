@@ -793,26 +793,26 @@ module Lustra::Model
     # Get the last row from the collection query.
     # if not found, return `nil`
     def last(fetch_columns = false) : T?
-      order_by("#{T.__pkey__}", :asc) if T.__pkey__ || order_bys.empty?
-
-      arr = order_bys.dup # Save current order by
-
-      begin
-        new_order = arr.map do |x|
-          Lustra::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
-        end
-
-        clear_order_bys.order_by(new_order)
-
-        limit(1).fetch do |hash|
-          return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
-        end
-
-        nil
-      ensure
-        # reset the order by in case we want to reuse the query
-        clear_order_bys.order_by(order_bys)
+      query = dup
+      # Default ordering is only safe for a plain model-table query. Joins can
+      # make the primary key ambiguous, and CTE/from aliases may not expose the
+      # model table name at all.
+      if query.order_bys.empty? && query.joins.empty? && query.cte.empty? &&
+         query.froms.size == 1 && query.froms.first.to_sql == T.full_table_name
+        query.order_by("#{T.full_table_name}.#{Lustra::SQL.escape(T.__pkey__)}", :asc)
       end
+
+      new_order = query.order_bys.map do |x|
+        Lustra::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
+      end
+
+      query.clear_order_bys.order_by(new_order)
+
+      query.limit(1).fetch do |hash|
+        return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+      end
+
+      nil
     end
 
     # Get the last row from the collection query.
