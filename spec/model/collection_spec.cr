@@ -962,6 +962,23 @@ module CollectionSpec
       end
     end
 
+    it "first does not mutate the query" do
+      temporary do
+        reinit_example_models
+
+        10.times do |x|
+          User.create! first_name: "user #{x}"
+        end
+
+        users = User.query.order_by({id: :desc})
+        sql = users.to_sql
+
+        users.first!.first_name.should eq("user 9")
+        users.to_sql.should eq(sql)
+        users.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" }.reverse)
+      end
+    end
+
     it "last / last!" do
       temporary do
         reinit_example_models

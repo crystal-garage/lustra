@@ -188,6 +188,9 @@ module Lustra::Model
     @cache : Lustra::Model::QueryCache
 
     # :nodoc:
+    getter cache : Lustra::Model::QueryCache
+
+    # :nodoc:
     @cached_result : Array(T)?
 
     # :nodoc:
@@ -765,10 +768,17 @@ module Lustra::Model
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      order_by(Lustra::SQL.escape("#{T.__pkey__}"), :asc) if T.__pkey__ || order_bys.empty?
+      query = dup
+      # Default ordering is only safe for a plain model-table query. Joins can
+      # make the primary key ambiguous, and CTE/from aliases may not expose the
+      # model table name at all.
+      if query.order_bys.empty? && query.joins.empty? && query.cte.empty? &&
+         query.froms.size == 1 && query.froms.first.to_sql == T.full_table_name
+        query.order_by("#{T.full_table_name}.#{Lustra::SQL.escape(T.__pkey__)}", :asc)
+      end
 
-      limit(1).fetch do |hash|
-        return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+      query.limit(1).fetch do |hash|
+        return Lustra::Model::Factory.build(T, hash, persisted: true, cache: query.cache, fetch_columns: fetch_columns)
       end
 
       nil
