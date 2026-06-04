@@ -53,6 +53,21 @@ module ModelSpec
         end
       end
 
+      it "fetch_first does not mutate the query" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+          User.create!(id: 2, first_name: "Hans")
+
+          users = User.query.order_by("id")
+          sql = users.to_sql
+
+          users.fetch_first!["first_name"].should eq("John")
+          users.to_sql.should eq(sql)
+          users.to_a.map(&.first_name).should eq(["John", "Hans"])
+        end
+      end
+
       it "exists?" do
         temporary do
           reinit_example_models
