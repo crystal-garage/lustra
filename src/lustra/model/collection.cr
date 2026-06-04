@@ -575,12 +575,12 @@ module Lustra::Model
 
     # Basically a fancy way to write `OFFSET x LIMIT 1`
     def []?(off, fetch_columns = false) : T?
-      offset(off).first(fetch_columns)
+      dup.offset(off).first(fetch_columns)
     end
 
     # Get a range of models
     def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
-      offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
+      dup.offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
 
     # Return an empty, chainable collection (Rails-like `.none`).

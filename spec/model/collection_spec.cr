@@ -663,6 +663,7 @@ module CollectionSpec
         end
 
         qry = User.query.order_by({first_name: :asc})
+        sql = qry.to_sql
 
         qry[1].first_name.should eq("user 1")
         qry[3..5].map(&.first_name).should eq(["user 3", "user 4"])
@@ -671,6 +672,9 @@ module CollectionSpec
         qry[10]?.should be_nil
 
         expect_raises(Lustra::SQL::RecordNotFoundError) { qry[11] }
+
+        qry.to_sql.should eq(sql)
+        qry.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" })
       end
     end
 
