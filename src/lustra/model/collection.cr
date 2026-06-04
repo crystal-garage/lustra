@@ -480,7 +480,7 @@ module Lustra::Model
 
       return !cr.empty? if cr
 
-      clear_select.select("1").limit(1).fetch { |_| return true }
+      dup.clear_select.select("1").limit(1).fetch { |_| return true }
 
       false
     end

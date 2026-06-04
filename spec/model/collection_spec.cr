@@ -169,6 +169,24 @@ module CollectionSpec
         end
       end
 
+      context "#empty?" do
+        it "does not mutate the query before iteration" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John", last_name: "Doe")
+            users = User.query.where(id: user.id)
+
+            users.empty?.should be_false
+
+            users.each do |found_user|
+              found_user.id.should eq(user.id)
+              found_user.first_name.should eq("John")
+            end
+          end
+        end
+      end
+
       context "#find_or_build" do
         it "create with block" do
           temporary do
