@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Collections: `empty?`/`any?` no longer mutate the original query, preserving selected columns for later iteration.
+- Queries: `pluck`/`pluck_col` no longer mutate the original query select list.
+- Queries: `fetch_first`/`fetch_first!` no longer mutate the original query limit.
+- Collections: `first`/`first!` no longer mutate the original query limit or order.
+- Collections: `last`/`last!` no longer mutate the original query limit or order.
+- Collections: index and range accessors (`[]`, `[]?`) no longer mutate the original query offset or limit.
+- Collections: finder helpers no longer mutate the original query conditions.
+
 ## [v0.17.2] - 2026-05-08
 
 ### Added

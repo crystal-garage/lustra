@@ -188,6 +188,9 @@ module Lustra::Model
     @cache : Lustra::Model::QueryCache
 
     # :nodoc:
+    getter cache : Lustra::Model::QueryCache
+
+    # :nodoc:
     @cached_result : Array(T)?
 
     # :nodoc:
@@ -480,7 +483,7 @@ module Lustra::Model
 
       return !cr.empty? if cr
 
-      clear_select.select("1").limit(1).fetch { |_| return true }
+      dup.clear_select.select("1").limit(1).fetch { |_| return true }
 
       false
     end
@@ -572,12 +575,12 @@ module Lustra::Model
 
     # Basically a fancy way to write `OFFSET x LIMIT 1`
     def []?(off, fetch_columns = false) : T?
-      offset(off).first(fetch_columns)
+      dup.offset(off).first(fetch_columns)
     end
 
     # Get a range of models
     def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
-      offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
+      dup.offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
 
     # Return an empty, chainable collection (Rails-like `.none`).
@@ -596,7 +599,7 @@ module Lustra::Model
     def find(fetch_columns = false, &) : T?
       x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
 
-      where(x).first(fetch_columns)
+      dup.where(x).first(fetch_columns)
     end
 
     # A convenient way to write `where({any_column: "any_value"}).first(fetch_columns)`
@@ -614,13 +617,13 @@ module Lustra::Model
     # Returns a model using primary key equality
     # Returns `nil` if not found.
     def find(x)
-      where { raw(T.__pkey__) == x }.first
+      dup.where { raw(T.__pkey__) == x }.first
     end
 
     # Find multiple models by an array of primary keys.
     # Returns an array of models (may be empty if none found).
     def find(ids : Array)
-      where { raw(T.__pkey__).in?(ids) }.to_a
+      dup.where { raw(T.__pkey__).in?(ids) }.to_a
     end
 
     # A convenient way to write `where { condition }.first!(fetch_columns)`
@@ -628,7 +631,7 @@ module Lustra::Model
     def find!(fetch_columns = false, &) : T
       x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
 
-      where(x).first!(fetch_columns)
+      dup.where(x).first!(fetch_columns)
     end
 
     # A convenient way to write `where({any_column: "any_value"}).first!(fetch_columns)`
@@ -663,7 +666,7 @@ module Lustra::Model
     def find_by(fetch_columns = false, &) : T?
       x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
 
-      where(x).first(fetch_columns)
+      dup.where(x).first(fetch_columns)
     end
 
     # Find a model by column values. Returns `nil` if not found.
@@ -673,19 +676,19 @@ module Lustra::Model
     # user = User.query.where { active == true }.find_by(role: "admin")
     # ```
     def find_by(**tuple) : T?
-      where(tuple).first
+      dup.where(tuple).first
     end
 
     # :ditto:
     def find_by(tuple : NamedTuple, fetch_columns = false) : T?
-      where(tuple).first(fetch_columns)
+      dup.where(tuple).first(fetch_columns)
     end
 
     # A convenient way to write `where { condition }.first!(fetch_columns)`
     def find_by!(fetch_columns = false, &) : T
       x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
 
-      where(x).first!(fetch_columns)
+      dup.where(x).first!(fetch_columns)
     end
 
     # Find a model by column values. Raises error if not found.
@@ -694,19 +697,20 @@ module Lustra::Model
     # user = User.query.find_by!(email: "test@example.com")
     # ```
     def find_by!(**tuple) : T
-      where(**tuple).first!
+      dup.where(**tuple).first!
     end
 
     # :ditto:
     def find_by!(tuple : NamedTuple, fetch_columns = false) : T
-      where(**tuple).first!(fetch_columns)
+      dup.where(tuple).first!(fetch_columns)
     end
 
     # Try to fetch a row. If not found, build a new object and setup
     # the fields like setup in the condition tuple.
     def find_or_build(**tuple, & : T -> Nil) : T
-      where(tuple) unless tuple.size == 0
-      r = first
+      query = dup
+      query.where(tuple) unless tuple.size == 0
+      r = query.first
 
       return r if r
 
@@ -765,10 +769,11 @@ module Lustra::Model
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      order_by(Lustra::SQL.escape("#{T.__pkey__}"), :asc) if T.__pkey__ || order_bys.empty?
+      query = dup
+      query.apply_default_order_for_simple_query
 
-      limit(1).fetch do |hash|
-        return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+      query.limit(1).fetch do |hash|
+        return Lustra::Model::Factory.build(T, hash, persisted: true, cache: query.cache, fetch_columns: fetch_columns)
       end
 
       nil
@@ -783,26 +788,32 @@ module Lustra::Model
     # Get the last row from the collection query.
     # if not found, return `nil`
     def last(fetch_columns = false) : T?
-      order_by("#{T.__pkey__}", :asc) if T.__pkey__ || order_bys.empty?
+      query = dup
+      query.apply_default_order_for_simple_query
 
-      arr = order_bys.dup # Save current order by
-
-      begin
-        new_order = arr.map do |x|
-          Lustra::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
-        end
-
-        clear_order_bys.order_by(new_order)
-
-        limit(1).fetch do |hash|
-          return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
-        end
-
-        nil
-      ensure
-        # reset the order by in case we want to reuse the query
-        clear_order_bys.order_by(order_bys)
+      new_order = query.order_bys.map do |x|
+        Lustra::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
       end
+
+      query.clear_order_bys.order_by(new_order)
+
+      query.limit(1).fetch do |hash|
+        return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+      end
+
+      nil
+    end
+
+    protected def apply_default_order_for_simple_query
+      # Default ordering is only safe for a plain model-table query. Joins can
+      # make the primary key ambiguous, and CTE/from aliases may not expose the
+      # model table name at all.
+      if order_bys.empty? && joins.empty? && cte.empty? &&
+         froms.size == 1 && froms.first.to_sql == T.full_table_name
+        order_by("#{T.full_table_name}.#{Lustra::SQL.escape(T.__pkey__)}", :asc)
+      end
+
+      self
     end
 
     # Get the last row from the collection query.

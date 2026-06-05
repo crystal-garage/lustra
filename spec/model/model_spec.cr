@@ -38,6 +38,36 @@ module ModelSpec
         end
       end
 
+      it "pluck does not mutate the query" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", middle_name: "William")
+          User.create!(id: 2, first_name: "Hans", middle_name: "Zimmer")
+
+          users = User.query.order_by("id")
+          sql = users.to_sql
+
+          users.pluck_col("first_name", String).should eq(["John", "Hans"])
+          users.to_sql.should eq(sql)
+          users.to_a.map(&.middle_name).should eq(["William", "Zimmer"])
+        end
+      end
+
+      it "fetch_first does not mutate the query" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+          User.create!(id: 2, first_name: "Hans")
+
+          users = User.query.order_by("id")
+          sql = users.to_sql
+
+          users.fetch_first!["first_name"].should eq("John")
+          users.to_sql.should eq(sql)
+          users.to_a.map(&.first_name).should eq(["John", "Hans"])
+        end
+      end
+
       it "exists?" do
         temporary do
           reinit_example_models
