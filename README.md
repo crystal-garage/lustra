@@ -135,7 +135,7 @@ In `shards.yml`
 dependencies:
   lustra:
     github: crystal-garage/lustra
-    version: ">= 0.17.2"
+    version: ">= 0.18.0"
 ```
 
 Then:

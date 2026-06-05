@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.18.0] - 2026-06-05
+
 ### Fixed
 - Collections: `empty?`/`any?` no longer mutate the original query, preserving selected columns for later iteration.
 - Queries: `pluck`/`pluck_col` no longer mutate the original query select list.
