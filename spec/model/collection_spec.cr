@@ -782,6 +782,26 @@ module CollectionSpec
           end
         end
       end
+
+      it "does not mutate the query" do
+        temporary do
+          reinit_example_models
+
+          3.times do |x|
+            User.create! first_name: "user #{x}"
+          end
+
+          users = User.query.order_by({id: :asc})
+          sql = users.to_sql
+
+          users.find_by(first_name: "user 1").try(&.first_name).should eq("user 1")
+          users.find(3).try(&.first_name).should eq("user 2")
+          users.find_or_build(first_name: "user 4").persisted?.should be_false
+
+          users.to_sql.should eq(sql)
+          users.to_a.map(&.first_name).should eq(["user 0", "user 1", "user 2"])
+        end
+      end
     end
 
     context "join" do
