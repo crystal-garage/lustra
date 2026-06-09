@@ -475,7 +475,7 @@ module Lustra::Model
     end
 
     # Check whether the query return any row.
-    def any?
+    def any? : Bool
       cr = @cached_result
 
       return !cr.empty? if cr
@@ -488,7 +488,7 @@ module Lustra::Model
     end
 
     # Inverse of `any?`, return true if the request return no rows.
-    def empty?
+    def empty? : Bool
       !any?
     end
 
