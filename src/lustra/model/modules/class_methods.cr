@@ -87,11 +87,8 @@ module Lustra::Model::ClassMethods
       # This is the object managing a `SELECT` request.
       # A new collection is created by calling `{{ @type }}.query`
       #
-      # Collections are mutable: query-refinement methods such as `where`,
-      # `select`, `order_by`, `limit`, and `offset` mutate the collection.
-      # Terminal helpers such as `first`, `last`, `empty?`, `pluck`, and
-      # finder methods should not mutate it.
-      # You may want to copy the collection by calling `dup`.
+      # Collection are mutable and refining the SQL will mutate the collection.
+      # You may want to copy the collection by calling `dup`
       #
       # See `Lustra::Model::CollectionBase`
       class Collection < Lustra::Model::CollectionBase(\{{@type}}); end

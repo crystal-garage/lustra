@@ -44,7 +44,7 @@ module Lustra::SQL::SelectBuilder
 
   # Duplicate the query
   def dup : self
-    query = self.class.new(
+    self.class.new(
       distinct_value: @distinct_value,
       cte: @cte.dup,
       columns: @columns.dup,
@@ -60,10 +60,6 @@ module Lustra::SQL::SelectBuilder
       lock: @lock,
       before_query_triggers: @before_query_triggers
     ).use_connection(connection_name)
-
-    # Preserve joined-model projections such as SELECT "posts".* when terminal helpers run on duplicates.
-    query.default_wildcard_table = @default_wildcard_table
-    query
   end
 
   def to_sql : String

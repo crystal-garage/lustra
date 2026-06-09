@@ -336,57 +336,26 @@ end
 
 ### Querying
 
-Lustra queries are represented by collections. A collection is both a model
-loader and a SQL builder backed by the lower-level `Lustra::SQL` API.
+Lustra offers a collection system for your models. The collection system
+takes origin to the lower API `Lustra::SQL`, used to build requests.
 
 #### Simple query
 
-##### Building and reusing collections
+##### Fetch a model
 
-Start from `Model.query` to build a `SELECT * FROM ...` request. Query
-refinement methods mutate the collection they are called on:
-
-```crystal
-users = User.query
-users.where { active == true }
-users.order_by(:created_at, :desc)
-
-users.to_sql
-# => SELECT * FROM "users" WHERE ("active" = TRUE) ORDER BY "created_at" DESC
-```
-
-Use `dup` when you want to branch from a base query:
+To fetch one model:
 
 ```crystal
-active_users = User.query.where { active == true }
-
-admins = active_users.dup.where { role == "admin" }
-guests = active_users.dup.where { role == "guest" }
-```
-
-Terminal helpers execute a query and should not mutate the collection:
-`first`, `last`, `empty?`, `exists?`, `find`, `find_by`, `pluck`, `ids`,
-index/range accessors, `each`, and `to_a`.
-
-##### Fetch one model
-
-Use `first`/`last` for positional lookup, `find` for primary keys, and
-`find_by` for arbitrary conditions:
-
-```crystal
-# Get the first or last user
-User.query.first  # Returns User? ordered by primary key on simple queries
-User.query.first! # Raises Lustra::SQL::RecordNotFoundError when no row exists
-User.query.last
-User.query.last!
+# 1. Get the first user
+User.query.first # Get the first user, ordered by primary key
 
 # Get a specific user by primary key
 User.find!(1) # Returns user with id=1, or raises exception if not found
 User.find(1)  # Returns user with id=1, or nil if not found
 
 # Find multiple users by array of IDs
-users = User.find([1, 2, 3])  # Returns Array(User), may be partial
-users = User.find!([1, 2, 3]) # Raises if any ID is not found
+users = User.find([1, 2, 3])    # Returns Array(User), may be partial if some IDs don't exist
+users = User.find!([1, 2, 3])   # Raises error if ANY ID is not found
 
 # Find by other columns
 user = User.find_by(email: "test@example.com")  # Returns nil if not found
@@ -401,14 +370,14 @@ u : User? = User.query.find_by { email =~ /yacine/i }
 
 ##### Fetch multiple models
 
-Collections include the `Lustra::SQL::SelectBuilder` API, so lower-level query
-methods like `where`, `where.not`, `where.or`, `join`, `group_by`, `order_by`,
-`limit`, `offset`, and `lock` are available on model queries.
+To prepare a collection, just use `Model#query`.
+Collections include `SQL::Select` object, so all the low level API
+(`where`, `where.not`, `where.or`, `join`, `group_by`, `lock`...) can be used in this context.
 
 ```crystal
 # Basic filtering with where
 User.query.where { (id >= 100) & (id <= 200) }.each do |user|
-  # Do something with user
+  # Do something with user !
 end
 
 # Negative filtering with where.not
@@ -426,31 +395,11 @@ User.query
   end
 # Generated SQL:
 # SELECT * FROM "users" WHERE ((("active" = TRUE) AND NOT ("role" = 'admin')) OR "id" IN (1, 2, 3))
-```
 
-Fetch all rows as an array, iterate row by row, or fetch a slice:
-
-```crystal
-users = User.query.where { active == true }.to_a
-
-User.query.order_by(:id).each do |user|
-  puts user.id
-end
-
-third_user = User.query.order_by(:id)[2]
-first_page = User.query.order_by(:id)[0..20]
-```
-
-Use predicate and projection helpers when you do not need full models:
-
-```crystal
 # Check if any records exist
 if User.query.where { active == true }.exists?
   puts "There are active users!"
 end
-
-# Inverse predicate
-User.query.where { active == true }.empty?
 
 # Extract specific column values
 user_names = User.query.pluck_col("first_name")
@@ -458,31 +407,20 @@ user_data = User.query.pluck("first_name", "last_name")
 
 # Get array of IDs (shortcut for pluck_col primary key)
 active_user_ids = User.query.where { active == true }.ids  # => [1, 2, 3, 4, 5]
-```
 
-Bulk write helpers operate directly in SQL and do not instantiate models:
-
-```crystal
 # Bulk update without loading models (bypasses validations and callbacks)
 affected = User.query.where { active == false }.update_all(status: "inactive")
 puts "Updated #{affected} users"
 
 # Update multiple columns at once
 User.query.where { role == "guest" }.update_all(role: "user", verified: true)
-```
 
-For large result sets, use a cursor to avoid loading everything in memory:
-
-```crystal
+# In case you know there's millions of rows, use a cursor to avoid memory issues!
 User.query.where { (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |user|
   # Do something with user; only 100 users will be stored in memory
   # This method is using pg cursor, so it's 100% transaction-safe
 end
-```
 
-Order by a custom sequence when domain values have a specific priority:
-
-```crystal
 # Order records by a specific sequence of values (CASE-based ordering)
 # Rows not in the list sort last
 Post.query.in_order_of(:status, ["started", "enrolled", "completed"])
