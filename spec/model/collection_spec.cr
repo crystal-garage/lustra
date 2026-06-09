@@ -169,6 +169,24 @@ module CollectionSpec
         end
       end
 
+      context "#empty?" do
+        it "does not mutate the query before iteration" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "John", last_name: "Doe")
+            users = User.query.where(id: user.id)
+
+            users.empty?.should be_false
+
+            users.each do |found_user|
+              found_user.id.should eq(user.id)
+              found_user.first_name.should eq("John")
+            end
+          end
+        end
+      end
+
       context "#find_or_build" do
         it "create with block" do
           temporary do
@@ -645,6 +663,7 @@ module CollectionSpec
         end
 
         qry = User.query.order_by({first_name: :asc})
+        sql = qry.to_sql
 
         qry[1].first_name.should eq("user 1")
         qry[3..5].map(&.first_name).should eq(["user 3", "user 4"])
@@ -653,6 +672,9 @@ module CollectionSpec
         qry[10]?.should be_nil
 
         expect_raises(Lustra::SQL::RecordNotFoundError) { qry[11] }
+
+        qry.to_sql.should eq(sql)
+        qry.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" })
       end
     end
 
@@ -758,6 +780,26 @@ module CollectionSpec
           expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.find_by!(first_name: "not_exists")
           end
+        end
+      end
+
+      it "does not mutate the query" do
+        temporary do
+          reinit_example_models
+
+          3.times do |x|
+            User.create! first_name: "user #{x}"
+          end
+
+          users = User.query.order_by({id: :asc})
+          sql = users.to_sql
+
+          users.find_by(first_name: "user 1").try(&.first_name).should eq("user 1")
+          users.find(3).try(&.first_name).should eq("user 2")
+          users.find_or_build(first_name: "user 4").persisted?.should be_false
+
+          users.to_sql.should eq(sql)
+          users.to_a.map(&.first_name).should eq(["user 0", "user 1", "user 2"])
         end
       end
     end
@@ -944,6 +986,23 @@ module CollectionSpec
       end
     end
 
+    it "first does not mutate the query" do
+      temporary do
+        reinit_example_models
+
+        10.times do |x|
+          User.create! first_name: "user #{x}"
+        end
+
+        users = User.query.order_by({id: :desc})
+        sql = users.to_sql
+
+        users.first!.first_name.should eq("user 9")
+        users.to_sql.should eq(sql)
+        users.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" }.reverse!)
+      end
+    end
+
     it "last / last!" do
       temporary do
         reinit_example_models
@@ -962,6 +1021,23 @@ module CollectionSpec
         end
 
         User.query.last.should be_nil
+      end
+    end
+
+    it "last does not mutate the query" do
+      temporary do
+        reinit_example_models
+
+        10.times do |x|
+          User.create! first_name: "user #{x}"
+        end
+
+        users = User.query.order_by({id: :desc})
+        sql = users.to_sql
+
+        users.last!.first_name.should eq("user 0")
+        users.to_sql.should eq(sql)
+        users.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" }.reverse!)
       end
     end
 
