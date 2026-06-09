@@ -16,6 +16,13 @@ module Lustra::SQL::Query::BeforeQuery
       self
     end
 
+    # Remove callbacks registered to run before the query executes.
+    def clear_before_query_triggers
+      @before_query_triggers = [] of -> Nil
+
+      self
+    end
+
     # :nodoc:
     protected def trigger_before_query
       @before_query_triggers.each &.call
