@@ -69,7 +69,7 @@ module ModelSpec
 
           users.empty?.should be_false
           users.to_sql.should eq(sql)
-          users.each { |user| user.first_name.should eq("John") }
+          users.each(&.first_name.should(eq("John")))
         end
       end
 
