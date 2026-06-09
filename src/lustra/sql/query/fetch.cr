@@ -73,7 +73,7 @@ module Lustra::SQL::Query::Fetch
   # Alias for `first` because first is redefined in Collection::Base
   # object to return a model instead.
   def fetch_first
-    dup.limit(1).fetch(fetch_all: true) { |x| return x }
+    limit(1).fetch(fetch_all: true) { |x| return x }
 
     nil
   end
