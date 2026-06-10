@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.18.2] - 2026-06-10
+
 ### Fixed
 - `Collection#any?` and `Collection#empty?` no longer mutate the collection query or run eager-loading hooks while checking for matching rows.
 
