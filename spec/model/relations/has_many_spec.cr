@@ -127,6 +127,22 @@ describe "Lustra::Model::Relations::HasMany" do
         end
       end
 
+      it "does not run eager loading hooks when checking empty?" do
+        temporary do
+          reinit_example_models
+          User.create!({first_name: "John", last_name: "Doe"})
+
+          hook_called = false
+          users = User.query.with_posts { hook_called = true }
+
+          users.empty?.should be_false
+          hook_called.should be_false
+
+          users.each { }
+          hook_called.should be_true
+        end
+      end
+
       it "can find posts" do
         temporary do
           reinit_example_models

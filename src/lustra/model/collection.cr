@@ -475,18 +475,20 @@ module Lustra::Model
     end
 
     # Check whether the query return any row.
-    def any?
+    def any? : Bool
       cr = @cached_result
 
       return !cr.empty? if cr
 
-      clear_select.select("1").limit(1).fetch { |_| return true }
+      query = dup.clear_before_query_triggers.clear_select.clear_order_bys.select("1")
+      query.limit(1) unless query.limit == 0
+      query.fetch { |_| return true }
 
       false
     end
 
     # Inverse of `any?`, return true if the request return no rows.
-    def empty?
+    def empty? : Bool
       !any?
     end
 

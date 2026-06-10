@@ -59,6 +59,20 @@ module ModelSpec
         end
       end
 
+      it "empty? does not mutate selected columns" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+
+          users = User.query.where(id: 1)
+          sql = users.to_sql
+
+          users.empty?.should be_false
+          users.to_sql.should eq(sql)
+          users.each(&.first_name.should(eq("John")))
+        end
+      end
+
       it "find with array of IDs" do
         temporary do
           reinit_example_models
