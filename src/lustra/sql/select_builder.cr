@@ -26,20 +26,22 @@ module Lustra::SQL::SelectBuilder
   include Query::BeforeQuery
   include Query::WithPagination
 
-  def initialize(@distinct_value = nil,
-                 @cte = {} of String => Lustra::SQL::SelectBuilder | String,
-                 @columns = [] of SQL::Column,
-                 @froms = [] of SQL::From,
-                 @joins = [] of SQL::Join,
-                 @wheres = [] of Lustra::Expression::Node,
-                 @havings = [] of Lustra::Expression::Node,
-                 @windows = [] of {String, String},
-                 @group_bys = [] of Symbolic,
-                 @order_bys = [] of Lustra::SQL::Query::OrderBy::Record,
-                 @limit = nil,
-                 @offset = nil,
-                 @lock = nil,
-                 @before_query_triggers = [] of -> Nil)
+  def initialize(
+    @distinct_value = nil,
+    @cte = {} of String => Lustra::SQL::SelectBuilder | String,
+    @columns = [] of SQL::Column,
+    @froms = [] of SQL::From,
+    @joins = [] of SQL::Join,
+    @wheres = [] of Lustra::Expression::Node,
+    @havings = [] of Lustra::Expression::Node,
+    @windows = [] of {String, String},
+    @group_bys = [] of Symbolic,
+    @order_bys = [] of Lustra::SQL::Query::OrderBy::Record,
+    @limit = nil,
+    @offset = nil,
+    @lock = nil,
+    @before_query_triggers = [] of -> Nil,
+  )
   end
 
   # Duplicate the query
@@ -63,40 +65,56 @@ module Lustra::SQL::SelectBuilder
   end
 
   def to_sql : String
-    [print_ctes,
-     print_select,
-     print_froms,
-     print_joins,
-     print_wheres,
-     print_windows,
-     print_group_bys,
-     print_havings,
-     print_order_bys,
-     print_limit_offsets,
-     print_lock].compact.reject(&.empty?).join(" ")
+    [
+      print_ctes,
+      print_select,
+      print_froms,
+      print_joins,
+      print_wheres,
+      print_windows,
+      print_group_bys,
+      print_havings,
+      print_order_bys,
+      print_limit_offsets,
+      print_lock,
+    ].compact.reject(&.empty?).join(" ")
   end
 
   # Construct a delete query from this select query.
   # It uses only the `from` and the `where` clause fo the current select request.
-  # Can be useful in some case, but
-  #   use at your own risk !
+  # Can be useful in some case, but use at your own risk.
   def to_delete
-    raise QueryBuildingError.new("Cannot build a delete query " +
-                                 "from a select with multiple or none `from` clauses") unless @froms.size == 1
+    unless @froms.size == 1
+      raise QueryBuildingError.new(
+        "Cannot build a delete query from a select with multiple or none `from` clauses"
+      )
+    end
 
     v = @froms[0].value
 
-    raise QueryBuildingError.new("Cannot delete from a select with sub-select as `from` clause") if v.is_a?(SelectBuilder)
+    if v.is_a?(SelectBuilder)
+      raise QueryBuildingError.new(
+        "Cannot delete from a select with sub-select as `from` clause"
+      )
+    end
 
     DeleteQuery.new(v.dup, @wheres.dup)
   end
 
   def to_update
-    raise QueryBuildingError.new("Cannot build a update query " +
-                                 "from a select with multiple or none `from` clauses") unless @froms.size == 1
+    unless @froms.size == 1
+      raise QueryBuildingError.new(
+        "Cannot build a update query from a select with multiple or none `from` clauses"
+      )
+    end
+
     v = @froms[0].value
 
-    raise QueryBuildingError.new("Cannot delete from a select with sub-select as `from` clause") if v.is_a?(SelectBuilder)
+    if v.is_a?(SelectBuilder)
+      raise QueryBuildingError.new(
+        "Cannot delete from a select with sub-select as `from` clause"
+      )
+    end
 
     UpdateQuery.new(table: v.dup, wheres: @wheres.dup)
   end
