@@ -11,12 +11,12 @@ struct Time
     end
   end
 
-  def +(time_in_day : Lustra::TimeInDay)
-    self + time_in_day.microseconds.microseconds
+  def +(other : Lustra::TimeInDay)
+    self + other.microseconds.microseconds
   end
 
-  def -(time_in_day : Lustra::TimeInDay)
-    self - time_in_day.microseconds.microseconds
+  def -(other : Lustra::TimeInDay)
+    self - other.microseconds.microseconds
   end
 end
 

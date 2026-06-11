@@ -26,8 +26,5 @@ Lint/SpecFilename:
 Naming/BlockParameterName:
   Enabled: false
 
-Naming/BinaryOperatorParameterName:
-  Enabled: false
-
 Style/RedundantSelf:
   Enabled: false

@@ -8,11 +8,11 @@ struct Citext
   def initialize(@string)
   end
 
-  def ==(x : String | Citext)
-    compare(x.to_s, true) == 0
+  def ==(other : String | Citext)
+    compare(other.to_s, true) == 0
   end
 
-  def !=(x : String | Citext)
-    !(self == x)
+  def !=(other : String | Citext)
+    !(self == other)
   end
 end
