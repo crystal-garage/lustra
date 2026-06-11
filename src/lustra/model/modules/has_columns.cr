@@ -306,7 +306,7 @@ module Lustra::Model::HasColumns
       {% verbatim do %}
         {% for name, typ in T %}
           {% if settings = COLUMNS["#{name}".id] %}
-            @{{ settings[:crystal_variable_name] }}_column.set_convert(t[:{{ name }}])
+            @{{ settings[:crystal_variable_name] }}_column.convert = t[:{{ name }}]
           {% else %}
             {% if !@type.has_method?("#{name}=") %}
               {% raise "No method #{@type}##{name}= while trying to set value of #{name}" %}
@@ -330,7 +330,7 @@ module Lustra::Model::HasColumns
       {% verbatim do %}
         {% for name, settings in COLUMNS %}
           v = h.fetch(:{{ settings[:db_column_name] }}) { Lustra::Model::Column::UNKNOWN }
-          @{{ settings[:crystal_variable_name] }}_column.set_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
+          @{{ settings[:crystal_variable_name] }}_column.convert = v unless v.is_a?(Lustra::Model::Column::UnknownClass)
         {% end %}
       {% end %}
 
@@ -344,7 +344,7 @@ module Lustra::Model::HasColumns
       {% verbatim do %}
         {% for name, settings in COLUMNS %}
           v = h.fetch({{ settings[:db_column_name] }}) { Lustra::Model::Column::UNKNOWN }
-          @{{ settings[:crystal_variable_name] }}_column.set_convert(v) unless v.is_a?(Lustra::Model::Column::UnknownClass)
+          @{{ settings[:crystal_variable_name] }}_column.convert = v unless v.is_a?(Lustra::Model::Column::UnknownClass)
         {% end %}
       {% end %}
 

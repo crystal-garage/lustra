@@ -20,9 +20,6 @@ Lint/NotNil:
 Lint/UselessAssign:
   Enabled: false
 
-Naming/AccessorMethodName:
-  Enabled: false
-
 Lint/SpecFilename:
   Enabled: false
 
