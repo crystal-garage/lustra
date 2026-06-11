@@ -1612,9 +1612,10 @@ results =
     .limit(20)
 
 # Find potential service gaps
-uncovered_areas = ServiceArea.query
-  .where { active == true }
-  .where.not { coverage_area.overlaps?(competitor_areas.any) }
+uncovered_areas =
+  ServiceArea.query
+    .where { active == true }
+    .where.not { coverage_area.overlaps?(competitor_areas.any) }
 ```
 
 **Migration with Geometric Constraints:**
