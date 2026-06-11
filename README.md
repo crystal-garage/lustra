@@ -1593,9 +1593,10 @@ delivery_stores = Store.can_deliver_to(customer_location)
 pickup_stores = Store.pickup_available(customer_location)
 
 # Find nearest 3 stores using ordering by distance
-nearest_stores = Store.query
-  .order_by("coordinates <-> point(#{customer_location.x},#{customer_location.y})")
-  .limit(3)
+nearest_stores =
+  Store.query
+    .order_by("coordinates <-> point(#{customer_location.x},#{customer_location.y})")
+    .limit(3)
 ```
 
 **Spatial Analysis Queries:**
@@ -1603,13 +1604,12 @@ nearest_stores = Store.query
 ```crystal
 # Complex spatial query combining multiple operations
 results =
-  Location
-  .query
-  .where { coordinates.within_distance?(city_center, 10_000.0) } # Within 10km of center
-  .where { service_boundary.overlaps?(target_neighborhood) }     # Overlaps target area
-  .where { coverage_radius >= 1000.0 }                           # Minimum coverage
-  .order("coordinates <-> ?", city_center)                       # Order by distance
-  .limit(20)
+  Location.query
+    .where { coordinates.within_distance?(city_center, 10_000.0) } # Within 10km of center
+    .where { service_boundary.overlaps?(target_neighborhood) }     # Overlaps target area
+    .where { coverage_radius >= 1000.0 }                           # Minimum coverage
+    .order("coordinates <-> ?", city_center)                       # Order by distance
+    .limit(20)
 
 # Find potential service gaps
 uncovered_areas = ServiceArea.query
