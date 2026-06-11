@@ -24,7 +24,7 @@ module Lustra::SQL::Query::Pluck
   def pluck_col(field : Lustra::SQL::Symbolic) : Array(Lustra::SQL::Any)
     field = Lustra::SQL.escape(field) if field.is_a?(Symbol)
 
-    sql = clear_select.select(field).to_sql
+    sql = dup.clear_before_query_triggers.clear_select.select(field).to_sql
 
     Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
@@ -44,7 +44,7 @@ module Lustra::SQL::Query::Pluck
   def pluck_col(field : Lustra::SQL::Symbolic, type : T.class) : Array(T) forall T
     field = Lustra::SQL.escape(field) if field.is_a?(Symbol)
 
-    sql = clear_select.select(field).to_sql
+    sql = dup.clear_before_query_triggers.clear_select.select(field).to_sql
 
     Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
@@ -76,7 +76,7 @@ module Lustra::SQL::Query::Pluck
   # :ditto:
   def pluck(fields : Tuple(*T)) forall T
     select_clause = fields.join(", ") { |f| f.is_a?(Symbol) ? Lustra::SQL.escape(f) : f.to_s }
-    sql = clear_select.select(select_clause).to_sql
+    sql = dup.clear_before_query_triggers.clear_select.select(select_clause).to_sql
 
     Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
@@ -100,7 +100,7 @@ module Lustra::SQL::Query::Pluck
   # User.query.pluck(id: Int64, "UPPER(last_name)": String).each do #...
   # ```
   def pluck(**fields : **T) forall T
-    sql = clear_select.select(fields.keys.join(", ")).to_sql
+    sql = dup.clear_before_query_triggers.clear_select.select(fields.keys.join(", ")).to_sql
 
     Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
