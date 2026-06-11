@@ -17,18 +17,6 @@ Lint/NotNil:
   Enabled: true
   Severity: Warning
 
-Performance/AnyInsteadOfEmpty:
-  Excluded:
-  - spec/**/*
-  Enabled: true
-  Severity: Warning
-
-Performance/ChainedCallWithNoBang:
-  Excluded:
-  - spec/model/where_spec.cr
-  - spec/model/model_spec.cr
-  Enabled: true
-
 Lint/UselessAssign:
   Enabled: false
 

@@ -701,22 +701,22 @@ module WhereSpec
           # Test basic where.or with expression engine
           users = User.query.where { id == 1 }.or { id == 3 }.to_a
           users.size.should eq(2)
-          users.map(&.first_name).sort.should eq(["Bob", "John"])
+          users.map(&.first_name).sort!.should eq(["Bob", "John"])
 
           # Test where.or with named tuple
           users = User.query.where { id == 1 }.or(first_name: "Jane").to_a
           users.size.should eq(2)
-          users.map(&.first_name).sort.should eq(["Jane", "John"])
+          users.map(&.first_name).sort!.should eq(["Jane", "John"])
 
           # Test where.or with array conditions (IN)
           users = User.query.where { active == true }.or({id: [2, 4]}).to_a
           users.size.should eq(4) # John, Bob (active=true), Jane (id=2), Alice (id=4)
-          users.map(&.first_name).sort.should eq(["Alice", "Bob", "Jane", "John"])
+          users.map(&.first_name).sort!.should eq(["Alice", "Bob", "Jane", "John"])
 
           # Test where.or with nil
           users = User.query.where { id == 1 }.or(active: nil).to_a
           users.size.should eq(2)
-          users.map(&.first_name).sort.should eq(["Alice", "John"])
+          users.map(&.first_name).sort!.should eq(["Alice", "John"])
         end
       end
 
@@ -736,7 +736,7 @@ module WhereSpec
             .or { id == 3 }
             .to_a
           users.size.should eq(3)
-          users.map(&.first_name).sort.should eq(["Bob", "Jane", "John"])
+          users.map(&.first_name).sort!.should eq(["Bob", "Jane", "John"])
         end
       end
 
@@ -756,7 +756,7 @@ module WhereSpec
             .where { id > 1 }
             .to_a
           users.size.should eq(3) # Bob, Jane, Charlie (active OR Jane, and id > 1)
-          users.map(&.first_name).sort.should eq(["Bob", "Charlie", "Jane"])
+          users.map(&.first_name).sort!.should eq(["Bob", "Charlie", "Jane"])
         end
       end
 
@@ -793,7 +793,7 @@ module WhereSpec
             .or(active: true, last_name: "Johnson")
             .to_a
           users.size.should eq(2) # John (id=1) OR Bob (active=true AND last_name=Johnson)
-          users.map(&.first_name).sort.should eq(["Bob", "John"])
+          users.map(&.first_name).sort!.should eq(["Bob", "John"])
         end
       end
 
@@ -823,7 +823,7 @@ module WhereSpec
             .or("first_name = ?", "Bob")
             .to_a
           users.size.should eq(2)
-          users.map(&.first_name).sort.should eq(["Bob", "John"])
+          users.map(&.first_name).sort!.should eq(["Bob", "John"])
 
           # Using template string with named params
           users = User.query
@@ -831,7 +831,7 @@ module WhereSpec
             .or("first_name = :name", name: "Jane")
             .to_a
           users.size.should eq(3)
-          users.map(&.first_name).sort.should eq(["Bob", "Jane", "John"])
+          users.map(&.first_name).sort!.should eq(["Bob", "Jane", "John"])
         end
       end
 
@@ -849,7 +849,7 @@ module WhereSpec
             .or { (active == false) & (first_name == "Jane") }
             .to_a
           users.size.should eq(2) # John (active AND Admin) OR Jane (NOT active AND Jane)
-          users.map(&.first_name).sort.should eq(["Jane", "John"])
+          users.map(&.first_name).sort!.should eq(["Jane", "John"])
         end
       end
     end
