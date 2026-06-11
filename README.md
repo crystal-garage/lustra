@@ -784,11 +784,12 @@ puts plan
 # - Join algorithms used
 
 # Optimize complex queries
-slow_query = Post.query
-  .join(:user)
-  .join(:category)
-  .where { published == true }
-  .order_by(created_at: :desc)
+slow_query =
+  Post.query
+    .join(:user)
+    .join(:category)
+    .where { published == true }
+    .order_by(created_at: :desc)
 
 # Analyze to find bottlenecks
 puts slow_query.explain_analyze
