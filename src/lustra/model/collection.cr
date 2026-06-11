@@ -172,14 +172,6 @@ module Lustra::Model
     # Used for build from collection
     @tags : Hash(String, Lustra::SQL::Any)
 
-    # Redefinition of the fields,
-    # because of a bug in the compiler
-    # https://github.com/crystal-lang/crystal/issues/5281
-    @limit : Int64?
-    @offset : Int64?
-    @lock : String?
-    @distinct_value : String?
-
     @polymorphic : Bool = false
     @polymorphic_key : String?
     @polymorphic_scope : Set(String)?
