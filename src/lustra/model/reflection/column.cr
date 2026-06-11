@@ -1,5 +1,6 @@
-# Reflection of the columns using information_schema in postgreSQL.
-# TODO: Usage of view instead of model
+# Reflection of columns exposed by PostgreSQL's information_schema.
+# information_schema.columns is a PostgreSQL view, but mapping it as a read-only
+# model keeps the regular query and association APIs available.
 class Lustra::Reflection::Column
   include Lustra::Model
 
