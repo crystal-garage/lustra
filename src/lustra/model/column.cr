@@ -56,7 +56,7 @@ class Lustra::Model::Column(T, C)
     reset C.to_column(x)
   end
 
-  def set_convert(x)
+  def convert=(x)
     set C.to_column(x)
   end
 

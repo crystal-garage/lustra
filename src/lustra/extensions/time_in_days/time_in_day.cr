@@ -40,16 +40,16 @@ struct Lustra::TimeInDay
   def initialize(@microseconds : UInt64 = 0)
   end
 
-  def +(t : Time::Span)
-    Lustra::TimeInDay.new(microseconds: @microseconds + t.total_nanoseconds.to_i64 // 1_000)
+  def +(other : Time::Span)
+    Lustra::TimeInDay.new(microseconds: @microseconds + other.total_nanoseconds.to_i64 // 1_000)
   end
 
-  def -(t : Time::Span)
-    Lustra::TimeInDay.new(microseconds: @microseconds - t.total_nanoseconds.to_i64 // 1_000)
+  def -(other : Time::Span)
+    Lustra::TimeInDay.new(microseconds: @microseconds - other.total_nanoseconds.to_i64 // 1_000)
   end
 
-  def +(x : self)
-    TimeInDay.new(@microseconds + x.ms)
+  def +(other : self)
+    TimeInDay.new(@microseconds + other.ms)
   end
 
   def hour

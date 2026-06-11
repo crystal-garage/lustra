@@ -18,15 +18,15 @@ class Lustra::Expression::Node::JSONB::Field < Lustra::Expression::Node
     self
   end
 
-  def ==(value : Lustra::Expression::Node)
-    super(value) # << Keep same for node which are not literal value
+  def ==(other : Lustra::Expression::Node)
+    super(other) # << Keep same for node which are not literal value
   end
 
-  def ==(value : _) # << For other type, literalize and use smart JSONB equality
+  def ==(other : _) # << For other type, literalize and use smart JSONB equality
     if @cast
-      super(value)
+      super(other)
     else
-      Lustra::Expression::Node::JSONB::Equality.new(field.resolve, jsonb_k2h(key, value))
+      Lustra::Expression::Node::JSONB::Equality.new(field.resolve, jsonb_k2h(key, other))
     end
   end
 

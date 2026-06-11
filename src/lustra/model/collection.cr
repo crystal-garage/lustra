@@ -593,26 +593,6 @@ module Lustra::Model
       where { raw("1 = 0") }
     end
 
-    # A convenient way to write `where { condition }.first(fetch_columns)`
-    @[Deprecated("Use `#find_by` instead.")]
-    def find(fetch_columns = false, &) : T?
-      x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
-
-      where(x).first(fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first(fetch_columns)`
-    @[Deprecated("Use `#find_by` instead.")]
-    def find(tuple : NamedTuple, fetch_columns = false) : T?
-      find_by(tuple, fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first`
-    @[Deprecated("Use `#find_by` instead.")]
-    def find(**tuple) : T?
-      find_by(**tuple)
-    end
-
     # Returns a model using primary key equality
     # Returns `nil` if not found.
     def find(x)
@@ -623,26 +603,6 @@ module Lustra::Model
     # Returns an array of models (may be empty if none found).
     def find(ids : Array)
       where { raw(T.__pkey__).in?(ids) }.to_a
-    end
-
-    # A convenient way to write `where { condition }.first!(fetch_columns)`
-    @[Deprecated("Use `#find_by!` instead.")]
-    def find!(fetch_columns = false, &) : T
-      x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
-
-      where(x).first!(fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first!(fetch_columns)`
-    @[Deprecated("Use `#find_by!` instead.")]
-    def find!(tuple : NamedTuple, fetch_columns = false) : T
-      find_by!(tuple, fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first!`
-    @[Deprecated("Use `#find_by!` instead.")]
-    def find!(**tuple) : T
-      find_by!(tuple)
     end
 
     # Returns a model using primary key equality.

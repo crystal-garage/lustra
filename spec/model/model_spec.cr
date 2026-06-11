@@ -116,8 +116,8 @@ module ModelSpec
           # Test finding multiple users by array of IDs
           users = User.find([1, 2, 3])
           users.size.should eq(3)
-          users.map(&.id).sort.should eq([1, 2, 3])
-          users.map(&.first_name).sort.should eq(["Bob", "Jane", "John"])
+          users.map(&.id).sort!.should eq([1, 2, 3])
+          users.map(&.first_name).sort!.should eq(["Bob", "Jane", "John"])
 
           # Test with empty array
           users = User.find([] of Int64)
@@ -132,7 +132,7 @@ module ModelSpec
           # Test with some non-existent IDs (should only return existing ones)
           users = User.find([1, 99, 3, 100])
           users.size.should eq(2)
-          users.map(&.id).sort.should eq([1, 3])
+          users.map(&.id).sort!.should eq([1, 3])
 
           # Test with all non-existent IDs
           users = User.find([99, 100, 101])
@@ -141,7 +141,7 @@ module ModelSpec
           # Test find! with valid IDs
           users = User.find!([1, 2, 3])
           users.size.should eq(3)
-          users.map(&.id).sort.should eq([1, 2, 3])
+          users.map(&.id).sort!.should eq([1, 2, 3])
 
           # Test find! raises error when some IDs not found
           expect_raises(Lustra::SQL::RecordNotFoundError, /Couldn't find all records/) do

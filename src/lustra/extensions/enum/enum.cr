@@ -24,8 +24,8 @@ module Lustra
       json.string(@value)
     end
 
-    def ==(x)
-      super(x) || @value == x
+    def ==(other)
+      super(other) || @value == other
     end
 
     module Converter(T)

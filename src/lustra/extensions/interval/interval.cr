@@ -94,15 +94,15 @@ struct Lustra::Interval
     }.join(" "))
   end
 
-  def +(interval : self)
+  def +(other : self)
     new(
-      months: self.months + interval.months,
-      day: self.days + interval.days,
-      hours: self.hours + interval.hours,
-      minutes: self.minutes + interval.minutes,
-      seconds: self.seconds + interval.seconds,
-      milliseconds: self.milliseconds + interval.milliseconds,
-      microseconds: self.microseconds + interval.microseconds
+      months: self.months + other.months,
+      day: self.days + other.days,
+      hours: self.hours + other.hours,
+      minutes: self.minutes + other.minutes,
+      seconds: self.seconds + other.seconds,
+      milliseconds: self.milliseconds + other.milliseconds,
+      microseconds: self.microseconds + other.microseconds
     )
   end
 
