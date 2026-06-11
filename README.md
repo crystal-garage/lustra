@@ -662,8 +662,10 @@ In case you want columns computed by postgres, or stored in another table, you c
 By default, for performance reasons, `fetch_columns` option is set to false.
 
 ```crystal
-users = User.query.select(email: "users.email", remark: "infos.remark")
-  .join("infos") { infos.user_id == users.id }.to_a(fetch_columns: true)
+users =
+  User.query
+    .select(email: "users.email", remark: "infos.remark")
+    .join("infos") { infos.user_id == users.id }.to_a(fetch_columns: true)
 
 # Now the column "remark" will be fetched into each user object.
 # Access can be made using `[]` operator on the model.
