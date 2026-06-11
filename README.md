@@ -339,6 +339,26 @@ end
 Lustra offers a collection system for your models. The collection system
 takes origin to the lower API `Lustra::SQL`, used to build requests.
 
+#### Collection mutability
+
+Lustra collections are mutable query builders. Refinement methods such as
+`where`, `select`, `join`, `order_by`, `limit`, and `offset` update the same
+collection and return it for chaining.
+
+Some read-only helpers execute against an internal copy and do not mutate the
+collection: `any?`, `empty?`, `exists?`, `pluck`, `pluck_col`, and `ids`.
+
+Model-fetching helpers such as `first`, `last`, `find`, `find_by`, and `[]`
+currently refine the collection they are called on. If you need to reuse the
+original query after one of those calls, call `dup` first.
+
+```crystal
+users = User.query.where { active == true }
+
+users.dup.first # leaves users unchanged
+users.limit(10) # intentionally refines users
+```
+
 #### Simple query
 
 ##### Fetch a model
