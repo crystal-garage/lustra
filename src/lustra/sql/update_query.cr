@@ -2,24 +2,21 @@ require "db"
 require "pg"
 require "./sql"
 
-# Builds a PostgreSQL `UPDATE` statement.
+# An update query
 #
-# Use `Lustra::SQL.update(table)` for standalone updates:
+# Postgres documentation:
 #
 # ```
-# Lustra::SQL.update(:users)
-#   .set(active: false, updated_at: Time.local)
-#   .where { users.id == 1 }
-#   .execute
+# [ WITH [ RECURSIVE ] with_query [, ...] ]
+# UPDATE [ ONLY ] table_name [ * ] [ [ AS ] alias ]
+#     SET { column_name = { expression | DEFAULT } |
+#           ( column_name [, ...] ) = [ ROW ] ( { expression | DEFAULT } [, ...] ) |
+#           ( column_name [, ...] ) = ( sub-SELECT )
+#         } [, ...]
+#     [ FROM from_item [, ...] ]
+#     [ WHERE condition | WHERE CURRENT OF cursor_name ]
+#     [ RETURNING * | output_expression [ [ AS ] output_name ] [, ...] ]
 # ```
-#
-# `set` accepts named tuples, keyword arguments, hashes, or raw SQL fragments.
-# Raw SQL fragments are inserted as-is and should only be used with trusted
-# values.
-#
-# `UpdateQuery` is also used internally by `InsertQuery#on_conflict` /
-# `do_update`, where PostgreSQL expects only the `SET` clause after
-# `DO UPDATE`.
 class Lustra::SQL::UpdateQuery
   alias Updatable = Lustra::SQL::Any | BigInt | BigFloat | Time
   alias UpdateInstruction = Hash(String, Updatable) | String

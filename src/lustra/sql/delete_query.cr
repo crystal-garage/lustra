@@ -1,5 +1,16 @@
 require "./query/*"
 
+# A delete query
+#
+# Postgres documentation:
+#
+# ```
+# [ WITH [ RECURSIVE ] with_query [, ...] ]
+# DELETE FROM [ ONLY ] table_name [ * ] [ [ AS ] alias ]
+#     [ USING from_item [, ...] ]
+#     [ WHERE condition | WHERE CURRENT OF cursor_name ]
+#     [ RETURNING * | output_expression [ [ AS ] output_name ] [, ...] ]
+# ```
 class Lustra::SQL::DeleteQuery
   getter table : Symbolic?
 
