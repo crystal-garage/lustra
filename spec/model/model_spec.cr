@@ -38,6 +38,36 @@ module ModelSpec
         end
       end
 
+      it "pluck does not mutate selected columns" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", middle_name: "William")
+
+          users = User.query.where(id: 1)
+          sql = users.to_sql
+
+          users.pluck_col("first_name").should eq(["John"])
+          users.to_sql.should eq(sql)
+          users.each(&.first_name.should(eq("John")))
+        end
+      end
+
+      it "pluck does not run eager loading hooks" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+
+          hook_called = false
+          users = User.query.with_posts { hook_called = true }
+
+          users.pluck_col("first_name").should eq(["John"])
+          hook_called.should be_false
+
+          users.each { }
+          hook_called.should be_true
+        end
+      end
+
       it "exists?" do
         temporary do
           reinit_example_models
