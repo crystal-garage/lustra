@@ -259,11 +259,9 @@ class Lustra::Expression
     idx = -1
 
     x.gsub("?") do |_|
-      begin
-        Lustra::Expression[args[idx += 1]]
-      rescue e : IndexError
-        raise Lustra::ErrorMessages.query_building_error(e.message)
-      end
+      Lustra::Expression[args[idx += 1]]
+    rescue e : IndexError
+      raise Lustra::ErrorMessages.query_building_error(e.message)
     end
   end
 
@@ -295,12 +293,10 @@ class Lustra::Expression
   #
   def self.raw(__template : String, **tuple)
     __template.gsub(/(^|[^:])\:([a-zA-Z0-9_]+)/) do |_, match|
-      begin
-        sym = match[2]
-        match[1] + Lustra::Expression[tuple[sym]]
-      rescue e : KeyError
-        raise Lustra::ErrorMessages.query_building_error(e.message)
-      end
+      sym = match[2]
+      match[1] + Lustra::Expression[tuple[sym]]
+    rescue e : KeyError
+      raise Lustra::ErrorMessages.query_building_error(e.message)
     end
   end
 
