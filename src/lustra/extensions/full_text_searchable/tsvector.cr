@@ -68,7 +68,7 @@ class Lustra::TSVector
   end
 
   def self.decode(x : Slice(UInt8))
-    io = IO::Memory.new(x, writeable: false)
+    io = IO::Memory.new(x, false)
     Lustra::TSVector.new(io)
   end
 

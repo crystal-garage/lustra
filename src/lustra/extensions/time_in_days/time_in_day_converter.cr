@@ -28,7 +28,7 @@ module Lustra::TimeInDay::Converter
     when UInt64
       TimeInDay.new(x)
     when Slice
-      mem = IO::Memory.new(x, writeable: false)
+      mem = IO::Memory.new(x, false)
       TimeInDay.new(mem.read_bytes(UInt64, IO::ByteFormat::BigEndian))
     when String
       TimeInDay.parse(x)
