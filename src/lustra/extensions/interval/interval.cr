@@ -107,7 +107,7 @@ struct Lustra::Interval
   end
 
   def self.decode(x : Slice(UInt8))
-    io = IO::Memory.new(x, writeable: false)
+    io = IO::Memory.new(x, false)
 
     new(io)
   end

@@ -1464,6 +1464,45 @@ module ModelSpec
       end
     end
 
+    it "queries array columns with PostgreSQL array operators" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "John"})
+        Post.create!({title: "Crystal ORM", user_id: user.id, tags_list: ["crystal", "orm"]})
+        Post.create!({title: "ORM only", user_id: user.id, tags_list: ["orm", "orm"]})
+        Post.create!({title: "PostgreSQL", user_id: user.id, tags_list: ["postgres", "sql"]})
+
+        Post.query
+          .where { raw("? = ANY(tags_list)", "orm") }
+          .order_by(:title)
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM", "ORM only"])
+
+        Post.query
+          .where { raw("? = ALL(tags_list)", "orm") }
+          .pluck_col("title", String)
+          .should eq(["ORM only"])
+
+        Post.query
+          .where { raw("tags_list @> ARRAY[?]::text[]", "crystal") }
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM"])
+
+        Post.query
+          .where { raw("tags_list <@ ARRAY[?, ?]::text[]", "orm", "crystal") }
+          .order_by(:title)
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM", "ORM only"])
+
+        Post.query
+          .where { raw("tags_list && ARRAY[?, ?]::text[]", "sql", "crystal") }
+          .order_by(:title)
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM", "PostgreSQL"])
+      end
+    end
+
     context "with self-reference and has_many through" do
       it "assign self-reference has_many through" do
         temporary do
