@@ -1,32 +1,32 @@
 require "inflector/core_ext"
 require "pg"
 
-# This module declare all the methods and macro related to columns in `Lustra::Model`
+# This module declares all methods and macros related to columns in `Lustra::Model`.
 module Lustra::Model::HasColumns
   macro included # In Lustra::Model
     macro included # In RealModel
       COLUMNS = {} of Nil => Nil
-      # Attributes, used when fetch_columns is true
+      # Attributes used when fetch_columns is true.
       getter attributes : Hash(String, ::Lustra::SQL::Any) = {} of String => ::Lustra::SQL::Any
 
       # Special reinitialization if we detect inheritance (meaning polymorphism)
       macro inherited
         # Reset COLUMNS constants
         COLUMNS = {} of Nil => Nil
-        # Table is same than parent table
+        # The table is the same as the parent table.
         self.table = \\{{@type.ancestors.first}}.table
       end
     end
   end
 
-  # Reset one or multiple columns; Reseting set the current value of the column
+  # Reset one or multiple columns; resetting sets the current value of the column
   # to the given value, while the `changed?` flag remains false.
-  # If you call save on a persisted model, the reset columns won't be
-  # commited in the UPDATE query.
+  # If you call save on a persisted model, reset columns won't be committed in
+  # the UPDATE query.
   def reset(**t : **T) forall T
     # Dev note:
     # ---------
-    # The current implementation of reset is overriden on finalize (see below).
+    # The current implementation of reset is overridden on finalize (see below).
     # This method is a placeholder to ensure that we can call `super`
     # in case of inherited (polymorphic) models
   end
@@ -40,7 +40,7 @@ module Lustra::Model::HasColumns
   end
 
   # Set one or multiple columns to a specific value
-  # This two are equivalents:
+  # These two are equivalent:
   #
   # ```
   # model.set(a: 1)
@@ -49,7 +49,7 @@ module Lustra::Model::HasColumns
   def set(**t : **T) forall T
     # Dev note:
     # ---------
-    # The current implementation of set is overriden on finalize (see below).
+    # The current implementation of set is overridden on finalize (see below).
     # This method is a placeholder to ensure that we can call `super`
     # in case of inherited (polymorphic) models
   end
@@ -62,8 +62,8 @@ module Lustra::Model::HasColumns
   def set(h : Hash(Symbol, _))
   end
 
-  # Access to direct SQL attributes given by the request used to build the model.
-  # Access is read only and updating the model columns will not apply change to theses columns.
+  # Access direct SQL attributes returned by the query used to build the model.
+  # Access is read-only, and updating model columns does not change these values.
   #
   # ```
   # model = Model.query.select("MIN(id) AS min_id").first(fetch_columns: true)
@@ -73,11 +73,11 @@ module Lustra::Model::HasColumns
     attributes[x]
   end
 
-  # Access to direct SQL attributes given by the request and used to build the model
+  # Access direct SQL attributes returned by the query used to build the model,
   # or Nil if not found.
   #
-  # Access is read only and updating the model columns will not apply change to theses columns.
-  # You must set `fetch_column: true` in your model to access the attributes.
+  # Access is read-only, and updating model columns does not change these values.
+  # You must set `fetch_columns: true` when fetching the model to access the attributes.
   def []?(x) : ::Lustra::SQL::Any
     attributes[x]?
   end
@@ -97,8 +97,8 @@ module Lustra::Model::HasColumns
   end
 
   # Returns the model columns as Hash.
-  # Calling `to_h` will returns only the defined columns, while settings the optional parameter `full` to `true`
-  #   will return all the column and fill the undefined columns by `nil` values.
+  # Calling `to_h` returns only defined columns. Setting the optional `full`
+  # parameter to `true` returns all columns and fills undefined columns with nil.
   # Example:
   #
   # ```
@@ -355,7 +355,7 @@ module Lustra::Model::HasColumns
       set(from_json.as_h)
     end
 
-    # Generate the hash for update request (like during save)
+    # Generate the hash for an update request (like during save).
     def update_h : Hash(String, ::Lustra::SQL::Any)
       o = super
 
@@ -371,8 +371,7 @@ module Lustra::Model::HasColumns
 
     # set flavors
 
-    # For each column, ensure than when needed the column has present
-    # information into it.
+    # For each column, ensure the column has presence information when needed.
     #
     # This method is called on validation.
     def validate_fields_presence
@@ -393,8 +392,8 @@ module Lustra::Model::HasColumns
 
     # Reset the `changed?` flag on all columns
     #
-    # The model behave like its not dirty anymore
-    # and call to save would apply no changes.
+    # The model behaves as if it is no longer dirty, and calling save would apply
+    # no changes.
     #
     # Returns `self`
     def clear_change_flags

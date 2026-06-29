@@ -32,7 +32,7 @@ module Lustra::SQL::Query::Aggregate
   # query.agg("MEDIAN(age)", Int64)
   # ```
   #
-  # Note than COUNT, MIN, MAX, SUM and AVG are already conveniently mapped.
+  # Note that COUNT, MIN, MAX, SUM and AVG are already conveniently mapped.
   #
   # This return only one row, and should not be used with `group_by` (prefer pluck or fetch)
   # Automatically handles LIMIT/OFFSET by wrapping in a subquery.

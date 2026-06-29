@@ -1,9 +1,9 @@
 # ## Lustra's Expression engine
 #
-# The goal of this module is to offer the most natural way to write down your
-# query in crystal.
+# The goal of this module is to offer the most natural way to write queries in
+# Crystal.
 #
-# If you're familiar with Sequel on Ruby, then here you have !
+# If you're familiar with Sequel in Ruby, this should feel familiar.
 #
 # Instead of writing:
 #
@@ -22,33 +22,33 @@
 # model_collection.where { created_at.in?(1.day.ago..DateTime.local) }
 # ```
 #
-# (Note for the later, it will generate `created_at > 1.day.ago AND created_at < DateTime.local`)
+# The latter generates `created_at > 1.day.ago AND created_at < DateTime.local`.
 #
 # ## Limitations
 #
-# Due to the use of `missing_method` macro, some case can be confusing.
+# Due to the use of the `missing_method` macro, some cases can be confusing.
 #
 # ### Existing local variable / instance method
 #
 # ```
 # id = 1
-# model_collection.where { id > 100 } # Will raise an error, because the expression is resolved by Crystal !
+# model_collection.where { id > 100 } # Raises an error, because the expression is resolved by Crystal.
 # # Should be:
 # id = 1
-# model_collection.where { var("id") > 100 } # Will works
+# model_collection.where { var("id") > 100 } # Works
 # ```
 #
 # ### Usage of AND / OR
 #
-# And/Or can be used using the bitwises operators `&` and `|`.
-# Due to the impossibility to reuse `||` and `&&`, beware the operator precendance
-# rules are changed.
+# AND/OR can be expressed using the bitwise operators `&` and `|`.
+# Because `||` and `&&` cannot be reused, be aware that operator precedence
+# rules are different.
 #
 # ```
-# # v-- This below will not works, as we cannot redefine the `or` operator
+# # v-- This will not work, as we cannot redefine the `or` operator
 # model_collection.where { first_name == "yacine" || last_name == "petitprez" }
-# # v-- This will works, but beware of the parenthesis between each terms, as `|` is prioritary on `==`
-# model.collection.where { (firt_name == "yacine") | (last_name == "petitprez") }
+# # v-- This works, but parenthesize each term because `|` has priority over `==`
+# model.collection.where { (first_name == "yacine") | (last_name == "petitprez") }
 # # ^-- ... WHERE first_name = 'yacine' OR last_name == ''
 # ```
 #
@@ -56,16 +56,14 @@ class Lustra::Expression
   DATABASE_DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S.%L %:z"
   DATABASE_DATE_FORMAT      = "%Y-%m-%d"
 
-  # Allow any type to be used into the expression engine
-  #   by including the module Lustra::Expression::Literal
-  #   and defining the method `to_sql`.
+  # Allow any type to be used in the expression engine by including
+  # Lustra::Expression::Literal and defining `to_sql`.
   module Literal
     abstract def to_sql
     abstract def to_json(json : JSON::Builder)
   end
 
-  # Wrap an unsafe string. Useful to cancel-out the
-  # safe_literal function used internally.
+  # Wrap an unsafe string. Useful to bypass the internal safe_literal function.
   # Obviously, this can lead to SQL injection, so beware!
   class UnsafeSql
     include Literal
@@ -123,18 +121,19 @@ class Lustra::Expression
     x.resolve
   end
 
-  # Transform multiple objects into a string which is SQL-Injection safe.
+  # Transform multiple objects into SQL-injection-safe string representations.
   def self.safe_literal(x : Array(AvailableLiteral)) : Array(String)
     x.map { |item| safe_literal(item) }
   end
 
-  # Return unsafe string injected to the query.
-  #   can be used for example in `insert` query building
+  # Return an unsafe string injected into the query.
+  # Can be used, for example, in `insert` query building.
   def self.unsafe(x)
     Lustra::Expression::UnsafeSql.new(x)
   end
 
-  # Safe literal of a time return a string representation of time in the format understood by postgresql.
+  # Safe literal for Time returns a string representation in the format
+  # understood by PostgreSQL.
   #
   # If the optional parameter `date` is passed, the time is truncated and only the date is passed:
   #
@@ -163,13 +162,14 @@ class Lustra::Expression
     x.to_s
   end
 
-  # Sanitize an object and return a `String` representation of itself which is proofed against SQL injections.
+  # Sanitize an object and return a `String` representation that is protected
+  # against SQL injection.
   def self.safe_literal(x : _) : String
     safe_literal(x.to_s)
   end
 
-  # This method will raise error on compilation if discovered in the code.
-  # This allow to avoid issues like this one at compile type:
+  # This method raises a compile-time error if discovered in the code.
+  # This avoids issues like this:
   #
   # ```
   # id = 1
@@ -177,13 +177,12 @@ class Lustra::Expression
   # User.query.where { id == 2 }
   # ```
   #
-  # In this case, the local var id will be evaluated in the expression engine.
-  # leading to buggy code.
+  # In this case, the local variable `id` would be evaluated in the expression
+  # engine, leading to buggy code.
   #
-  # Having this method prevent the code to compile.
+  # Having this method prevents the code from compiling.
   #
-  # To be able to pass a literal or values other than node, please use `raw`
-  # method.
+  # To pass a literal or values other than nodes, use `raw`.
   #
   def self.ensure_node!(any)
     {% raise \
@@ -200,10 +199,9 @@ class Lustra::Expression
     node
   end
 
-  # Return a node of the expression engine
-  # This node can then be combined with others node
-  # in case of chain request creation `where {...}.where {...}`
-  # through the chaining engine
+  # Return a node of the expression engine.
+  # This node can then be combined with other nodes through the chaining engine,
+  # e.g. `where {...}.where {...}`.
   def self.where(&) : Node
     expression_engine = new
 
@@ -212,7 +210,7 @@ class Lustra::Expression
 
   # `NOT` operator
   #
-  # Return an logically reversed version of the contained `Node`
+  # Return a logically reversed version of the contained `Node`.
   #
   # ## Example
   #
@@ -223,11 +221,12 @@ class Lustra::Expression
     Node::Not.new(x)
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
-  # or in case of a complex piece of computation impossible to express with the expression engine
-  # (e.g. usage of functions) you can use then raw to pass the String.
+  # If the variable name is a reserved word (e.g. `not`, `var`, `raw`) or if a
+  # complex computation cannot be expressed with the expression engine (e.g.
+  # function usage), use raw to pass the String.
   #
-  # BE AWARE than the String is pasted AS-IS and can lead to SQL injection if not used properly.
+  # BE AWARE that the String is pasted AS-IS and can lead to SQL injection if not
+  # used properly.
   #
   # ```
   # having { raw("COUNT(*)") > 5 }           # SELECT ... FROM ... HAVING COUNT(*) > 5
@@ -238,11 +237,12 @@ class Lustra::Expression
     Node::Raw.new(self.class.raw(x, *args))
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
-  # or in case of a complex piece of computation impossible to express with the expression engine
-  # (e.g. usage of functions) you can use then raw to pass the String.
+  # If the variable name is a reserved word (e.g. `not`, `var`, `raw`) or if a
+  # complex computation cannot be expressed with the expression engine (e.g.
+  # function usage), use raw to pass the String.
   #
-  # BE AWARE than the String is pasted AS-IS and can lead to SQL injection if not used properly.
+  # BE AWARE that the String is pasted AS-IS and can lead to SQL injection if not
+  # used properly.
   #
   # ```
   # having { raw("COUNT(*)") > 5 }           # SELECT ... FROM ... HAVING COUNT(*) > 5
@@ -254,7 +254,7 @@ class Lustra::Expression
   end
 
   # See `self.raw`
-  # Can pass an array to this version
+  # Can pass an array to this version.
   def self.raw_enum(x : String, args)
     idx = -1
 
@@ -265,11 +265,12 @@ class Lustra::Expression
     end
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
-  # or in case of a complex piece of computation impossible to express with the expression engine
-  # (e.g. usage of functions) you can use then raw to pass the String.
+  # If the variable name is a reserved word (e.g. `not`, `var`, `raw`) or if a
+  # complex computation cannot be expressed with the expression engine (e.g.
+  # function usage), use raw to pass the String.
   #
-  # BE AWARE than the String is pasted AS-IS and can lead to SQL injection if not used properly.
+  # BE AWARE that the String is pasted AS-IS and can lead to SQL injection if not
+  # used properly.
   #
   # ```
   # having { raw("COUNT(*)") > 5 }                       # SELECT ... FROM ... HAVING COUNT(*) > 5
@@ -280,11 +281,12 @@ class Lustra::Expression
     Node::Raw.new(self.class.raw(__template, **tuple))
   end
 
-  # In case the name of the variable is a reserved word (e.g. `not`, `var`, `raw`)
-  # or in case of a complex piece of computation impossible to express with the expression engine
-  # (e.g. usage of functions) you can use then raw to pass the String.
+  # If the variable name is a reserved word (e.g. `not`, `var`, `raw`) or if a
+  # complex computation cannot be expressed with the expression engine (e.g.
+  # function usage), use raw to pass the String.
   #
-  # BE AWARE than the String is pasted AS-IS and can lead to SQL injection if not used properly.
+  # BE AWARE that the String is pasted AS-IS and can lead to SQL injection if not
+  # used properly.
   #
   # ```
   # having { raw("COUNT(*)") > 5 }                       # SELECT ... FROM ... HAVING COUNT(*) > 5
@@ -300,10 +302,12 @@ class Lustra::Expression
     end
   end
 
-  # Use var to create expression of variable. Variables are columns with or without the namespace and tablename:
+  # Use var to create a variable expression. Variables are columns with or
+  # without a namespace and table name:
   #
-  # It escapes each part of the expression with double-quote as requested by PostgreSQL.
-  # This is useful to escape SQL keywords or `.` and `"` character in the name of a column.
+  # It escapes each part of the expression with double quotes as required by
+  # PostgreSQL. This is useful to escape SQL keywords or `.` and `"` characters
+  # in column names.
   #
   # ```
   # var("template1", "users", "name")        # "template1"."users"."name"
@@ -323,8 +327,8 @@ class Lustra::Expression
     end
   end
 
-  # Because many postgresql operators are not transcriptable in Crystal lang,
-  # this helpers helps to write the expressions:
+  # Because many PostgreSQL operators are not directly translatable in Crystal,
+  # this helper helps write expressions:
   #
   # ```
   # where { op(jsonb_field, "something", "?") } # << Return "jsonb_field ? 'something'"

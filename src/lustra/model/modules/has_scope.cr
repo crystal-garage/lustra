@@ -23,7 +23,7 @@ module Lustra::Model::HasScope
     # User.admin.active
     # ```
     #
-    # Scope can be used for other purpose than just filter (e.g. ordering),
+    # Scope can be used for purposes other than filtering (e.g. ordering),
     # but I would not recommend it.
     macro scope(name, &block)
       \{% parameters = "" %}

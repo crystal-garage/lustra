@@ -1,9 +1,9 @@
 module Lustra::SQL::Query::Change
-  # This method is called everytime the request has been changed
-  # By default, this do nothing and return `self`. However, it can be
-  # reimplemented to change some behavior when the query is changed
+  # This method is called every time the request changes.
+  # By default, this does nothing and returns `self`. However, it can be
+  # reimplemented to change behavior when the query changes.
   #
-  # (eg. it is by `Lustra::Model::Collection`, to discard cache over collection)
+  # For example, `Lustra::Model::Collection` uses it to discard collection cache.
   def change! : self
     self
   end

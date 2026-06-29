@@ -18,7 +18,7 @@ module Lustra
     # - SHARE ROW EXCLUSIVE
     # - EXCLUSIVE
     #
-    # See [Official PG documentation for more informations](https://www.postgresql.org/docs/12/explicit-locking.html)
+    # See [official PostgreSQL documentation for more information](https://www.postgresql.org/docs/12/explicit-locking.html)
     #
     def self.lock(table : String | Symbol, mode = "ACCESS EXCLUSIVE", connection = "default", &)
       Lustra::SQL::ConnectionPool.with_connection(connection) do |cnx|

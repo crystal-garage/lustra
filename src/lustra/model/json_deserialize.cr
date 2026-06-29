@@ -15,7 +15,7 @@ module Lustra::Model::JSONDeserialize
   end
 end
 
-# Used internally to deserialise json
+# Used internally to deserialize json.
 macro columns_to_instance_vars
   # :nodoc:
   struct Assigner
@@ -70,7 +70,7 @@ macro columns_to_instance_vars
   # Create a new model from json and save it. Returns the model.
   #
   # The model may not be saved due to validation failure;
-  # check the returned model `errors?` and `persisted?` flags.
+  # check the returned model's `errors?` and `persisted?` flags.
   # Trusted flag set to true will allow mass assignment without protection, FALSE by default
   def self.create_from_json(string_or_io : String | IO, trusted : Bool = false)
     mdl = self.from_json(string_or_io, trusted)

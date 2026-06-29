@@ -1,7 +1,7 @@
 # This module provides the callback system for `Lustra::Model`, allowing you to hook into
 # model lifecycle events like `:create`, `:update`, `:validate`, etc.
 module Lustra::Model::HasHooks
-  # This performs theses operations:
+  # This performs these operations:
   #
   # - Call triggers `before` the event
   # - Yield the given block

@@ -29,8 +29,9 @@ module Lustra::Model::ClassMethods
         __register_factory__
       end
 
-      # Return the table name setup for this model.
-      # By convention, the class name is by default equals to the pluralized underscored string form of the model name.
+      # Return the table name configured for this model.
+      # By convention, the class name defaults to the pluralized, underscored
+      # string form of the model name.
       # Example:
       #
       # ```
@@ -51,8 +52,9 @@ module Lustra::Model::ClassMethods
       # ```
       class_property table : Lustra::SQL::Symbolic = self.name.underscore.gsub(/::/, "_").pluralize
 
-      # Define the current schema used in PostgreSQL. The value is `nil` by default, which lead to non-specified
-      #   schema during the querying, and usage of "public" by PostgreSQL.
+      # Define the current PostgreSQL schema. The value is `nil` by default,
+      # which means no schema is specified during querying, so PostgreSQL uses
+      # "public".
       #
       # This property can be redefined on initialization. Example:
       #
@@ -66,8 +68,8 @@ module Lustra::Model::ClassMethods
       # ```
       class_property schema : Lustra::SQL::Symbolic? = nil
 
-      # returns the fully qualified and escaped name for this table.
-      # add schema if schema is different from 'public' (default schema)
+      # Return the fully qualified and escaped name for this table.
+      # Add schema if schema is different from 'public' (default schema).
       #
       # ex: "schema"."table"
       def self.full_table_name
@@ -85,15 +87,15 @@ module Lustra::Model::ClassMethods
       # {{ @type }}::Collection
       #
       # This is the object managing a `SELECT` request.
-      # A new collection is created by calling `{{ @type }}.query`
+      # A new collection is created by calling `{{ @type }}.query`.
       #
-      # Collection are mutable and refining the SQL will mutate the collection.
+      # Collections are mutable, and refining the SQL mutates the collection.
       # You may want to copy the collection by calling `dup`
       #
       # See `Lustra::Model::CollectionBase`
       class Collection < Lustra::Model::CollectionBase(\{{@type}}); end
 
-      # Return a new query `SELECT * FROM [my_model_table]`. Can be refined after that.
+      # Return a new query `SELECT * FROM [my_model_table]`. It can be refined after that.
       # Automatically applies default_scope if defined.
       def self.query
         q = Collection.new.use_connection(connection).from(self.full_table_name)
