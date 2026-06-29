@@ -30,6 +30,7 @@ Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version
 - [Advanced Features](#advanced-features)
 - [Installation](#installation)
 - [Database Setup](#database-setup)
+- [Quick Start](#quick-start)
 - [SQL Views and Read-only Models](#sql-views-and-read-only-models)
 - [Model definition](#model-definition)
 - [Querying](#querying)
@@ -236,6 +237,54 @@ end
 results = Lustra::SQL.select.from(:pg_timezone_names).to_a  # Get all results as array
 first = Lustra::SQL.select.from(:pg_timezone_names).first   # Get first result
 ```
+
+### Quick Start
+
+Define a model, connect to PostgreSQL, create a table, and use the query API:
+
+```crystal
+require "lustra"
+
+Lustra::SQL.init("postgres://user:password@localhost/my_app")
+
+class User
+  include Lustra::Model
+
+  primary_key
+
+  column email : String
+  column first_name : String?
+
+  timestamps
+end
+
+class CreateUsers
+  include Lustra::Migration
+
+  def change(dir)
+    create_table :users do |t|
+      t.column :email, :string, null: false
+      t.column :first_name, :string
+      t.timestamps
+    end
+  end
+end
+
+Lustra::Migration::Manager.instance.apply_all
+
+user = User.create!(email: "ada@example.com", first_name: "Ada")
+
+found =
+  User.query
+    .where { email == "ada@example.com" }
+    .first!
+
+found.first_name = "Ada Lovelace"
+found.save!
+```
+
+For production applications, configure the connection pool explicitly as shown
+in [Database Setup](#database-setup).
 
 ### SQL Views and Read-only Models
 
