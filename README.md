@@ -18,49 +18,49 @@ It also has a powerful DSL to construct `where` and `having` clauses.
 The philosophy beneath is to please me (and you !) with emphasis made on business
 code readability and minimal setup.
 
-The project is quite active and well maintened, too !
+The project is quite active and well maintained, too !
 
 Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version 0.8, and it is not compatible with later Clear releases. Over time it evolved into an independent project. To keep it compatible with newer Crystal versions, I continued development, added missing features, improved existing ones, and expanded test coverage. Today Lustra is far beyond its upstream origins — a distinct, mature project in its own right.
 
 ## Table of Contents
 
-- [Why to use Lustra?](#why-to-use-lustra-)
+- [Why Use Lustra?](#why-use-lustra)
 - [Features](#features)
 - [Core ORM Features](#core-orm-features)
 - [Advanced Features](#advanced-features)
 - [Installation](#installation)
 - [Database Setup](#database-setup)
 - [Quick Start](#quick-start)
-- [SQL Views and Read-only Models](#sql-views-and-read-only-models)
-- [Model definition](#model-definition)
+- [SQL Views and Read-Only Models](#sql-views-and-read-only-models)
+- [Model Definition](#model-definition)
 - [Querying](#querying)
-  - [Collection mutability](#collection-mutability)
-  - [Array column queries](#array-column-queries)
-  - [JOIN operations](#join-operations)
-  - [Fetching associations](#fetching-associations)
-  - [Querying computed or foreign columns](#querying-computed-or-foreign-columns)
+  - [Collection Mutability](#collection-mutability)
+  - [Array Column Queries](#array-column-queries)
+  - [JOIN Operations](#join-operations)
+  - [Fetching Associations](#fetching-associations)
+  - [Querying Computed or Foreign Columns](#querying-computed-or-foreign-columns)
 - [Scopes and Default Scopes](#scopes-and-default-scopes)
-- [Inspection & SQL logging](#inspection--sql-logging)
+- [Inspection & SQL Logging](#inspection--sql-logging)
 - [Persistence](#persistence)
   - [Attribute Change Tracking](#attribute-change-tracking)
-  - [Lifecycle-bypassing methods](#lifecycle-bypassing-methods)
+  - [Lifecycle-Bypassing Methods](#lifecycle-bypassing-methods)
 - [Validation](#validation)
 - [Lifecycle Callbacks](#lifecycle-callbacks)
 - [Migration](#migration)
 - [PostgreSQL Geometric Types](#postgresql-geometric-types)
 - [Running Tests](#running-tests)
 
-## Why to use Lustra ?
+## Why Use Lustra?
 
-In few seconds, you want to use Lustra if:
+In short, you want to use Lustra if:
 
 - [x] You want an expressive ORM. Put straight your thought to your code !
-- [x] You'd like to use advanced Postgres features without hassle
-- [x] You are at aware of the pro and cons of Active Records pattern
+- [x] You'd like to use advanced PostgreSQL features without hassle
+- [x] You are aware of the pros and cons of the Active Record pattern
 
 You don't want to use Lustra if:
 
-- [ ] You're not willing to use on PostgreSQL
+- [ ] You're not willing to use PostgreSQL
 - [ ] You look for a minimalist ORM / Data Mapper
 
 ## Features
@@ -71,7 +71,7 @@ You don't want to use Lustra if:
 ```crystal
 # Like ...
 Product.query.where { ( type == "Book" ) & ( metadata.jsonb("author.full_name") == "Philip K. Dick" ) }
-# ^--- will use @> operator, to relay on your gin index. For real.
+# ^--- will use @> operator, to rely on your GIN index. For real.
 
 Product.query.where { ( products.type == "Book" ) & ( products.metadata.jsonb("author.full_name") != "Philip K. Dick" ) }
 # ^--- this time will use -> notation, because no optimizations possible :/
@@ -287,9 +287,9 @@ found.save!
 For production applications, configure the connection pool explicitly as shown
 in [Database Setup](#database-setup).
 
-### SQL Views and Read-only Models
+### SQL Views and Read-Only Models
 
-#### Read-only models and SQL views
+#### Read-Only Models and SQL Views
 
 Use `self.read_only = true` when a model maps to a PostgreSQL view, a system
 catalog, or any table that the application should query but never write to.
@@ -330,7 +330,7 @@ This is useful for SQL views because the model can describe the view's result
 shape while making accidental writes explicit. Lustra uses the same approach for
 reflection models backed by PostgreSQL `information_schema` views.
 
-#### Registering SQL views
+#### Registering SQL Views
 
 Lustra can also register PostgreSQL views in code with `Lustra::View.register`.
 Registered views are dropped before pending migrations run and recreated after
@@ -407,11 +407,11 @@ end
 refresh/drop behavior. For those cases, prefer dedicated migration SQL if you
 need full control.
 
-### Model definition
+### Model Definition
 
 Lustra offers some mixins, just include them in your classes:
 
-#### Column mapping
+#### Column Mapping
 
 ```crystal
 class User
@@ -437,7 +437,7 @@ end
 
 ```
 
-#### Column types
+#### Column Types
 
 - `Number`, `String`, `Time`, `Boolean` and `Jsonb` structures are already mapped.
 - `Array` of primitives too.
@@ -464,11 +464,11 @@ end
 Lustra::Model::Converter.add_converter("MyClass", Lustra::Model::Converter::MyClassConversion)
 ```
 
-##### Column presence
+##### Column Presence
 
-Most of the ORM for Crystal are mapping column type as `Type | Nil` union.
-It makes sens so we allow selection of some columns only of a model.
-However, this have a caveats: columns are still accessible, and will return nil,
+Most ORMs for Crystal map column types as `Type | Nil` unions.
+It makes sense when selecting only some columns from a model.
+However, this has a caveat: columns are still accessible, and will return nil,
 even if the real value of the column is not null !
 
 Moreover, most of the developers will enforce nullity only on their programming
@@ -478,8 +478,8 @@ Therefore, we choose to throw exception whenever a column is accessed before
 it has been initialized and to enforce presence through the union system of
 Crystal.
 
-Lustra offers this through the use of column wrapper.
-Wrapper can be of the type of the column as in postgres, or in `UNKNOWN` state.
+Lustra offers this through the use of column wrappers.
+Wrappers can be the column type as in PostgreSQL, or in `UNKNOWN` state.
 This approach offers more flexibility:
 
 ```crystal
@@ -494,7 +494,7 @@ u.first_name = "bonjour"
 u.first_name_column.defined? # Return true now !
 ```
 
-Wrapper give also some pretty useful features:
+Wrappers also provide some useful features:
 
 ```crystal
 u = User.new
@@ -535,7 +535,7 @@ end
 Lustra offers a collection system for your models. The collection system
 takes origin to the lower API `Lustra::SQL`, used to build requests.
 
-#### Collection mutability
+#### Collection Mutability
 
 Lustra collections are mutable query builders. Refinement methods such as
 `where`, `select`, `join`, `order_by`, `limit`, and `offset` update the same
@@ -555,9 +555,9 @@ users.dup.first # leaves users unchanged
 users.limit(10) # intentionally refines users
 ```
 
-#### Simple query
+#### Simple Query
 
-##### Fetch a model
+##### Fetch a Model
 
 To fetch one model:
 
@@ -584,7 +584,7 @@ user = User.find_by(first_name: "John", last_name: "Doe")
 u : User? = User.query.find_by { email =~ /yacine/i }
 ```
 
-##### Fetch multiple models
+##### Fetch Multiple Models
 
 To prepare a collection, just use `Model#query`.
 Collections include `SQL::Select` object, so all the low level API
@@ -643,7 +643,7 @@ Post.query.in_order_of(:status, ["started", "enrolled", "completed"])
 Ticket.query.in_order_of(:priority, [1, 3, 2]).order_by(:created_at, :desc)
 ```
 
-##### Array column queries
+##### Array Column Queries
 
 PostgreSQL array columns can be declared with regular Crystal array types:
 
@@ -680,7 +680,7 @@ Use a GIN index for frequently queried array columns:
 add_index "posts", "tags_list", using: "gin"
 ```
 
-##### JOIN operations
+##### JOIN Operations
 
 Lustra supports automatic join detection from associations, as well as manual joins with custom conditions.
 
@@ -714,7 +714,7 @@ class Category
 end
 ```
 
-###### Auto-joins
+###### Auto-Joins
 
 Simply pass the association name and Lustra will auto-detect the join conditions:
 
@@ -764,7 +764,7 @@ Post.query
   .where { (users.active == true) & (categories.name == "Tech") }
 ```
 
-###### Manual joins with custom conditions
+###### Manual Joins with Custom Conditions
 
 For complex joins or when you need custom conditions, use the block syntax:
 
@@ -784,7 +784,7 @@ User.query
   .join("custom_table") { custom_table.user_id == users.id }
 ```
 
-##### Aggregate functions
+##### Aggregate Functions
 
 Call aggregate functions from the query is possible. For complex aggregation,
 I would recommend to use the `SQL::View` API (note: Not yet developed),
@@ -799,10 +799,10 @@ max_id = User.query.where { email.ilike "@gmail.com%" }.max("id", Int32)
 weighted_avg = User.query.agg("SUM(performance_weight * performance_score) / SUM(performance_weight)", Float64)
 ```
 
-##### Fetching associations
+##### Fetching Associations
 
-Associations are basically getter which create predefined SQL.
-To access to an association, just call it !
+Associations are getters that create predefined SQL.
+To access an association, call it.
 
 ```crystal
 User.query.each do |user|
@@ -813,9 +813,9 @@ User.query.each do |user|
 end
 ```
 
-###### Caching association for N+1 request
+###### Caching Associations for N+1 Queries
 
-For every association, you can tell Lustra to encache the results to avoid
+For every association, you can tell Lustra to cache the results to avoid
 N+1 queries, using `with_XXX` on the collection:
 
 ```crystal
@@ -867,10 +867,10 @@ User.query.with_posts(&.where({published: true}))
 `with_XXX` is for association caching only. It is not a join; use `join` when
 you need to filter or order parent rows by associated-table columns.
 
-###### Associations caching examples
+###### Association Caching Examples
 
-When you use the caching system of the association, using filters on association will
-invalidate the cache, and N+1 query will happens.
+When you use the association cache, filtering the association afterward will
+invalidate the cache and N+1 queries will happen.
 
 For example:
 
@@ -890,17 +890,17 @@ The way to fix it is to filter on the association itself:
 ```crystal
 User.query.with_posts(&.where({published: true})).each do |user|
   puts "User #{user.id} published posts:"
-  # The posts collection of user is already encached with the published filter
+  # The posts collection for user is already cached with the published filter
   user.posts.each do |post|
     puts "• #{post.id}"
   end
 end
 ```
 
-Note than, of course in this example `user.posts` are not ALL the posts but only the
+Note that, in this example, `user.posts` is not ALL the posts but only the
 `published` posts
 
-Thanks to this system, we can stack it to encache long distance relations:
+Thanks to this system, we can stack it to cache long-distance relations:
 
 ```crystal
 # Will cache users<=>posts & posts<=>category
@@ -910,7 +910,7 @@ User.query.with_posts(&.with_category).each do |user|
 end
 ```
 
-##### Querying computed or foreign columns
+##### Querying Computed or Foreign Columns
 
 In case you want columns computed by PostgreSQL, or columns selected from another table,
 use `fetch_columns: true` when executing the collection. By default, for performance
@@ -1021,7 +1021,7 @@ Post.query.unscoped.where(...) # Build query without default scope
 
 **Warning:** Default scopes can be confusing because they're implicit. Use them sparingly and document them clearly. Always provide an `unscoped` escape hatch when you need to bypass them.
 
-### Inspection & SQL logging
+### Inspection & SQL Logging
 
 #### Inspection
 
@@ -1045,7 +1045,7 @@ p # => #<Post:0x10c5f6720
         @user_id_column=5>
 ```
 
-In this case, the `*` means a column is changed and the object is dirty and diverge from the database.
+In this case, the `*` means a column has changed and the object is dirty and diverges from the database.
 
 #### Query Performance Analysis
 
@@ -1080,7 +1080,7 @@ slow_query =
 # Analyze to find bottlenecks
 puts slow_query.explain_analyze
 
-# Use insights to add indexes, rewrite query, etc.
+# Use insights to add indexes, rewrite queries, etc.
 ```
 
 **Common use cases:**
@@ -1117,11 +1117,10 @@ end
 
 #### SQL Logging
 
-One thing very important for a good ORM is to offer vision of the SQL
-called under the hood.
-Lustra is offering SQL logging tools, with SQL syntax colorizing in your terminal.
+One important ORM feature is visibility into the SQL called under the hood.
+Lustra offers SQL logging tools with SQL syntax colorizing in your terminal.
 
-For activation, simply setup the logger to `DEBUG` level !
+To activate it, set the logger to `DEBUG` level:
 
 ```crystal
 Log.builder.bind "lustra.*", :debug, Log::IOBackend.new(STDOUT)
@@ -1129,7 +1128,7 @@ Log.builder.bind "lustra.*", :debug, Log::IOBackend.new(STDOUT)
 
 ### Persistence
 
-#### Saving records
+#### Saving Records
 
 Object can be persisted, saved, updated:
 
@@ -1214,7 +1213,7 @@ user.email_column.change    # Get {old, new} tuple (nil if not changed)
 user.email_column.revert    # Revert to old value
 ```
 
-#### Lifecycle-bypassing methods
+#### Lifecycle-Bypassing Methods
 
 Some helpers write directly to PostgreSQL for speed or atomicity. These helpers
 are useful, but they intentionally skip parts of the model lifecycle.
@@ -1338,12 +1337,12 @@ class User
 end
 ```
 
-##### `NOT NULL DEFAULT ...` case
+##### `NOT NULL DEFAULT ...` Case
 
-There's a case when a column CAN be null inside Crystal, if not persisted,
-but CANNOT be null inside Postgres.
+There is a case where a column can be nil inside Crystal before persistence,
+but cannot be null inside PostgreSQL.
 
-It's for example the case of the `id` column, which take value after saving !
+For example, an `id` column often gets its value after saving.
 
 In this case, you can write:
 
@@ -1353,7 +1352,7 @@ class User
 end
 ```
 
-Thus, in all case this will fail:
+In that case, this will fail before the record is saved:
 
 ```crystal
 u = User.new
@@ -1390,15 +1389,14 @@ end
 
 #### Unique Validator
 
-Please use `unique` feature of postgres. Unique validator at crystal level is a
-non-go and lead to terrible race concurrency issues if your deploy on multiple nodes/pods.
+Please use PostgreSQL unique constraints. A uniqueness validator at the Crystal level is a
+bad fit and leads to race conditions when deploying on multiple nodes or pods.
 It's an anti-pattern and must be avoided at any cost.
 
 #### Validation and Uninitialized Columns
 
-In the case you try validation on a column which has not been initialized,
-Lustra will complain, telling you you cannot access to the column.
-Let's see an example here:
+If you validate a column that has not been initialized, Lustra will raise because
+the column cannot be accessed yet. Example:
 
 ```crystal
 class MyModel
@@ -1408,11 +1406,11 @@ class MyModel
   end
 end
 
-MyModel.new.save! # < Raise unexpected exception, not validation failure :(
+MyModel.new.save! # < Raises an exception, not a validation failure :(
 ```
 
-This validator will raise an exception, because first_name has never been initialized.
-To avoid this, we have many way:
+This validator raises an exception because `first_name` has never been initialized.
+There are several ways to avoid this:
 
 ```crystal
 # 1. Check presence:
@@ -1448,7 +1446,7 @@ end
 
 ```
 
-I recommend the 4th method in most of the cases you will faces.
+I recommend the 4th method in most cases.
 Simple to write and easy to read !
 
 ### Lifecycle Callbacks
@@ -1576,10 +1574,10 @@ The `counter_cache` automatically registers `after(:create)` and `after(:destroy
 
 ### Migration
 
-Lustra offers of course a migration system.
+Lustra includes a migration system.
 
-Migration should have an `order` column set.
-This number can be wrote at the end of the class itself:
+Each migration should have an order number.
+This number can be written at the end of the class name:
 
 ```crystal
 class Migration1
@@ -1591,7 +1589,7 @@ class Migration1
 end
 ```
 
-#### Using filename
+#### Using Filename
 
 Another way is to write down all your migrations one file per migration, and
 naming the file using the `[number]_migration_description.cr` pattern.
@@ -1608,12 +1606,12 @@ class CreateTable
 end
 ```
 
-#### Migration examples
+#### Migration Examples
 
 Migration must implement the method `change(dir : Migration::Direction)`
 
 Direction is the current direction of the migration (up or down).
-It provides few methods: `up?`, `down?`, `up(&block)`, `down(&block)`
+It provides a few methods: `up?`, `down?`, `up(&block)`, `down(&block)`
 
 ##### Creating Tables
 
@@ -1830,7 +1828,7 @@ end
 
 #### Constraints
 
-I strongly encourage to use the foreign key constraints of postgres for your references:
+Use PostgreSQL foreign key constraints for your references:
 
 ```crystal
 t.references to: "users", on_delete: "cascade", null: false
@@ -2007,4 +2005,4 @@ I hope one day we will cover all the features of PG here !
 
 ### Running Tests
 
-In order to run the test suite, you will need to have the PostgresSQL service locally available via a socket for access with psql. psql will attempt to use the 'postgres' user to create the test database. If you are working with a newly installed database that may not have the postgres user, this can be created with `createuser -s postgres`.
+In order to run the test suite, you will need to have the PostgreSQL service locally available via a socket for access with psql. psql will attempt to use the 'postgres' user to create the test database. If you are working with a newly installed database that may not have the postgres user, this can be created with `createuser -s postgres`.
