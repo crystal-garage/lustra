@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Unknown association errors now include available association names.
 - Read-only model save errors now explain that read-only models commonly map database views or system catalogs.
+- Uninitialized column errors now mention reusing mutable collections after model-fetching helpers as a possible cause.
 
 ### Removed
 - Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.
