@@ -716,8 +716,26 @@ end
 
 ##### Querying computed or foreign columns
 
-In case you want columns computed by postgres, or stored in another table, you can use `fetch_column`.
-By default, for performance reasons, `fetch_columns` option is set to false.
+In case you want columns computed by PostgreSQL, or columns selected from another table,
+use `fetch_columns: true` when executing the collection. By default, for performance
+reasons, `fetch_columns` is false and Lustra only initializes declared model columns.
+
+Extra selected fields are stored in the model's read-only attributes and can be read
+with `[]` or `[]?`.
+
+```crystal
+user =
+  User.query
+    .select("users.*, COUNT(posts.id) AS posts_count")
+    .left_join("posts") { posts.user_id == users.id }
+    .group_by("users.id")
+    .first!(fetch_columns: true)
+
+puts user.first_name        # regular model column
+puts user["posts_count"]?   # computed SQL field
+```
+
+The same works for fields selected from joined tables:
 
 ```crystal
 users =
@@ -732,6 +750,20 @@ users =
 users.each do |u|
   puts "email: `#{u.email}`, remark: `#{u["remark"]?}`"
 end
+```
+
+`fetch_columns: true` is available on helpers that build models, such as `first`,
+`first!`, `last`, `last!`, `find_by`, `find_by!`, `to_a`, `each`, and `map`.
+
+It does not make custom SQL fields writable model columns. If you select only a
+subset of the real model columns, the omitted declared columns remain uninitialized
+and accessing them through their regular getter will raise:
+
+```crystal
+user = User.query.select("first_name").first!(fetch_columns: true)
+
+user.first_name # ok
+user.last_name  # raises if last_name was not selected
 ```
 
 ### Scopes and Default Scopes
