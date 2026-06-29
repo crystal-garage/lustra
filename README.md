@@ -211,6 +211,126 @@ results = Lustra::SQL.select.from(:pg_timezone_names).to_a  # Get all results as
 first = Lustra::SQL.select.from(:pg_timezone_names).first   # Get first result
 ```
 
+### SQL Views and Read-only Models
+
+#### Read-only models and SQL views
+
+Use `self.read_only = true` when a model maps to a PostgreSQL view, a system
+catalog, or any table that the application should query but never write to.
+
+```crystal
+class ActiveUserReport
+  include Lustra::Model
+
+  self.table = "active_user_reports"
+  self.read_only = true
+
+  column user_id : Int64, primary: true
+  column email : String
+  column posts_count : Int64
+end
+```
+
+Read-only models still use the regular query API:
+
+```crystal
+reports =
+  ActiveUserReport.query
+    .where { posts_count > 0 }
+    .order_by(:posts_count, :desc)
+    .to_a
+```
+
+Write helpers are blocked:
+
+```crystal
+report = ActiveUserReport.query.first!
+
+report.save  # => false
+report.save! # raises Lustra::Model::ReadOnlyError
+```
+
+This is useful for SQL views because the model can describe the view's result
+shape while making accidental writes explicit. Lustra uses the same approach for
+reflection models backed by PostgreSQL `information_schema` views.
+
+#### Registering SQL views
+
+Lustra can also register PostgreSQL views in code with `Lustra::View.register`.
+Registered views are dropped before pending migrations run and recreated after
+the migrations finish. This helps when a view depends on tables or other views
+that may change during migrations.
+
+```crystal
+Lustra::View.register :active_user_reports do |view|
+  view.query <<-SQL
+    SELECT
+      users.id AS user_id,
+      users.email,
+      COUNT(posts.id) AS posts_count
+    FROM users
+    LEFT JOIN posts ON posts.user_id = users.id
+    WHERE users.active = TRUE
+    GROUP BY users.id, users.email
+    SQL
+end
+```
+
+If a view depends on another registered view, declare the dependency with
+`require`. Lustra will create dependencies first and drop dependents first.
+
+```crystal
+Lustra::View.register :daily_post_counts do |view|
+  view.query <<-SQL
+    SELECT user_id, DATE(created_at) AS day, COUNT(*) AS posts_count
+    FROM posts
+    GROUP BY user_id, DATE(created_at)
+    SQL
+end
+
+Lustra::View.register :active_user_daily_post_counts do |view|
+  view.require(:daily_post_counts)
+
+  view.query <<-SQL
+    SELECT daily_post_counts.*
+    FROM daily_post_counts
+    INNER JOIN users ON users.id = daily_post_counts.user_id
+    WHERE users.active = TRUE
+    SQL
+end
+```
+
+You can then map a view with a read-only model. Since Lustra supports one
+primary key column per model, pick a view column that is unique for each row.
+
+```crystal
+class ActiveUserReport
+  include Lustra::Model
+
+  self.table = "active_user_reports"
+  self.read_only = true
+
+  column user_id : Int64, primary: true
+  column email : String
+  column posts_count : Int64
+end
+```
+
+By default, views are created in the `public` schema on the default connection.
+Use `schema` or `connection` when needed:
+
+```crystal
+Lustra::View.register :admin_reports do |view|
+  view.schema :reporting
+  view.connection "primary"
+  view.query "SELECT * FROM reports"
+end
+```
+
+`materialized(true)` is available, but materialized views often need explicit
+refresh/drop behavior. For those cases, prefer dedicated migration SQL if you
+need full control.
+
 ### Model definition
 
 Lustra offers some mixins, just include them in your classes:
@@ -1002,124 +1122,6 @@ are useful, but they intentionally skip parts of the model lifecycle.
 Use lifecycle methods when business rules live in validations or callbacks. Use
 direct SQL helpers for counters, flags, maintenance jobs, and bulk changes where
 you deliberately do not want each record to run model code.
-
-##### Read-only models and SQL views
-
-Use `self.read_only = true` when a model maps to a PostgreSQL view, a system
-catalog, or any table that the application should query but never write to.
-
-```crystal
-class ActiveUserReport
-  include Lustra::Model
-
-  self.table = "active_user_reports"
-  self.read_only = true
-
-  column user_id : Int64, primary: true
-  column email : String
-  column posts_count : Int64
-end
-```
-
-Read-only models still use the regular query API:
-
-```crystal
-reports =
-  ActiveUserReport.query
-    .where { posts_count > 0 }
-    .order_by(:posts_count, :desc)
-    .to_a
-```
-
-Write helpers are blocked:
-
-```crystal
-report = ActiveUserReport.query.first!
-
-report.save  # => false
-report.save! # raises Lustra::Model::ReadOnlyError
-```
-
-This is useful for SQL views because the model can describe the view's result
-shape while making accidental writes explicit. Lustra uses the same approach for
-reflection models backed by PostgreSQL `information_schema` views.
-
-##### Registering SQL views
-
-Lustra can also register PostgreSQL views in code with `Lustra::View.register`.
-Registered views are dropped before pending migrations run and recreated after
-the migrations finish. This helps when a view depends on tables or other views
-that may change during migrations.
-
-```crystal
-Lustra::View.register :active_user_reports do |view|
-  view.query <<-SQL
-    SELECT
-      users.id AS user_id,
-      users.email,
-      COUNT(posts.id) AS posts_count
-    FROM users
-    LEFT JOIN posts ON posts.user_id = users.id
-    WHERE users.active = TRUE
-    GROUP BY users.id, users.email
-    SQL
-end
-```
-
-If a view depends on another registered view, declare the dependency with
-`require`. Lustra will create dependencies first and drop dependents first.
-
-```crystal
-Lustra::View.register :daily_post_counts do |view|
-  view.query <<-SQL
-    SELECT user_id, DATE(created_at) AS day, COUNT(*) AS posts_count
-    FROM posts
-    GROUP BY user_id, DATE(created_at)
-    SQL
-end
-
-Lustra::View.register :active_user_daily_post_counts do |view|
-  view.require(:daily_post_counts)
-
-  view.query <<-SQL
-    SELECT daily_post_counts.*
-    FROM daily_post_counts
-    INNER JOIN users ON users.id = daily_post_counts.user_id
-    WHERE users.active = TRUE
-    SQL
-end
-```
-
-You can then map a view with a read-only model. Since Lustra supports one
-primary key column per model, pick a view column that is unique for each row.
-
-```crystal
-class ActiveUserReport
-  include Lustra::Model
-
-  self.table = "active_user_reports"
-  self.read_only = true
-
-  column user_id : Int64, primary: true
-  column email : String
-  column posts_count : Int64
-end
-```
-
-By default, views are created in the `public` schema on the default connection.
-Use `schema` or `connection` when needed:
-
-```crystal
-Lustra::View.register :admin_reports do |view|
-  view.schema :reporting
-  view.connection "primary"
-  view.query "SELECT * FROM reports"
-end
-```
-
-`materialized(true)` is available, but materialized views often need explicit
-refresh/drop behavior. For those cases, prefer dedicated migration SQL if you
-need full control.
 
 ##### Attribute Change Tracking
 
