@@ -22,6 +22,32 @@ The project is quite active and well maintened, too !
 
 Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version 0.8, and it is not compatible with later Clear releases. Over time it evolved into an independent project. To keep it compatible with newer Crystal versions, I continued development, added missing features, improved existing ones, and expanded test coverage. Today Lustra is far beyond its upstream origins — a distinct, mature project in its own right.
 
+## Table of Contents
+
+- [Why to use Lustra?](#why-to-use-lustra-)
+- [Features](#features)
+- [Core ORM Features](#core-orm-features)
+- [Advanced Features](#advanced-features)
+- [Installation](#installation)
+- [Database Setup](#database-setup)
+- [SQL Views and Read-only Models](#sql-views-and-read-only-models)
+- [Model definition](#model-definition)
+- [Querying](#querying)
+  - [Collection mutability](#collection-mutability)
+  - [Array column queries](#array-column-queries)
+  - [JOIN operations](#join-operations)
+  - [Fetching associations](#fetching-associations)
+  - [Querying computed or foreign columns](#querying-computed-or-foreign-columns)
+- [Scopes and Default Scopes](#scopes-and-default-scopes)
+- [Inspection & SQL logging](#inspection--sql-logging)
+- [Save & validation](#save--validation)
+  - [Lifecycle-bypassing methods](#lifecycle-bypassing-methods)
+  - [Validation](#validation)
+  - [Lifecycle Callbacks](#lifecycle-callbacks)
+- [Migration](#migration)
+- [PostgreSQL Geometric Types](#postgresql-geometric-types)
+- [Running Tests](#running-tests)
+
 ## Why to use Lustra ?
 
 In few seconds, you want to use Lustra if:
