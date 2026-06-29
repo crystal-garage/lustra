@@ -30,7 +30,7 @@ module Lustra::Model
   # If `Model#id` IS the primary key, then calling `Model#__pkey__` is exactly the same as `Model#id`.
   #
   # This method exists to tremendously simplify the meta-programming code.
-  # If no primary key has been setup to this model, raise an exception.
+  # If no primary key has been set up for this model, raise an exception.
   def __pkey__
     raise lack_of_primary_key(self.class.name)
   end
@@ -92,7 +92,7 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # This is a tricky method which is overriden by inherited models.
+    # This is a tricky method that is overridden by inherited models.
     #
     # The problem is usage of static array initialisation under `finalize` macro; they are initialized
     # AFTER the main code is executed, preventing it to work properly.
@@ -100,7 +100,8 @@ module Lustra::Model
     # The strategy here is to execute the static array initialization under a method and execute this method
     # before main.
     #
-    # Then to redefine this method in the finalize block. The current behavior seems to be a crystal compiler bug
+    # Then redefine this method in the finalize block. The current behavior seems
+    # to be a Crystal compiler bug.
     # and should be fixed in near future.
     def self.__main_init__
     end

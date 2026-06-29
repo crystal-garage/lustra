@@ -632,7 +632,7 @@ module CollectionSpec
       end
 
       it "with find_or_build" do
-        # same test than find_or_create, persistance check changing.
+        # Same test as find_or_create, with the persistence check changed.
         temporary do
           reinit_example_models
 

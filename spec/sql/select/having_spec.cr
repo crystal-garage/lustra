@@ -1,9 +1,9 @@
 require "../../spec_helper"
 
-# Having specs are essentially the same specs than the WHERE clause.
-# This is because the HAVING block behave essentially like the WHERE block (and I'm lazy)
+# Having specs are essentially the same specs as the WHERE clause.
+# This is because the HAVING block behaves essentially like the WHERE block.
 #
-# Therefore, the SQL tested in this test battery doesn't make sense.
+# Therefore, the SQL tested in this test suite doesn't make sense.
 module HavingSpec
   def self.complex_query
     Lustra::SQL.select.from(:users)

@@ -37,7 +37,7 @@ module Lustra::Model::HasValidation
   end
 
   # This method is called whenever `valid?` or `save` is called.
-  # By default, `validate` is empty and must be overriden by your own validation code.
+  # By default, `validate` is empty and must be overridden by your own validation code.
   def validate
     # Can be overwritten
   end

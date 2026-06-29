@@ -64,7 +64,7 @@ class Lustra::View
     @@views[view.name] = view
   end
 
-  # install the view into postgresql using CREATE VIEW
+  # Install the view into PostgreSQL using CREATE VIEW.
   def self.apply(direction : Symbol, apply_cache = Set(String).new)
     @@views.values.each do |view|
       next if apply_cache.includes?(view.name)

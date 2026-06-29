@@ -1,7 +1,7 @@
 require "./tsvector"
 
-# Full text search plugin offers full integration with `tsvector` capabilities of
-# Postgresql.
+# The full-text search plugin offers full integration with PostgreSQL `tsvector`
+# capabilities.
 #
 # It allows you to query models through the text content of one or multiple fields.
 #
@@ -18,10 +18,13 @@ require "./tsvector"
 # end
 # ```
 #
-# This migration will create a 3rd column named `full_text_vector` of type `tsvector`,
-# a gin index, a trigger and a function to update automatically this column.
+# This migration will create a third column named `full_text_vector` of type
+# `tsvector`, a GIN index, a trigger, and a function to update this column
+# automatically.
 #
-# Over the `on` keyword, `'{"title", 'A'}'` means it allows search of the content of "title", with level of priority (weight) "A", which tells postgres than title content is more meaningful than the article content itself.
+# In the `on` option, `{"title", 'A'}` means that "title" is searchable with
+# priority weight "A". This tells PostgreSQL that title content is more
+# meaningful than the article content itself.
 #
 # Now, let's build some models:
 #
@@ -39,13 +42,13 @@ require "./tsvector"
 #   Post.create!({title: "You won't believe: She raises her poney like as star!", content: "She's cool because poney are cool"})
 # ```
 #
-# Search is now easily done
+# Search is now straightforward:
 #
 # ```
-# Post.query.search("poney") # Return all the articles !
+# Post.query.search("poney") # Returns all matching articles.
 # ```
 #
-# Obviously, search call can be chained:
+# Search calls can be chained:
 #
 # ```
 # user = User.find_by! { email == "some_email@example.com" }
@@ -66,16 +69,18 @@ require "./tsvector"
 # full_text_searchable catalog: "pg_catalog.french"
 # ```
 #
-# Note: For now, Lustra doesn't offers dynamic selection of catalog (for let's say multi-lang service).
-# If your app need this feature, do not hesitate to open an issue.
+# Note: For now, Lustra does not offer dynamic catalog selection for multilingual
+# services. If your app needs this feature, open an issue.
 #
 # #### `trigger_name`, `function_name`
 #
-# In migration, you can change the name generated for the trigger and the function, using theses two keys.
+# In migrations, you can change the generated trigger and function names using
+# these two keys.
 #
 # #### `dest_field`
 #
-# The field created in the database, which will contains your ts vector. Default is `full_text_vector`.
+# The field created in the database that will contain your tsvector. Default is
+# `full_text_vector`.
 #
 # ```
 # # in your migration
@@ -176,12 +181,12 @@ module Lustra::Model::FullTextSearchable
   # Parse client side text and generate string ready to be ingested by PG's `to_tsquery`.
   #
   # Author note: pg `to_tsquery` is awesome but can easily fail to parse.
-  #   `search` method use then a wrapper text_to_search used to ensure than
-  #   request is understood and produce ALWAYS legal string for `to_tsquery`
-  # This is a good helper then to use with the input of your end-users !
+  #   `search` uses a text_to_search wrapper to ensure the request is understood
+  #   and always produces a legal string for `to_tsquery`.
+  # This is a good helper to use with end-user input.
   #
   # However, this helper can be improved, as it doesn't use all the features
-  # of tsvector (parentesis, OR operator etc...)
+  # of tsvector (parentheses, OR operator, etc.).
   def self.to_tsq(text)
     text = text.gsub(/\+/, " ")
     tokens = split_to_exp(text)

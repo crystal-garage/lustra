@@ -1,6 +1,6 @@
 # ## JSONB Integration with Lustra
 #
-# Lustra supports natively postgres jsonb columns
+# Lustra natively supports PostgreSQL jsonb columns.
 #
 # Functions can be used calling or including Lustra::SQL::JSONB methods as helper methods:
 #

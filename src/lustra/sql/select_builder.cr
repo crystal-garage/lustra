@@ -81,7 +81,7 @@ module Lustra::SQL::SelectBuilder
   end
 
   # Construct a delete query from this select query.
-  # It uses only the `from` and the `where` clause fo the current select request.
+  # It uses only the `from` and `where` clauses of the current select request.
   # Can be useful in some case, but use at your own risk.
   def to_delete
     unless @froms.size == 1

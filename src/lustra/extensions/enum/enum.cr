@@ -44,7 +44,7 @@ module Lustra
 
   # ## Enum
   #
-  # Lustra offers full support of postgres enum strings.
+  # Lustra offers full support for PostgreSQL enum strings.
   #
   # ### Example
   #

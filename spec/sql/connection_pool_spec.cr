@@ -18,7 +18,7 @@ module ConnectionPoolSpec
         spawn do
           Lustra::SQL.transaction do
             Lustra::SQL.insert("tests", {id: 1}).execute
-            sleep 200.milliseconds # < The transaction is not yet commited
+            sleep 200.milliseconds # < The transaction is not yet committed.
           end
         end
 

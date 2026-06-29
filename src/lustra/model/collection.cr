@@ -11,7 +11,8 @@ require "../sql/select_query"
 # end
 # ```
 #
-# We just created a new model, linked to your database, mapping the column `my_column` of type String (`text` in postgres).
+# We just created a new model linked to your database, mapping the column
+# `my_column` as String (`text` in PostgreSQL).
 #
 # Now, you can play with your model:
 #
@@ -21,8 +22,9 @@ require "../sql/select_query"
 # row.save! # insert the new row in the database !
 # ```
 #
-# By convention, the table name will follow an underscore, plural version of your model: `my_models`.
-# A model into a module will prepend the module name before, so `Logistic::MyModel` will check for `logistic_my_models` in your database.
+# By convention, the table name follows an underscored, plural version of your
+# model: `my_models`. A model inside a module prepends the module name, so
+# `Logistic::MyModel` checks for `logistic_my_models` in your database.
 # You can force a specific table name using:
 #
 # ```
@@ -34,11 +36,13 @@ require "../sql/select_query"
 #
 # ## Presence validation
 #
-# Unlike many ORM around, Lustra carry about non-nullable pattern in crystal. Meaning `column my_column : String` assume than a call to `row.my_column` will return a String.
+# Unlike many ORMs, Lustra cares about non-nullable patterns in Crystal. That
+# means `column my_column : String` assumes that `row.my_column` returns a String.
 #
-# But it exists cases where the column is not yet initialized:
-# - When the object is built with constructor without providing the value (See above).
-# - When an object is semi-fetched through the database query. This is useful to ignore some large fields non-interesting in the body of the current operation.
+# But there are cases where the column is not initialized yet:
+# - When the object is built without providing the value (see above).
+# - When an object is partially fetched through a database query. This is useful
+#   for skipping large fields that are not needed for the current operation.
 #
 # For example, this code will compile:
 #
@@ -47,32 +51,33 @@ require "../sql/select_query"
 # puts row.my_column
 # ```
 #
-# However, it will throw a runtime exception `You cannot access to the field 'my_column' because it never has been initialized`
+# However, it will raise a runtime exception because the field has never been initialized.
 #
 # Same way, trying to save the object will raise an error:
 #
 # ```
 # row.save      # Will return false
-# pp row.errors # Will tell you than `my_column` presence is mandatory.
+# pp row.errors # Will tell you that `my_column` presence is mandatory.
 # ```
 #
-# Thanks to expressiveness of the Crystal language, we can handle presence validation by simply using the `Nilable` type in crystal:
+# Thanks to Crystal's expressiveness, we can handle presence validation by using
+# a nilable type:
 #
 # ```
 # class MyModel
 #   include Lustra::Model
 #
-#   column my_column : String? # Now, the column can be NULL or text in postgres.
+#   column my_column : String? # Now, the column can be NULL or text in PostgreSQL.
 # end
 # ```
 #
-# This time, the code above will works; in case of no value, my_column will be `nil` by default.
+# This time, the code above works; if there is no value, `my_column` is nil by default.
 #
 # ## Querying your code
 #
 # Whenever you want to fetch data from your database, you must create a new collection query:
 #
-# `MyModel.query # Will setup a vanilla 'SELECT * FROM my_models'`
+# `MyModel.query # Sets up a vanilla 'SELECT * FROM my_models'`
 #
 # Queries are fetchable using `each`:
 #
@@ -88,7 +93,7 @@ require "../sql/select_query"
 #
 # ## Column type
 #
-# By default, Lustra map theses columns types:
+# By default, Lustra maps these column types:
 #
 # - `String` => `text`
 # - `Numbers` (any from 8 to 64 bits, float, double, big number, big float) => `int, large int etc... (depends of your choice)`
@@ -99,16 +104,19 @@ require "../sql/select_query"
 #
 # _NOTE_: The `crystal-pg` gems map also some structures like GIS coordinates, but their implementation is not tested in Lustra. Use them at your own risk. Tell me if it's working 😉
 #
-# If you need to map special structure, see [Mapping Your Data](Mapping) guides for more informations.
+# If you need to map a special structure, see the [Mapping Your Data](Mapping)
+# guide for more information.
 #
 # ## Primary key
 #
-# Primary key is essential for relational mapping. Currently Lustra support only one column primary key.
+# A primary key is essential for relational mapping. Lustra currently supports
+# only one primary key column.
 #
-# A model without primary key can work in sort of degraded mode, throwing error in case of using some methods on them:
-# - `collection#first` will be throwing error if no `order_by` has been setup
+# A model without a primary key can work in a degraded mode, raising errors when
+# some methods are used:
+# - `collection#first` raises if no `order_by` has been set.
 #
-# To setup a primary key, you can add the modifier `primary: true` to the column:
+# To set up a primary key, add `primary: true` to the column:
 #
 # ```
 # class MyModel
@@ -119,13 +127,16 @@ require "../sql/select_query"
 # end
 # ```
 #
-# Note the flag `presence: false` added to the column. This tells Lustra than presence checking on save is not mandatory. Usually this happens if you setup a default value in postgres. In the case of our primary key `id`, we use a serial auto-increment default value.
-# Therefore, saving the model without primary key will works. The id will be fetched after insertion:
+# Note the `presence: false` flag added to the column. This tells Lustra that
+# presence checking on save is not mandatory. This usually happens when you set
+# up a default value in PostgreSQL. In the case of our primary key `id`, we use a
+# serial auto-increment default value.
+# Therefore, saving the model without a primary key works. The id is fetched after insertion:
 #
 # ```
 # m = MyModel
 # m.save!
-# m.id # Now the id value is setup.
+# m.id # Now the id value is set.
 # ```
 #
 # ## Helpers
@@ -137,11 +148,12 @@ require "../sql/select_query"
 # ```
 # class MyModel
 #   include Lustra::Model
-#   timestamps # Will map the two columns 'created_at' and 'updated_at', and map some hooks to update their values.
+#   timestamps # Maps 'created_at' and 'updated_at', and adds hooks to update their values.
 # end
 # ```
 #
-# Theses fields are automatically updated whenever you call `save` methods, and works as Rails ActiveRecord.
+# These fields are automatically updated whenever you call `save` methods, like
+# Rails ActiveRecord.
 #
 # ### With Serial Pkey
 #
@@ -152,24 +164,25 @@ require "../sql/select_query"
 # end
 # ```
 #
-# Basically rewrite `column id : UInt64, primary: true, presence: false`
+# Basically rewrites `column id : UInt64, primary: true, presence: false`.
 #
-# Argument is optional (default = id)
+# Argument is optional (default = id).
 module Lustra::Model
-  # `CollectionBase(T)` is the base class for collection of model.
-  # Collection of model are a SQL `SELECT` query mapping & building system. They are Enumerable and are
-  # `Lustra::SQL::SelectBuilder` behavior; therefore, they can be used array-like and are working with low-level SQL
-  # Building.
+  # `CollectionBase(T)` is the base class for model collections.
+  # Model collections are a SQL `SELECT` query mapping and building system. They
+  # are Enumerable and include `Lustra::SQL::SelectBuilder` behavior; therefore,
+  # they can be used array-like and also work with low-level SQL building.
   #
-  # The `CollectionBase(T)` is extended by each model. For example, generating the model `MyModel` will generate the
-  # class `MyModel::Collection` which inherits from `CollectionBase(MyModel)`
+  # The `CollectionBase(T)` is extended by each model. For example, generating
+  # the model `MyModel` generates the class `MyModel::Collection`, which
+  # inherits from `CollectionBase(MyModel)`.
   #
-  # Collection are instantiated using `Model.query` method.
+  # Collections are instantiated using the `Model.query` method.
   class CollectionBase(T)
     include Enumerable(T)
     include Lustra::SQL::SelectBuilder
 
-    # Used for build from collection
+    # Used for build from collection.
     @tags : Hash(String, Lustra::SQL::Any)
 
     @polymorphic : Bool = false
@@ -187,7 +200,7 @@ module Lustra::Model
     # :nodoc:
     property unlink_operation : Proc(T, T)?
 
-    # Parent model context for autosave functionality
+    # Parent model context for autosave functionality.
     property parent_model : Lustra::Model?
     property association_name : String?
     property? autosave : Bool = false
@@ -223,18 +236,19 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # Setup the connection of this query to be equal to the one of the model class
+    # Set this query's connection to the model class connection.
     def connection_name
       T.connection
     end
 
-    # Return the model class for this collection
+    # Return the model class for this collection.
     def item_class
       T
     end
 
     # :nodoc:
-    # Set a query cache on this Collection. Fetching and enumerate will use the cache instead of calling the SQL.
+    # Set a query cache on this Collection. Fetching and enumeration will use
+    # the cache instead of calling SQL.
     def cached(cache : Lustra::Model::QueryCache)
       @cache = cache
 
@@ -249,7 +263,7 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # Used internally to fetch the models if the collection is flagged as polymorphic
+    # Used internally to fetch models if the collection is flagged as polymorphic.
     def flag_as_polymorphic!(@polymorphic_key, scope : Enumerable(String))
       @polymorphic = true
       polymorphic_scope = @polymorphic_scope = Set(String).new
@@ -259,7 +273,7 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # Clear the current cache
+    # Clear the current cache.
     def clear_cached_result
       @cached_result = nil
 
@@ -268,7 +282,7 @@ module Lustra::Model
 
     # :nodoc:
     def change!
-      # In case we filter this collection, we remove the cache
+      # If we filter this collection, remove the cache.
       clear_cached_result
     end
 
@@ -291,13 +305,13 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # redefine where with tuple as argument which add tags
+    # Redefine where with a tuple argument that adds tags.
     def where(**tuple)
       hash = tuple.to_h.transform_keys &.to_s
 
       any_hash = {} of String => Lustra::SQL::Any
 
-      # remove terms which are not real value but conditions like range or array
+      # Remove terms that are not real values but conditions like range or array.
       hash.each do |k, v|
         any_hash[k] = v if v.is_a?(Lustra::SQL::Any)
       end
@@ -314,8 +328,8 @@ module Lustra::Model
       self
     end
 
-    # Build the SQL, send the query then iterate through each models
-    # gathered by the request.
+    # Build the SQL, send the query, then iterate through each model gathered by
+    # the request.
     def each(fetch_columns = false, & : T ->) : Nil
       result = @cached_result
 
@@ -339,8 +353,8 @@ module Lustra::Model
       end
     end
 
-    # Build the SQL, send the query then build and array by applying the
-    # block transformation over it.
+    # Build the SQL, send the query, then build an array by applying the block
+    # transformation over it.
     def map(fetch_columns = false, &block : T -> X) : Array(X) forall X
       o = [] of X
       each(fetch_columns) { |mdl| o << block.call(mdl) }
@@ -348,9 +362,9 @@ module Lustra::Model
       o
     end
 
-    # Build the SQL, send the query then iterate through each models
-    # gathered by the request.
-    # Use a postgres cursor to avoid memory bloating.
+    # Build the SQL, send the query, then iterate through each model gathered by
+    # the request.
+    # Use a PostgreSQL cursor to avoid memory bloat.
     # Useful to fetch millions of rows at once.
     def each_with_cursor(batch = 1000, fetch_columns = false, &block : T ->)
       cr = @cached_result
@@ -372,9 +386,9 @@ module Lustra::Model
     end
 
     # Build a new collection; if the collection comes from a has_many relation
-    # (e.g. `my_model.associations.build`), the foreign column which store
-    # the primary key of `my_model` will be setup by default, preventing you
-    # to forget it.
+    # (e.g. `my_model.associations.build`), the foreign column that stores the
+    # primary key of `my_model` will be set by default, preventing you from
+    # forgetting it.
     # You can pass extra parameters using a named tuple:
     # `my_model.associations.build({a_column: "value"}) `
     def build(**tuple, & : T -> Nil) : T
@@ -385,7 +399,7 @@ module Lustra::Model
 
       yield(r)
 
-      # Register with parent model for autosave functionality
+      # Register with parent model for autosave functionality.
       if autosave? && (pm = parent_model) && (an = association_name)
         pm.add_built_association(an, r)
       end
@@ -408,8 +422,7 @@ module Lustra::Model
       build(**x, &block)
     end
 
-    # Build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Build a new object and set the fields from the condition tuple.
     # Just after building, save the object.
     def create(**tuple, & : T -> Nil) : T
       r = build(**tuple) { |mdl| yield(mdl) }
@@ -436,11 +449,10 @@ module Lustra::Model
       create(**x, &block)
     end
 
-    # Build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Build a new object and set the fields from the condition tuple.
     # Just after building, save the object.
-    # But instead of returning self if validation failed,
-    # raise `Lustra::Model::InvalidError` exception
+    # Instead of returning self if validation fails, raise
+    # `Lustra::Model::InvalidError`.
     def create!(**tuple, & : T -> Nil) : T
       r = build(**tuple) { |mdl| yield(mdl) }
 
@@ -466,7 +478,7 @@ module Lustra::Model
       create(**x, &block)
     end
 
-    # Check whether the query return any row.
+    # Check whether the query returns any row.
     def any? : Bool
       cr = @cached_result
 
@@ -479,12 +491,12 @@ module Lustra::Model
       false
     end
 
-    # Inverse of `any?`, return true if the request return no rows.
+    # Inverse of `any?`; return true if the request returns no rows.
     def empty? : Bool
       !any?
     end
 
-    # Use SQL `COUNT` over your query, and return this number as a Int64
+    # Use SQL `COUNT` over your query, and return this number as an Int64.
     def count(type : X.class = Int64) forall X
       cr = @cached_result
 
@@ -495,10 +507,11 @@ module Lustra::Model
 
     # Add an item to the current collection.
     #
-    # If the current collection is not originated from a `has_many` or `has_many through:` relation, calling `<<` over
-    # the collection will raise a `Lustra::SQL::OperationNotPermittedError`
+    # If the current collection does not originate from a `has_many` or
+    # `has_many through:` relation, calling `<<` over the collection will raise a
+    # `Lustra::SQL::OperationNotPermittedError`.
     #
-    # Returns `self` and therefore can be chained
+    # Returns `self` and therefore can be chained.
     def <<(item : T)
       append_operation = self.append_operation
 
@@ -522,20 +535,21 @@ module Lustra::Model
       end
     end
 
-    # Save a model and handle append_operation for has_many through relationships
-    # This allows the build + save pattern to work
+    # Save a model and handle append_operation for has_many through relationships.
+    # This allows the build + save pattern to work.
     def save!(item : T)
       item.save!
       handle_append_operation(item)
       item
     end
 
-    # Unlink the model currently referenced through a relation `has_many through`
+    # Unlink the model currently referenced through a `has_many through` relation.
     #
-    # If the current colleciton doesn't come from a `has_many through` relation,
-    # this method will throw `Lustra::SQL::OperationNotPermittedError`
+    # If the current collection doesn't come from a `has_many through` relation,
+    # this method will throw `Lustra::SQL::OperationNotPermittedError`.
     #
-    # Returns `true` if unlinking is successful (e.g. one or more rows have been updated), or `false` otherwise
+    # Returns `true` if unlinking is successful (e.g. one or more rows have been
+    # updated), or `false` otherwise.
     def unlink(item : T)
       unlink_operation = self.unlink_operation
 
@@ -585,7 +599,7 @@ module Lustra::Model
       offset(off).first(fetch_columns)
     end
 
-    # Get a range of models
+    # Get a range of models.
     def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
       offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
@@ -601,7 +615,7 @@ module Lustra::Model
       where { raw("1 = 0") }
     end
 
-    # Returns a model using primary key equality
+    # Returns a model using primary key equality.
     # Returns `nil` if not found.
     def find(x)
       where { raw(T.__pkey__) == x }.first
@@ -614,13 +628,13 @@ module Lustra::Model
     end
 
     # Returns a model using primary key equality.
-    # Raises error if the model is not found.
+    # Raises an error if the model is not found.
     def find!(x)
       find(x) || raise Lustra::SQL::RecordNotFoundError.new
     end
 
     # Find multiple models by an array of primary keys.
-    # Raises error if ANY of the IDs are not found.
+    # Raises an error if ANY of the IDs are not found.
     def find!(ids : Array)
       results = find(ids)
       if results.size != ids.size
@@ -672,8 +686,8 @@ module Lustra::Model
       where(**tuple).first!(fetch_columns)
     end
 
-    # Try to fetch a row. If not found, build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Try to fetch a row. If not found, build a new object and set the fields
+    # from the condition tuple.
     def find_or_build(**tuple, & : T -> Nil) : T
       where(tuple) unless tuple.size == 0
       r = first
@@ -704,8 +718,8 @@ module Lustra::Model
       find_or_build(**x, &block)
     end
 
-    # Try to fetch a row. If not found, build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Try to fetch a row. If not found, build a new object and set the fields
+    # from the condition tuple.
     # Just after building, save the object.
     def find_or_create(**tuple, & : T -> Nil) : T
       r = find_or_build(**tuple) { |mdl| yield(mdl) }

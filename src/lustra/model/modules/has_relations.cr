@@ -18,18 +18,18 @@ module Lustra::Model::HasRelations
     end
   end
 
-  # The method `has_one` declare a relation 1 to [0,1]
-  # where the current model primary key is stored in the foreign table.
+  # The method `has_one` declares a 1 to [0,1] relation where the current
+  # model's primary key is stored in the foreign table.
   # `primary_key` method (default: `self#__pkey__`) and `foreign_key` method
   # (default: table_name in singular, plus "_id" appended)
-  # can be redefined
+  # can be redefined.
   #
   # Example:
   #
   # ```
   # model Passport
   #   column id : Int32, primary : true
-  #   has_one user : User It assumes the table `users` have a column `passport_id`
+  #   has_one user : User # It assumes the table `users` has a column `passport_id`
   # end
   #
   # model Passport
@@ -62,11 +62,15 @@ module Lustra::Model::HasRelations
     %}
   end
 
-  # Has Many and Has One are the relations where the model share its primary key into a foreign table. In our example above, we can assume than a User has many Post as author.
+  # Has Many and Has One are relations where the model shares its primary key
+  # into a foreign table. In our example above, we can assume that a User has
+  # many Posts as author.
   #
-  # Basically, for each `belongs_to` declaration, you must have a `has_many` or `has_one` declaration on the other model.
+  # Basically, for each `belongs_to` declaration, you must have a `has_many` or
+  # `has_one` declaration on the other model.
   #
-  # While `has_many` relation returns a list of models, `has_one` returns only one model when called.
+  # While a `has_many` relation returns a list of models, `has_one` returns only
+  # one model when called.
   #
   # Example:
   #

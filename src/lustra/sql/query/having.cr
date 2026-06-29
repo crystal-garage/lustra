@@ -10,7 +10,7 @@ module Lustra::SQL::Query::Having
   # # Note: in this example, InArray node use unsafe strings
   # ```
   #
-  # If useful for moving a having clause from a request to another one:
+  # Useful for moving a having clause from one request to another:
   #
   # ```
   # query1.having { a == b } # having a = b
@@ -121,7 +121,7 @@ module Lustra::SQL::Query::Having
   # # Note: in this example, InArray node use unsafe strings
   # ```
   #
-  # If useful for moving a having clause from a request to another one:
+  # Useful for moving a having clause from one request to another:
   #
   # ```
   # query1.or_having { a == b } # having a = b
