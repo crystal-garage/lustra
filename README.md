@@ -41,10 +41,11 @@ Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version
   - [Querying computed or foreign columns](#querying-computed-or-foreign-columns)
 - [Scopes and Default Scopes](#scopes-and-default-scopes)
 - [Inspection & SQL logging](#inspection--sql-logging)
-- [Save & validation](#save--validation)
+- [Persistence](#persistence)
+  - [Attribute Change Tracking](#attribute-change-tracking)
   - [Lifecycle-bypassing methods](#lifecycle-bypassing-methods)
-  - [Validation](#validation)
-  - [Lifecycle Callbacks](#lifecycle-callbacks)
+- [Validation](#validation)
+- [Lifecycle Callbacks](#lifecycle-callbacks)
 - [Migration](#migration)
 - [PostgreSQL Geometric Types](#postgresql-geometric-types)
 - [Running Tests](#running-tests)
@@ -1126,9 +1127,9 @@ For activation, simply setup the logger to `DEBUG` level !
 Log.builder.bind "lustra.*", :debug, Log::IOBackend.new(STDOUT)
 ```
 
-### Save & validation
+### Persistence
 
-#### Save
+#### Saving records
 
 Object can be persisted, saved, updated:
 
@@ -1174,31 +1175,7 @@ and lifecycle callbacks. Use `update_column`, `update_columns`, `delete`, or
 collection bulk helpers only when you explicitly want to bypass some of that
 model lifecycle.
 
-##### Lifecycle-bypassing methods
-
-Some helpers write directly to PostgreSQL for speed or atomicity. These helpers
-are useful, but they intentionally skip parts of the model lifecycle.
-
-| Method | Loads models | Validations | Callbacks | Timestamps | Result |
-| --- | --- | --- | --- | --- | --- |
-| `save` | Yes | Yes | `save`, `create`/`update` | Yes | `true` or `false` |
-| `save!` | Yes | Yes | `save`, `create`/`update` | Yes | model or raises |
-| `update` | Yes | Yes | `save`, `update` | Yes | `true` or `false` |
-| `update!` | Yes | Yes | `save`, `update` | Yes | model or raises |
-| `destroy` | Yes | No | `destroy` | No | `true` or `false` |
-| `delete` | Yes | No | No | No | `true` or `false` |
-| `update_column` | Yes | No | No | No | model |
-| `update_columns` | Yes | No | No | No | model |
-| `increment!` / `decrement!` | Yes | No | No | No | model |
-| `update_all` | No | No | No | No | affected row count |
-| `delete_all` | No | No | No | No | collection |
-| `destroy_all` | Yes | No | `destroy` | No | collection |
-
-Use lifecycle methods when business rules live in validations or callbacks. Use
-direct SQL helpers for counters, flags, maintenance jobs, and bulk changes where
-you deliberately do not want each record to run model code.
-
-##### Attribute Change Tracking
+#### Attribute Change Tracking
 
 Lustra automatically tracks changes to model attributes:
 
@@ -1237,7 +1214,31 @@ user.email_column.change    # Get {old, new} tuple (nil if not changed)
 user.email_column.revert    # Revert to old value
 ```
 
-##### Atomic Counter Updates
+#### Lifecycle-bypassing methods
+
+Some helpers write directly to PostgreSQL for speed or atomicity. These helpers
+are useful, but they intentionally skip parts of the model lifecycle.
+
+| Method | Loads models | Validations | Callbacks | Timestamps | Result |
+| --- | --- | --- | --- | --- | --- |
+| `save` | Yes | Yes | `save`, `create`/`update` | Yes | `true` or `false` |
+| `save!` | Yes | Yes | `save`, `create`/`update` | Yes | model or raises |
+| `update` | Yes | Yes | `save`, `update` | Yes | `true` or `false` |
+| `update!` | Yes | Yes | `save`, `update` | Yes | model or raises |
+| `destroy` | Yes | No | `destroy` | No | `true` or `false` |
+| `delete` | Yes | No | No | No | `true` or `false` |
+| `update_column` | Yes | No | No | No | model |
+| `update_columns` | Yes | No | No | No | model |
+| `increment!` / `decrement!` | Yes | No | No | No | model |
+| `update_all` | No | No | No | No | affected row count |
+| `delete_all` | No | No | No | No | collection |
+| `destroy_all` | Yes | No | `destroy` | No | collection |
+
+Use lifecycle methods when business rules live in validations or callbacks. Use
+direct SQL helpers for counters, flags, maintenance jobs, and bulk changes where
+you deliberately do not want each record to run model code.
+
+#### Atomic Counter Updates
 
 Increment or decrement numeric columns atomically without running validations or callbacks:
 
@@ -1259,7 +1260,7 @@ user.increment!(:view_count)  # Safe for concurrent requests
 
 The `!` versions update the database immediately using atomic SQL operations, making them thread-safe for counters like views, likes, or login counts.
 
-##### Direct Column Updates
+#### Direct Column Updates
 
 Update columns directly without running validations or callbacks. Useful for performance-critical updates when you know the data is valid:
 
@@ -1282,7 +1283,7 @@ user.update_columns({admin: true, role: "superuser"})
 
 Use these methods only when you need raw performance and are certain the data is valid.
 
-##### Deleting Records
+#### Deleting Records
 
 Lustra provides two ways to delete records:
 
@@ -1322,9 +1323,9 @@ post.destroy
 post.delete
 ```
 
-#### Validation
+### Validation
 
-##### Presence validator
+#### Presence Validator
 
 Presence validator is done using the type of the column:
 
@@ -1337,7 +1338,7 @@ class User
 end
 ```
 
-###### `NOT NULL DEFAULT ...` CASE
+##### `NOT NULL DEFAULT ...` case
 
 There's a case when a column CAN be null inside Crystal, if not persisted,
 but CANNOT be null inside Postgres.
@@ -1359,7 +1360,7 @@ u = User.new
 u.id # raise error
 ```
 
-##### Other validators
+#### Other Validators
 
 When you save your model, Lustra will call first the presence validators, then
 call your custom made validators. All you have to do is to reimplement
@@ -1387,13 +1388,13 @@ class MyModel
 end
 ```
 
-##### Unique validator
+#### Unique Validator
 
 Please use `unique` feature of postgres. Unique validator at crystal level is a
 non-go and lead to terrible race concurrency issues if your deploy on multiple nodes/pods.
 It's an anti-pattern and must be avoided at any cost.
 
-##### The validation and the presence system
+#### Validation and Uninitialized Columns
 
 In the case you try validation on a column which has not been initialized,
 Lustra will complain, telling you you cannot access to the column.
@@ -1450,11 +1451,11 @@ end
 I recommend the 4th method in most of the cases you will faces.
 Simple to write and easy to read !
 
-#### Lifecycle Callbacks
+### Lifecycle Callbacks
 
 Lustra provides a comprehensive callback system to hook into model lifecycle events. Callbacks allow you to execute code at specific points during a model's lifecycle.
 
-##### Available Callback Events
+#### Available Callback Events
 
 - `:validate` - Triggered during validation
 - `:save` - Triggered for any save operation (wraps create/update)
@@ -1462,12 +1463,12 @@ Lustra provides a comprehensive callback system to hook into model lifecycle eve
 - `:update` - Triggered when an existing record is updated
 - `:destroy` - Triggered when a record is destroyed (via `destroy` method, not `delete`)
 
-##### Callback Directions
+#### Callback Directions
 
 - `before` - Executed before the event
 - `after` - Executed after the event
 
-##### Basic Usage
+#### Basic Usage
 
 ```crystal
 class User
@@ -1502,7 +1503,7 @@ class User
 end
 ```
 
-##### Callback Execution Order
+#### Callback Execution Order
 
 **Before callbacks:** Last defined -> First defined (reverse order)
 ```crystal
@@ -1520,7 +1521,7 @@ after(:save) { puts "3" }
 # Execution order: 1, 2, 3
 ```
 
-##### Common Patterns
+#### Common Patterns
 
 **Sanitizing data before validation:**
 ```crystal
@@ -1558,7 +1559,7 @@ after(:update) do |model|
 end
 ```
 
-##### Callbacks with Associations
+#### Callbacks with Associations
 
 Callbacks work seamlessly with associations like `counter_cache` and `touch`:
 
