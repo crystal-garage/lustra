@@ -979,6 +979,47 @@ and lifecycle callbacks. Use `update_column`, `update_columns`, `delete`, or
 collection bulk helpers only when you explicitly want to bypass some of that
 model lifecycle.
 
+##### Read-only models and SQL views
+
+Use `self.read_only = true` when a model maps to a PostgreSQL view, a system
+catalog, or any table that the application should query but never write to.
+
+```crystal
+class ActiveUserReport
+  include Lustra::Model
+
+  self.table = "active_user_reports"
+  self.read_only = true
+
+  column user_id : Int64, primary: true
+  column email : String
+  column posts_count : Int64
+end
+```
+
+Read-only models still use the regular query API:
+
+```crystal
+reports =
+  ActiveUserReport.query
+    .where { posts_count > 0 }
+    .order_by(:posts_count, :desc)
+    .to_a
+```
+
+Write helpers are blocked:
+
+```crystal
+report = ActiveUserReport.query.first!
+
+report.save  # => false
+report.save! # raises Lustra::Model::ReadOnlyError
+```
+
+This is useful for SQL views because the model can describe the view's result
+shape while making accidental writes explicit. Lustra uses the same approach for
+reflection models backed by PostgreSQL `information_schema` views.
+
 ##### Attribute Change Tracking
 
 Lustra automatically tracks changes to model attributes:
