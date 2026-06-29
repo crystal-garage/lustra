@@ -632,23 +632,44 @@ User.query.with_posts.each do |user|
 end
 ```
 
-Note: For association eager loading (like `with_posts`), Lustra uses separate queries with the `IN` operator rather than JOINs for optimal performance.
+For association eager loading, Lustra uses separate queries with the `IN`
+operator instead of `JOIN`s. The preload query runs just before the parent
+collection is fetched and fills the association cache for the returned models.
 
-In the case above:
-
-- The first request will be
+In the example above, the parent request is:
 
 ```sql
 SELECT * FROM users;
 ```
 
-- Thanks to the cache, a second request will be called before fetching the users:
+The association preload query is:
 
 ```sql
 SELECT * FROM posts WHERE user_id IN ( SELECT id FROM users )
 ```
 
-I have plan in a late future to offer different query strategies for the cache (e.g. joins, unions...)
+This is useful for avoiding N+1 queries, but the cost follows the parent query.
+If the parent query is broad, the preload query is broad too. Always constrain
+or paginate the parent collection before eager loading large associations:
+
+```crystal
+User.query
+  .where { active.true? }
+  .limit(100)
+  .with_posts
+  .each do |user|
+    # user.posts is served from the association cache
+  end
+```
+
+Child association queries can also be refined inside the `with_XXX` block:
+
+```crystal
+User.query.with_posts(&.where({published: true}))
+```
+
+`with_XXX` is for association caching only. It is not a join; use `join` when
+you need to filter or order parent rows by associated-table columns.
 
 ###### Associations caching examples
 
