@@ -943,6 +943,42 @@ u.email = "test@example.com"
 u.save! # Save or throw if unsavable (validation failed).
 ```
 
+Use the non-bang methods when validation failure is an expected result:
+
+```crystal
+user = User.new
+
+if user.save
+  puts "saved"
+else
+  puts user.errors
+end
+```
+
+The bang methods raise `Lustra::Model::InvalidError` when validations fail:
+
+```crystal
+user.save! # raises if user is invalid
+```
+
+The same rule applies to create and update helpers:
+
+```crystal
+user = User.query.create
+user.persisted? # => false when validations failed
+user.errors     # inspect validation errors
+
+User.query.create! # raises on validation failure
+
+user.update(first_name: "Jane")  # returns true or false
+user.update!(first_name: "Jane") # raises on validation failure
+```
+
+`save`, `save!`, `create`, `create!`, `update`, and `update!` run validations
+and lifecycle callbacks. Use `update_column`, `update_columns`, `delete`, or
+collection bulk helpers only when you explicitly want to bypass some of that
+model lifecycle.
+
 ##### Attribute Change Tracking
 
 Lustra automatically tracks changes to model attributes:
