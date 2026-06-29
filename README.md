@@ -447,6 +447,43 @@ Post.query.in_order_of(:status, ["started", "enrolled", "completed"])
 Ticket.query.in_order_of(:priority, [1, 3, 2]).order_by(:created_at, :desc)
 ```
 
+##### Array column queries
+
+PostgreSQL array columns can be declared with regular Crystal array types:
+
+```crystal
+class Post
+  include Lustra::Model
+
+  column tags_list : Array(String), presence: false
+end
+```
+
+Use PostgreSQL array operators through `raw` for advanced array predicates:
+
+```crystal
+# A scalar value is present in the array
+Post.query.where { raw("? = ANY(tags_list)", "orm") }
+
+# Every array element matches the scalar value
+Post.query.where { raw("? = ALL(tags_list)", "orm") }
+
+# The array contains all listed values
+Post.query.where { raw("tags_list @> ARRAY[?]::text[]", "crystal") }
+
+# The array is contained by the listed values
+Post.query.where { raw("tags_list <@ ARRAY[?, ?]::text[]", "orm", "crystal") }
+
+# The array overlaps with any listed value
+Post.query.where { raw("tags_list && ARRAY[?, ?]::text[]", "sql", "crystal") }
+```
+
+Use a GIN index for frequently queried array columns:
+
+```crystal
+add_index "posts", "tags_list", using: "gin"
+```
+
 ##### JOIN operations
 
 Lustra supports automatic join detection from associations, as well as manual joins with custom conditions.
