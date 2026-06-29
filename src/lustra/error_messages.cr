@@ -188,11 +188,11 @@ module Lustra::ErrorMessages
 
   def lack_of_primary_key(model_name)
     build_error_message(
-      "Model `#{model_name}` lacks of primary key field",
+      "Model `#{model_name}` does not define a primary key.",
       {
-        "Define a column as primary key",
+        "For the default serial id, add `primary_key` inside the model.",
+        "For an explicit column, use `column id : Int64, primary: true` or set `primary: true` on your primary key column.",
         "Only one column can be primary key (no compound keys are allowed in Lustra for now)",
-        "You can use the helpers for primary key (see manual page)",
       }
     )
   end

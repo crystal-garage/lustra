@@ -2,8 +2,20 @@ require "../spec_helper"
 require "../data/example_models"
 
 module ModelSpec
+  class ModelWithoutPrimaryKey
+    include Lustra::Model
+
+    column name : String
+  end
+
   describe "Lustra::Model" do
     context "fields management" do
+      it "raises helpful error when primary key is missing" do
+        expect_raises(Exception, /ModelWithoutPrimaryKey[\s\S]*primary key[\s\S]*primary_key[\s\S]*primary: true/) do
+          ModelWithoutPrimaryKey.new.__pkey__
+        end
+      end
+
       it "load from tuple" do
         temporary do
           reinit_example_models
