@@ -979,6 +979,30 @@ and lifecycle callbacks. Use `update_column`, `update_columns`, `delete`, or
 collection bulk helpers only when you explicitly want to bypass some of that
 model lifecycle.
 
+##### Lifecycle-bypassing methods
+
+Some helpers write directly to PostgreSQL for speed or atomicity. These helpers
+are useful, but they intentionally skip parts of the model lifecycle.
+
+| Method | Loads models | Validations | Callbacks | Timestamps | Result |
+| --- | --- | --- | --- | --- | --- |
+| `save` | Yes | Yes | `save`, `create`/`update` | Yes | `true` or `false` |
+| `save!` | Yes | Yes | `save`, `create`/`update` | Yes | model or raises |
+| `update` | Yes | Yes | `save`, `update` | Yes | `true` or `false` |
+| `update!` | Yes | Yes | `save`, `update` | Yes | model or raises |
+| `destroy` | Yes | No | `destroy` | No | `true` or `false` |
+| `delete` | Yes | No | No | No | `true` or `false` |
+| `update_column` | Yes | No | No | No | model |
+| `update_columns` | Yes | No | No | No | model |
+| `increment!` / `decrement!` | Yes | No | No | No | model |
+| `update_all` | No | No | No | No | affected row count |
+| `delete_all` | No | No | No | No | collection |
+| `destroy_all` | Yes | No | `destroy` | No | collection |
+
+Use lifecycle methods when business rules live in validations or callbacks. Use
+direct SQL helpers for counters, flags, maintenance jobs, and bulk changes where
+you deliberately do not want each record to run model code.
+
 ##### Read-only models and SQL views
 
 Use `self.read_only = true` when a model maps to a PostgreSQL view, a system
