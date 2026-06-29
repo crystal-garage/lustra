@@ -916,7 +916,7 @@ module CollectionSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Exception, /Unknown association/) do
+          expect_raises(Exception, /Unknown association 'unknown_association' for User.*Available associations: categories, comments, dependencies, dependents, info, posts, relationships.*Use join with a block/) do
             User.query.join(:unknown_association).to_a
           end
         end

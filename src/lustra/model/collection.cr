@@ -882,8 +882,14 @@ module Lustra::Model
             {% end %}
         {% end %}
         else
-          # Unknown association - provide helpful error
-          raise "Unknown association '#{association}' for #{T}. Use join with a block for table names."
+          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
+          {% if available_associations.empty? %}
+            available = "none"
+          {% else %}
+            available = {{ available_associations.join(", ") }}
+          {% end %}
+
+          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
         end
       {% end %}
     end
