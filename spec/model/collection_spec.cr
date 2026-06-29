@@ -507,6 +507,28 @@ module CollectionSpec
             PostTag.query.count.should eq(1) # No duplicates!
           end
         end
+
+        it "raises helpful error on plain query collection" do
+          temporary do
+            reinit_example_models
+
+            expect_raises(Exception, /Cannot append Post.*plain Post\.query result.*user\.posts/) do
+              Post.query << Post.new({title: "Test Post"})
+            end
+          end
+        end
+      end
+
+      describe "#unlink" do
+        it "raises helpful error on plain query collection" do
+          temporary do
+            reinit_example_models
+
+            expect_raises(Exception, /Cannot unlink Tag.*has_many through.*plain Tag\.query result/) do
+              Tag.query.unlink(Tag.new({name: "Tag1"}))
+            end
+          end
+        end
       end
 
       context "autosave functionality" do

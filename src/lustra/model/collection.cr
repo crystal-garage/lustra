@@ -502,7 +502,7 @@ module Lustra::Model
     def <<(item : T)
       append_operation = self.append_operation
 
-      raise "Operation not permitted on this collection." unless append_operation
+      raise relation_operation_not_permitted("append", item) unless append_operation
 
       append_operation.call(item)
       @cached_result.try &.<<(item)
@@ -539,12 +539,28 @@ module Lustra::Model
     def unlink(item : T)
       unlink_operation = self.unlink_operation
 
-      raise "Operation not permitted on this collection." unless unlink_operation
+      raise relation_operation_not_permitted("unlink", item) unless unlink_operation
 
       unlink_operation.call(item)
       @cached_result.try &.delete(item)
 
       self
+    end
+
+    private def relation_operation_not_permitted(operation : String, item : T)
+      relation = if parent = parent_model
+                   if name = association_name
+                     " Association context: #{parent.class}##{name}."
+                   else
+                     " Association context: #{parent.class}."
+                   end
+                 else
+                   " This collection is a plain #{T}.query result."
+                 end
+
+      "Cannot #{operation} #{item.class} on this collection. " \
+      "This operation is only available on writable `has_many` or `has_many through` association collections." \
+      "#{relation} Use an association collection such as `user.posts`, not `#{T}.query`."
     end
 
     # Create an array from the query.
