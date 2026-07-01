@@ -863,6 +863,44 @@ module CollectionSpec
         end
       end
 
+      it "where.missing with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user_with_posts = User.create! first_name: "With Posts"
+          user_without_posts = User.create! first_name: "Without Posts"
+          Post.create! title: "Post 1", user_id: user_with_posts.id
+
+          query = User.query.where.missing(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" LEFT JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE \"posts\".\"id\" IS NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user_without_posts.id)
+        end
+      end
+
+      it "where.associated with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user_with_posts = User.create! first_name: "With Posts"
+          user_without_posts = User.create! first_name: "Without Posts"
+          Post.create! title: "Post 1", user_id: user_with_posts.id
+
+          query = User.query.where.associated(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE \"posts\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user_with_posts.id)
+        end
+      end
+
       it "join works with String association name" do
         temporary do
           reinit_example_models
