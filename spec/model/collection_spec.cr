@@ -901,6 +901,48 @@ module CollectionSpec
         end
       end
 
+      it "where.missing with has_many through join table" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag_with_post = Tag.create! name: "used"
+          tag_without_post = Tag.create! name: "orphan"
+          PostTag.create! post_id: post.id, tag_id: tag_with_post.id
+
+          query = Tag.query.where.missing(:post_tags)
+          query.to_sql.should eq(
+            "SELECT \"tags\".* FROM \"tags\" LEFT JOIN \"post_tags\" ON (\"post_tags\".\"tag_id\" = \"tags\".\"id\") WHERE \"post_tags\".\"id\" IS NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(tag_without_post.id)
+        end
+      end
+
+      it "where.associated with has_many through join table" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag_with_post = Tag.create! name: "used"
+          tag_without_post = Tag.create! name: "orphan"
+          PostTag.create! post_id: post.id, tag_id: tag_with_post.id
+
+          query = Tag.query.where.associated(:post_tags)
+          query.to_sql.should eq(
+            "SELECT \"tags\".* FROM \"tags\" INNER JOIN \"post_tags\" ON (\"post_tags\".\"tag_id\" = \"tags\".\"id\") WHERE \"post_tags\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(tag_with_post.id)
+        end
+      end
+
       it "join works with String association name" do
         temporary do
           reinit_example_models

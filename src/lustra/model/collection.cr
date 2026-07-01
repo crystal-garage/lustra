@@ -861,6 +861,12 @@ module Lustra::Model
               %primary_key = {{ settings[:type] }}.__pkey__
               "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
             {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+              %through_pkey = {{ settings[:through] }}.__pkey__
+              "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_pkey)}"
+          {% end %}
         {% end %}
         else
           {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
@@ -969,6 +975,20 @@ module Lustra::Model
               final_condition = "#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)} = #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_key)}"
               join(Lustra::SQL.escape(%final_table), type, final_condition, lateral)
             {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{ settings[:own_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
+              join(Lustra::SQL.escape(%through_table), type, condition, lateral)
+          {% end %}
         {% end %}
         else
           {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
