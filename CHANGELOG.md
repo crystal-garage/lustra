@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added `where.associated(:association)` and `where.missing(:association)` relation filters for querying records with or without associated rows.
+
 ### Changed
 - Unknown association errors now include available association names.
 - Read-only model save errors now explain that read-only models commonly map database views or system catalogs.
