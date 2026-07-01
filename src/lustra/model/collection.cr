@@ -816,6 +816,71 @@ module Lustra::Model
       end
     {% end %}
 
+    # Filter records missing the given association.
+    #
+    # ```
+    # User.query.where.missing(:posts)
+    # # SELECT "users".* FROM "users"
+    # # LEFT JOIN "posts" ON ("posts"."user_id" = "users"."id")
+    # # WHERE ("posts"."id" IS NULL)
+    # ```
+    def missing(association : Lustra::SQL::Symbolic)
+      auto_join_association(association, :left, false)
+      where("#{association_primary_key_sql(association)} IS NULL")
+    end
+
+    # Filter records having at least one matching association.
+    #
+    # ```
+    # User.query.where.associated(:posts)
+    # # SELECT "users".* FROM "users"
+    # # INNER JOIN "posts" ON ("posts"."user_id" = "users"."id")
+    # # WHERE ("posts"."id" IS NOT NULL)
+    # ```
+    def associated(association : Lustra::SQL::Symbolic)
+      auto_join_association(association, :inner, false)
+      where("#{association_primary_key_sql(association)} IS NOT NULL")
+    end
+
+    # Return the SQL identifier used for the association existence predicate.
+    private def association_primary_key_sql(association : Lustra::SQL::Symbolic)
+      {% begin %}
+        case association.to_s
+        {% for name, settings in T::RELATIONS %}
+          when "{{ name }}"
+            {% if settings[:relation_type] == :has_many || settings[:relation_type] == :has_many_through %}
+              %relation_table = {{ settings[:type] }}.table
+              %primary_key = {{ settings[:type] }}.__pkey__
+              "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+            {% elsif settings[:relation_type] == :has_one %}
+              %relation_table = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.table
+              %primary_key = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.__pkey__
+              "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+            {% elsif settings[:relation_type] == :belongs_to %}
+              %relation_table = {{ settings[:type] }}.table
+              %primary_key = {{ settings[:type] }}.__pkey__
+              "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+            {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+              %through_pkey = {{ settings[:through] }}.__pkey__
+              "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_pkey)}"
+          {% end %}
+        {% end %}
+        else
+          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
+          {% if available_associations.empty? %}
+            available = "none"
+          {% else %}
+            available = {{ available_associations.join(", ") }}
+          {% end %}
+
+          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
+        end
+      {% end %}
+    end
+
     # Helper to auto-detect join conditions from association metadata
     private def auto_join_association(association : Lustra::SQL::Symbolic, type, lateral)
       {% begin %}
@@ -910,6 +975,20 @@ module Lustra::Model
               final_condition = "#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)} = #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_key)}"
               join(Lustra::SQL.escape(%final_table), type, final_condition, lateral)
             {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{ settings[:own_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
+              join(Lustra::SQL.escape(%through_table), type, condition, lateral)
+          {% end %}
         {% end %}
         else
           {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
