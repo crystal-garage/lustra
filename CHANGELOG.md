@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `with_count(:association)` for selecting related record counts without loading the associated records.
 - Added polymorphic `has_many ..., as:` associations backed by `<name>_id` and `<name>_type` columns.
 - Added polymorphic `belongs_to ..., polymorphic: true` associations for explicit union target types, including `with_<association>` eager loading.
+- Added concrete `belongs_to ..., polymorphic_type:` aliases for joining and eager loading one polymorphic target type through a shared foreign key.
 
 ### Changed
 - Unknown association errors now include available association names.

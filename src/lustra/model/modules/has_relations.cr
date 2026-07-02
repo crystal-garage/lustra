@@ -151,10 +151,12 @@ module Lustra::Model::HasRelations
     touch = nil,
     counter_cache = nil,
     polymorphic = false,
+    polymorphic_type = nil,
   )
     {%
       foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
       touch = touch.id if touch.is_a?(SymbolLiteral) || touch.is_a?(StringLiteral)
+      polymorphic_type = polymorphic_type.stringify if polymorphic_type.is_a?(SymbolLiteral)
 
       nilable = false
       polymorphic_types = nil
@@ -195,6 +197,7 @@ module Lustra::Model::HasRelations
         counter_cache:     counter_cache,
         polymorphic:       polymorphic,
         polymorphic_types: polymorphic_types,
+        polymorphic_type:  polymorphic_type,
       }
     %}
   end
@@ -216,7 +219,8 @@ module Lustra::Model::HasRelations
           {{ settings[:touch] }},
           {{ settings[:counter_cache] }},
           {{ settings[:polymorphic] }},
-          {{ settings[:polymorphic_types] }}
+          {{ settings[:polymorphic_types] }},
+          {{ settings[:polymorphic_type] }}
         )
       {% elsif settings[:relation_type] == :has_many %}
         Relations::HasManyMacro.generate(

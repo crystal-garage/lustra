@@ -235,6 +235,34 @@ module BelongsToSpec
       end
     end
 
+    it "resolves concrete type aliases" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        product = Product.create!(name: "product")
+
+        employee.id.should eq(product.id)
+
+        employee_picture = Picture.create!(
+          name: "employee picture",
+          imageable_id: employee.id,
+          imageable_type: "Employee"
+        )
+        product_picture = Picture.create!(
+          name: "product picture",
+          imageable_id: product.id,
+          imageable_type: "Product"
+        )
+
+        employee_picture.employee.id.should eq(employee.id)
+
+        expect_raises(Lustra::SQL::RecordNotFoundError) do
+          product_picture.employee
+        end
+      end
+    end
+
     it "eager loads parents by stored type" do
       temporary do
         reinit_example_models
@@ -259,6 +287,36 @@ module BelongsToSpec
 
         pictures[0].imageable.as(Employee).id.should eq(employee.id)
         pictures[1].imageable.as(Product).id.should eq(product.id)
+      end
+    end
+
+    it "eager loads concrete type aliases" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        product = Product.create!(name: "product")
+
+        employee.id.should eq(product.id)
+
+        Picture.create!(
+          name: "employee picture",
+          imageable_id: employee.id,
+          imageable_type: "Employee"
+        )
+        Picture.create!(
+          name: "product picture",
+          imageable_id: product.id,
+          imageable_type: "Product"
+        )
+
+        pictures = Picture.query.with_employee.order_by(:name).to_a
+
+        pictures[0].employee.id.should eq(employee.id)
+
+        expect_raises(Lustra::SQL::RecordNotFoundError) do
+          pictures[1].employee
+        end
       end
     end
 

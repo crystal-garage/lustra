@@ -875,7 +875,7 @@ module Lustra::Model
               %primary_key = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.__pkey__
               "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
             {% elsif settings[:relation_type] == :belongs_to %}
-              {% if settings[:polymorphic] %}
+              {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
                 # A polymorphic belongs_to can point at multiple tables, so
                 # there is no single SQL JOIN target to infer here.
                 raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
@@ -957,7 +957,7 @@ module Lustra::Model
 
               "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
             {% elsif settings[:relation_type] == :belongs_to %}
-              {% if settings[:polymorphic] %}
+              {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
                 # A polymorphic belongs_to can point at multiple tables, so a
                 # single correlated count subquery would be ambiguous.
                 raise "Polymorphic association '#{association}' for #{T} cannot be used with with_count because it can target multiple tables. Filter or count each concrete type directly."
@@ -972,7 +972,13 @@ module Lustra::Model
                 %relation_table = {{ settings[:type] }}.table
                 %primary_key = {{ settings[:type] }}.__pkey__
 
-                "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)})"
+                count_condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)}"
+                {% if settings[:polymorphic_type] %}
+                  %type_key = %foreign_key.gsub(/_id$/, "_type")
+                  count_condition += " AND #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[{{ settings[:polymorphic_type] }}]}"
+                {% end %}
+
+                "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{count_condition})"
               {% end %}
             {% elsif settings[:relation_type] == :has_many_through %}
               %through_table = {{ settings[:through] }}.table
@@ -1067,7 +1073,7 @@ module Lustra::Model
                 condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
                 join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
-              {% if settings[:polymorphic] %}
+              {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
                 # A polymorphic belongs_to can point at multiple tables, so
                 # there is no single SQL JOIN target to infer here.
                 raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
@@ -1084,6 +1090,10 @@ module Lustra::Model
                 %primary_key = {{ settings[:type] }}.__pkey__
 
                 condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+                {% if settings[:polymorphic_type] %}
+                  %type_key = %foreign_key.gsub(/_id$/, "_type")
+                  condition += " AND #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[{{ settings[:polymorphic_type] }}]}"
+                {% end %}
                 join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
               {% end %}
             {% elsif settings[:relation_type] == :has_many_through %}

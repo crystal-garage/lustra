@@ -189,6 +189,8 @@ class Picture
   column name : String
 
   belongs_to imageable : Employee | Product, polymorphic: true
+  belongs_to employee : Employee, foreign_key: "imageable_id", polymorphic_type: "Employee"
+  belongs_to product : Product, foreign_key: "imageable_id", polymorphic_type: "Product"
 end
 
 module PolymorphicSpec

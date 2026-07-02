@@ -845,6 +845,28 @@ module CollectionSpec
         end
       end
 
+      it "joins concrete polymorphic belongs_to alias" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Employee picture", imageable_id: employee.id, imageable_type: "Employee"
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Picture.query.join(:employee).where { employees.name == "employee" }
+          query.to_sql.should eq(
+            "SELECT \"pictures\".* FROM \"pictures\" INNER JOIN \"employees\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE (\"employees\".\"name\" = 'employee')"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.name.should eq("Employee picture")
+        end
+      end
+
       it "raises a clear error when joining polymorphic belongs_to association" do
         temporary do
           reinit_example_models
@@ -996,6 +1018,28 @@ module CollectionSpec
         end
       end
 
+      it "filters associated records through concrete polymorphic belongs_to alias" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Employee picture", imageable_id: employee.id, imageable_type: "Employee"
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Picture.query.where.associated(:employee)
+          query.to_sql.should eq(
+            "SELECT \"pictures\".* FROM \"pictures\" INNER JOIN \"employees\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"employees\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.name.should eq("Employee picture")
+        end
+      end
+
       it "where.missing with has_many through join table" do
         temporary do
           reinit_example_models
@@ -1088,6 +1132,28 @@ module CollectionSpec
           expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used with with_count.*multiple tables/) do
             Picture.query.with_count(:imageable).to_a
           end
+        end
+      end
+
+      it "with_count with concrete polymorphic belongs_to alias" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Employee picture", imageable_id: employee.id, imageable_type: "Employee"
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Picture.query.with_count(:employee, alias_name: "employee_count").order_by(:name)
+          query.to_sql.should eq(
+            "SELECT \"pictures\".*, (SELECT COUNT(*) FROM \"employees\" WHERE \"employees\".\"id\" = \"pictures\".\"imageable_id\" AND \"pictures\".\"imageable_type\" = 'Employee') AS employee_count FROM \"pictures\" ORDER BY \"name\" ASC"
+          )
+
+          results = query.to_a(fetch_columns: true)
+          results[0].attributes["employee_count"].should eq(1)
+          results[1].attributes["employee_count"].should eq(0)
         end
       end
 

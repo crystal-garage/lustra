@@ -13,9 +13,11 @@ module Lustra::Model::Relations::BelongsToMacro
     counter_cache,
     polymorphic = false,
     polymorphic_types = nil,
+    polymorphic_type = nil,
   )
     {% foreign_key = foreign_key || method_name.stringify.underscore + "_id" %}
     {% type_key = method_name.stringify.underscore + "_type" %}
+    {% fixed_type_key = foreign_key.stringify.gsub(/_id$/, "_type") %}
 
     {%
       relation_type_nilable =
@@ -71,6 +73,16 @@ module Lustra::Model::Relations::BelongsToMacro
               raise "Unknown polymorphic type '#{self.{{ type_key.id }}}' for " + {{ "#{self_type}##{method_name}" }} + "."
             end
         {% else %}
+          {% if polymorphic_type %}
+            if self.{{ fixed_type_key.id }} != {{ polymorphic_type }}
+              {% if nilable %}
+                return nil
+              {% else %}
+                raise Lustra::SQL::RecordNotFoundError.new
+              {% end %}
+            end
+          {% end %}
+
           if cache && cache.active? "{{ method_name }}"
             {% if nilable %}
               @_cached_{{ method_name }} = cache.hit("{{ method_name }}",
@@ -83,9 +95,11 @@ module Lustra::Model::Relations::BelongsToMacro
             {% end %}
           else
             {% if nilable %}
-              @_cached_{{ method_name }} = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }.first
+              qry = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }
+              @_cached_{{ method_name }} = qry.first
             {% else %}
-              @_cached_{{ method_name }} = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }.first!
+              qry = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }
+              @_cached_{{ method_name }} = qry.first!
             {% end %}
           end
         {% end %}
@@ -105,6 +119,8 @@ module Lustra::Model::Relations::BelongsToMacro
             @{{ foreign_key.id }}_column.value = model.__pkey__
             {% if polymorphic %}
               @{{ type_key.id }}_column.value = model.class.name
+            {% elsif polymorphic_type %}
+              @{{ fixed_type_key.id }}_column.value = {{ polymorphic_type }}
             {% end %}
           end
 
@@ -113,6 +129,8 @@ module Lustra::Model::Relations::BelongsToMacro
           @{{ foreign_key.id }}_column.value = nil
           {% if polymorphic %}
             @{{ type_key.id }}_column.value = nil
+          {% elsif polymorphic_type %}
+            @{{ fixed_type_key.id }}_column.value = nil
           {% end %}
         end
       end
@@ -124,6 +142,8 @@ module Lustra::Model::Relations::BelongsToMacro
           @{{ foreign_key.id }}_column.value = model.__pkey__
           {% if polymorphic %}
             @{{ type_key.id }}_column.value = model.class.name
+          {% elsif polymorphic_type %}
+            @{{ fixed_type_key.id }}_column.value = {{ polymorphic_type }}
           {% end %}
         end
 
@@ -142,12 +162,16 @@ module Lustra::Model::Relations::BelongsToMacro
         @{{ foreign_key.id }}_column.value = c.__pkey__
         {% if polymorphic %}
           @{{ type_key.id }}_column.value = c.class.name
+        {% elsif polymorphic_type %}
+          @{{ fixed_type_key.id }}_column.value = {{ polymorphic_type }}
         {% end %}
       else
         if c.save
           @{{ foreign_key.id }}_column.value = c.__pkey__
           {% if polymorphic %}
             @{{ type_key.id }}_column.value = c.class.name
+          {% elsif polymorphic_type %}
+            @{{ fixed_type_key.id }}_column.value = {{ polymorphic_type }}
           {% end %}
         else
           add_error("{{ method_name }}", c.print_errors)
@@ -296,6 +320,9 @@ module Lustra::Model::Relations::BelongsToMacro
         def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
           before_query do
             sub_query = self.dup.clear_select.select("#{{{ self_type }}.table}.{{ foreign_key.id }}")
+            {% if polymorphic_type %}
+              sub_query.where { raw({{ fixed_type_key }}) == {{ polymorphic_type }} }
+            {% end %}
 
             cached_qry = {{ relation_type }}.query.where { raw("#{{{ relation_type }}.table}.#{{{ relation_type }}.__pkey__}").in?(sub_query) }
 
