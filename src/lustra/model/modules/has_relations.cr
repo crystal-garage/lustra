@@ -184,16 +184,16 @@ module Lustra::Model::HasRelations
       end
 
       RELATIONS[name.var.id] = {
-        relation_type:    :belongs_to,
-        type:             type,
-        foreign_key:      foreign_key,
-        nilable:          nilable,
-        primary:          primary,
-        no_cache:         no_cache,
-        foreign_key_type: foreign_key_type,
-        touch:            touch,
-        counter_cache:    counter_cache,
-        polymorphic:      polymorphic,
+        relation_type:     :belongs_to,
+        type:              type,
+        foreign_key:       foreign_key,
+        nilable:           nilable,
+        primary:           primary,
+        no_cache:          no_cache,
+        foreign_key_type:  foreign_key_type,
+        touch:             touch,
+        counter_cache:     counter_cache,
+        polymorphic:       polymorphic,
         polymorphic_types: polymorphic_types,
       }
     %}
