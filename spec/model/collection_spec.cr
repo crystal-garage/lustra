@@ -947,14 +947,19 @@ module CollectionSpec
         temporary do
           reinit_example_models
 
-          user = User.create! first_name: "user"
-          Post.create! title: "Post 1", user_id: user.id
-          Post.create! title: "Post 2", user_id: user.id
+          user1 = User.create! first_name: "user1"
+          user2 = User.create! first_name: "user2"
+
+          Post.create! title: "Post 1", user_id: user1.id
+          Post.create! title: "Post 2", user_id: user1.id
+          Post.create! title: "Post 3", user_id: user2.id
 
           query = User.query.with_count(:posts)
           query.to_sql.should eq(
             "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\""
           )
+
+          query.count.should eq(2)
 
           result = query.first!(fetch_columns: true)
           result.attributes["posts_count"].should eq(2)
@@ -975,6 +980,8 @@ module CollectionSpec
             "SELECT \"tags\".*, (SELECT COUNT(*) FROM \"post_tags\" WHERE \"post_tags\".\"tag_id\" = \"tags\".\"id\") AS posts_count FROM \"tags\""
           )
 
+          query.count.should eq(1)
+
           result = query.first!(fetch_columns: true)
           result.attributes["posts_count"].should eq(1)
         end
@@ -994,6 +1001,8 @@ module CollectionSpec
             "SELECT \"tags\".*, (SELECT COUNT(*) FROM \"post_tags\" WHERE \"post_tags\".\"tag_id\" = \"tags\".\"id\") AS tagging_count FROM \"tags\""
           )
 
+          query.count.should eq(1)
+
           result = query.first!(fetch_columns: true)
           result.attributes["tagging_count"].should eq(1)
         end
@@ -1011,6 +1020,8 @@ module CollectionSpec
           query.to_sql.should eq(
             "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
           )
+
+          query.count.should eq(1)
 
           results = query.to_a(fetch_columns: true)
           results.size.should eq(1)
