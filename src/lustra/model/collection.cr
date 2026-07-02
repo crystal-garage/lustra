@@ -73,11 +73,11 @@ require "../sql/select_query"
 #
 # This time, the code above works; if there is no value, `my_column` is nil by default.
 #
-# ## Querying your code
+# ## Querying Your Model
 #
-# Whenever you want to fetch data from your database, you must create a new collection query:
+# To fetch data from your database, create a collection query:
 #
-# `MyModel.query # Sets up a vanilla 'SELECT * FROM my_models'`
+# `MyModel.query # Builds SELECT * FROM my_models`
 #
 # Queries are fetchable using `each`:
 #
@@ -87,27 +87,32 @@ require "../sql/select_query"
 # end
 # ```
 #
-# ## Refining your query
+# ## Refining Your Query
 #
-# A collection query offers a lot of functionalities.
+# A collection query can be refined with `where`, `join`, `order_by`, `limit`,
+# `select`, `group_by`, and the other query helpers mixed in from
+# `Lustra::SQL::SelectBuilder`.
 #
-# ## Column type
+# ## Column Types
 #
-# By default, Lustra maps these column types:
+# By default, Lustra maps these Crystal types through converters:
 #
 # - `String` => `text`
-# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float) => `int, large int etc... (depends of your choice)`
-# - `Bool` => `text or bool`
+# - `Int8`, `Int16`, `Int32`, `Int64`, `Float32`, `Float64`, `BigDecimal` => PostgreSQL numeric types
+# - `Bool` => `boolean`
 # - `Time` => `timestamp without timezone or text`
-# - `JSON::Any` => `json and jsonb`
-# - `Nilable` => `NULL` (treated as special !)
+# - `JSON::Any` => `json` or `jsonb`
+# - `Array(Bool)`, `Array(String)`, `Array(Float32)`, `Array(Float64)`, `Array(Int32)`, `Array(Int64)` => PostgreSQL array columns
+# - Nilable types such as `String?` or `Int64?` => nullable columns
 #
-# _NOTE_: The `crystal-pg` gems map also some structures like GIS coordinates, but their implementation is not tested in Lustra. Use them at your own risk. Tell me if it's working 😉
+# `crystal-pg` also maps additional PostgreSQL-specific values such as
+# geometric types. Lustra provides converters for some of them through
+# extensions, but support depends on the converter being registered.
 #
 # If you need to map a special structure, see the [Mapping Your Data](Mapping)
 # guide for more information.
 #
-# ## Primary key
+# ## Primary Key
 #
 # A primary key is essential for relational mapping. Lustra currently supports
 # only one primary key column.
@@ -134,7 +139,7 @@ require "../sql/select_query"
 # Therefore, saving the model without a primary key works. The id is fetched after insertion:
 #
 # ```
-# m = MyModel
+# m = MyModel.new
 # m.save!
 # m.id # Now the id value is set.
 # ```
@@ -164,9 +169,13 @@ require "../sql/select_query"
 # end
 # ```
 #
-# Basically rewrites `column id : UInt64, primary: true, presence: false`.
+# With the default `:bigserial` type, this rewrites to
+# `column id : Int64, primary: true, presence: false`.
 #
-# Argument is optional (default = id).
+# The column name is optional and defaults to `id`. The key type is optional and
+# defaults to `:bigserial`; supported built-in types include `:bigserial`,
+# `:serial`, `:text`, `:int`, and `:bigint`. Extensions can register additional
+# primary key types, such as `:uuid`.
 module Lustra::Model
   # `CollectionBase(T)` is the base class for model collections.
   # Model collections are a SQL `SELECT` query mapping and building system. They
