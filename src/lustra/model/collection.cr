@@ -875,9 +875,15 @@ module Lustra::Model
               %primary_key = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.__pkey__
               "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
             {% elsif settings[:relation_type] == :belongs_to %}
-              %relation_table = {{ settings[:type] }}.table
-              %primary_key = {{ settings[:type] }}.__pkey__
-              "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+              {% if settings[:polymorphic] %}
+                # A polymorphic belongs_to can point at multiple tables, so
+                # there is no single SQL JOIN target to infer here.
+                raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
+              {% else %}
+                %relation_table = {{ settings[:type] }}.table
+                %primary_key = {{ settings[:type] }}.__pkey__
+                "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+              {% end %}
             {% end %}
           {% if settings[:relation_type] == :has_many_through %}
             when {{ settings[:through] }}.table
@@ -909,6 +915,8 @@ module Lustra::Model
               %foreign_key =
                 {% if settings[:foreign_key] %}
                   "{{ settings[:foreign_key] }}"
+                {% elsif settings[:as] %}
+                  "{{ settings[:as] }}_id"
                 {% else %}
                   T.table.to_s.singularize + "_id"
                 {% end %}
@@ -922,7 +930,14 @@ module Lustra::Model
                   T.__pkey__
                 {% end %}
 
-              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
+              count_condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
+
+              {% if settings[:as] %}
+                %type_key = "{{ settings[:as] }}_type"
+                count_condition += " AND #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[T.name]}"
+              {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{count_condition})"
             {% elsif settings[:relation_type] == :has_one %}
               %foreign_key =
                 {% if settings[:foreign_key] %}
@@ -942,17 +957,23 @@ module Lustra::Model
 
               "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
             {% elsif settings[:relation_type] == :belongs_to %}
-              %foreign_key =
-                {% if settings[:foreign_key] %}
-                  "{{ settings[:foreign_key] }}"
-                {% else %}
-                  "{{ name }}_id"
-                {% end %}
+              {% if settings[:polymorphic] %}
+                # A polymorphic belongs_to can point at multiple tables, so a
+                # single correlated count subquery would be ambiguous.
+                raise "Polymorphic association '#{association}' for #{T} cannot be used with with_count because it can target multiple tables. Filter or count each concrete type directly."
+              {% else %}
+                %foreign_key =
+                  {% if settings[:foreign_key] %}
+                    "{{ settings[:foreign_key] }}"
+                  {% else %}
+                    "{{ name }}_id"
+                  {% end %}
 
-              %relation_table = {{ settings[:type] }}.table
-              %primary_key = {{ settings[:type] }}.__pkey__
+                %relation_table = {{ settings[:type] }}.table
+                %primary_key = {{ settings[:type] }}.__pkey__
 
-              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)})"
+                "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)})"
+              {% end %}
             {% elsif settings[:relation_type] == :has_many_through %}
               %through_table = {{ settings[:through] }}.table
 
@@ -1003,6 +1024,8 @@ module Lustra::Model
               %foreign_key =
                 {% if settings[:foreign_key] %}
                   "{{ settings[:foreign_key] }}"
+                {% elsif settings[:as] %}
+                  "{{ settings[:as] }}_id"
                 {% else %}
                   T.table.to_s.singularize + "_id"
                 {% end %}
@@ -1017,6 +1040,10 @@ module Lustra::Model
                 {% end %}
 
               condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
+              {% if settings[:as] %}
+                %type_key = "{{ settings[:as] }}_type"
+                condition += " AND #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[T.name]}"
+              {% end %}
               join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :has_one %}
                 # has_one :info => user_infos.user_id = users.id
@@ -1040,19 +1067,25 @@ module Lustra::Model
                 condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
                 join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
-              # belongs_to :user => posts.user_id = users.id
-              %foreign_key =
-                {% if settings[:foreign_key] %}
-                  "{{ settings[:foreign_key] }}"
-                {% else %}
-                  "{{ name }}_id"
-                {% end %}
+              {% if settings[:polymorphic] %}
+                # A polymorphic belongs_to can point at multiple tables, so
+                # there is no single SQL JOIN target to infer here.
+                raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
+              {% else %}
+                # belongs_to :user => posts.user_id = users.id
+                %foreign_key =
+                  {% if settings[:foreign_key] %}
+                    "{{ settings[:foreign_key] }}"
+                  {% else %}
+                    "{{ name }}_id"
+                  {% end %}
 
-              %relation_table = {{ settings[:type] }}.table
-              %primary_key = {{ settings[:type] }}.__pkey__
+                %relation_table = {{ settings[:type] }}.table
+                %primary_key = {{ settings[:type] }}.__pkey__
 
-              condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
-              join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+                condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+                join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+              {% end %}
             {% elsif settings[:relation_type] == :has_many_through %}
               # has_many through requires two joins
               # Example: User has_many :categories, through: Post

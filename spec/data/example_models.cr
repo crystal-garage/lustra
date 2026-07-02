@@ -50,6 +50,26 @@ class User
   end
 end
 
+class Employee
+  include Lustra::Model
+
+  primary_key
+
+  column name : String
+
+  has_many pictures : Picture, as: :imageable
+end
+
+class Product
+  include Lustra::Model
+
+  primary_key
+
+  column name : String
+
+  has_many pictures : Picture, as: :imageable
+end
+
 class Post
   include Lustra::Model
 
@@ -159,6 +179,54 @@ class Comment
   belongs_to user : User, touch: :last_comment_at
 
   timestamps
+end
+
+class Picture
+  include Lustra::Model
+
+  primary_key
+
+  column name : String
+
+  belongs_to imageable : Employee | Product, polymorphic: true
+end
+
+module PolymorphicSpec
+  class Employee
+    include Lustra::Model
+
+    self.table = "polymorphic_spec_employees"
+
+    primary_key
+
+    column name : String
+
+    has_many pictures : Picture, as: :imageable
+  end
+
+  class Product
+    include Lustra::Model
+
+    self.table = "polymorphic_spec_products"
+
+    primary_key
+
+    column name : String
+
+    has_many pictures : Picture, as: :imageable
+  end
+
+  class Picture
+    include Lustra::Model
+
+    self.table = "polymorphic_spec_pictures"
+
+    primary_key
+
+    column name : String
+
+    belongs_to imageable : PolymorphicSpec::Employee | PolymorphicSpec::Product, polymorphic: true
+  end
 end
 
 class Relationship
@@ -299,6 +367,14 @@ class ModelSpecMigration123
       t.timestamps
     end
 
+    create_table "employees" do |t|
+      t.column "name", "string", null: false
+    end
+
+    create_table "products" do |t|
+      t.column "name", "string", null: false
+    end
+
     create_table "relationships", id: false do |t|
       t.references to: "users", name: "master_id", on_delete: "cascade", null: false, primary: true
       t.references to: "users", name: "dependency_id", on_delete: "cascade", null: false, primary: true
@@ -341,6 +417,26 @@ class ModelSpecMigration123
       t.references to: "users", name: "user_id", on_delete: "cascade"
 
       t.timestamps
+    end
+
+    create_table "pictures" do |t|
+      t.column "name", "string", null: false
+      t.column "imageable_id", "bigint", null: false
+      t.column "imageable_type", "string", null: false
+    end
+
+    create_table "polymorphic_spec_employees" do |t|
+      t.column "name", "string", null: false
+    end
+
+    create_table "polymorphic_spec_products" do |t|
+      t.column "name", "string", null: false
+    end
+
+    create_table "polymorphic_spec_pictures" do |t|
+      t.column "name", "string", null: false
+      t.column "imageable_id", "bigint", null: false
+      t.column "imageable_type", "string", null: false
     end
 
     create_table "post_tags" do |t|

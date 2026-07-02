@@ -84,6 +84,39 @@ module CacheSpec
           end
         end
       end
+
+      it "manage polymorphic belongs_to relations" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create!(id: 101, name: "Employee")
+          product = Product.create!(id: 101, name: "Product")
+
+          Picture.create!(
+            name: "employee picture",
+            imageable_id: employee.id,
+            imageable_type: "Employee"
+          )
+          Picture.create!(
+            name: "product picture",
+            imageable_id: product.id,
+            imageable_type: "Product"
+          )
+
+          Lustra::Model::QueryCache.reset_counter
+
+          Picture.query.with_imageable.order_by(:name).each do |picture|
+            case picture.imageable_type
+            when "Employee"
+              picture.imageable.as(Employee).id.should eq(employee.id)
+            when "Product"
+              picture.imageable.as(Product).id.should eq(product.id)
+            end
+          end
+
+          Lustra::Model::QueryCache.cache_hitted.should eq(2)
+        end
+      end
     end
   end
 end

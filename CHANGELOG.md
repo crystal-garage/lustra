@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `where.associated(:association)` and `where.missing(:association)` relation filters for querying records with or without associated rows.
 - Added `with_count(:association)` for selecting related record counts without loading the associated records.
+- Added polymorphic `has_many ..., as:` associations backed by `<name>_id` and `<name>_type` columns.
+- Added polymorphic `belongs_to ..., polymorphic: true` associations for explicit union target types, including `with_<association>` eager loading.
 
 ### Changed
 - Unknown association errors now include available association names.

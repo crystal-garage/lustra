@@ -91,6 +91,7 @@ module Lustra::Model::HasRelations
     polymorphic = false,
     foreign_key_type = nil,
     autosave = false,
+    as polymorphic_as = nil,
   )
     {%
       if through != nil
@@ -114,6 +115,7 @@ module Lustra::Model::HasRelations
       else
         foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
         primary_key = primary_key.id if primary_key.is_a?(SymbolLiteral) || primary_key.is_a?(StringLiteral)
+        polymorphic_as = polymorphic_as.id if polymorphic_as.is_a?(SymbolLiteral) || polymorphic_as.is_a?(StringLiteral)
         foreign_key_type = foreign_key_type.id if foreign_key_type.is_a?(SymbolLiteral) || foreign_key_type.is_a?(StringLiteral)
 
         RELATIONS[name.var.id] = {
@@ -122,6 +124,7 @@ module Lustra::Model::HasRelations
 
           foreign_key:      foreign_key,
           primary_key:      primary_key,
+          as:               polymorphic_as,
           foreign_key_type: foreign_key_type,
 
           no_cache:    no_cache,
@@ -147,12 +150,14 @@ module Lustra::Model::HasRelations
     foreign_key_type = Int64,
     touch = nil,
     counter_cache = nil,
+    polymorphic = false,
   )
     {%
       foreign_key = foreign_key.id if foreign_key.is_a?(SymbolLiteral) || foreign_key.is_a?(StringLiteral)
       touch = touch.id if touch.is_a?(SymbolLiteral) || touch.is_a?(StringLiteral)
 
       nilable = false
+      polymorphic_types = nil
 
       if name.type.is_a?(Union)
         # We cannot use here call `resolve` as some of the references
@@ -161,9 +166,15 @@ module Lustra::Model::HasRelations
         # So we check for the nil type if it exists
         nilable = types.includes?("Nil") || types.includes?("::Nil")
 
-        type = name.type.types.first
+        if polymorphic
+          polymorphic_types = name.type.types.reject { |x| "#{x.id}" == "Nil" || "#{x.id}" == "::Nil" }
+          type = polymorphic_types.map(&.id).join(" | ").id
+        else
+          type = name.type.types.first
+        end
       else
         type = name.type
+        polymorphic_types = [type] if polymorphic
       end
 
       if nilable
@@ -173,15 +184,17 @@ module Lustra::Model::HasRelations
       end
 
       RELATIONS[name.var.id] = {
-        relation_type:    :belongs_to,
-        type:             type,
-        foreign_key:      foreign_key,
-        nilable:          nilable,
-        primary:          primary,
-        no_cache:         no_cache,
-        foreign_key_type: foreign_key_type,
-        touch:            touch,
-        counter_cache:    counter_cache,
+        relation_type:     :belongs_to,
+        type:              type,
+        foreign_key:       foreign_key,
+        nilable:           nilable,
+        primary:           primary,
+        no_cache:          no_cache,
+        foreign_key_type:  foreign_key_type,
+        touch:             touch,
+        counter_cache:     counter_cache,
+        polymorphic:       polymorphic,
+        polymorphic_types: polymorphic_types,
       }
     %}
   end
@@ -201,7 +214,9 @@ module Lustra::Model::HasRelations
           {{ settings[:no_cache] }},
           {{ settings[:foreign_key_type] }},
           {{ settings[:touch] }},
-          {{ settings[:counter_cache] }}
+          {{ settings[:counter_cache] }},
+          {{ settings[:polymorphic] }},
+          {{ settings[:polymorphic_types] }}
         )
       {% elsif settings[:relation_type] == :has_many %}
         Relations::HasManyMacro.generate(
@@ -210,6 +225,7 @@ module Lustra::Model::HasRelations
           {{ settings[:type] }},
           {{ settings[:foreign_key] }},
           {{ settings[:primary_key] }},
+          {{ settings[:as] }},
           {{ settings[:autosave] }}
         )
       {% elsif settings[:relation_type] == :has_many_through %}

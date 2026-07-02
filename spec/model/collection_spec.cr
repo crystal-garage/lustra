@@ -845,6 +845,16 @@ module CollectionSpec
         end
       end
 
+      it "raises a clear error when joining polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
+            Picture.query.join(:imageable).to_a
+          end
+        end
+      end
+
       it "left_join with has_many association" do
         temporary do
           reinit_example_models
@@ -898,6 +908,91 @@ module CollectionSpec
           results = query.to_a
           results.size.should eq(1)
           results.first.id.should eq(user_with_posts.id)
+        end
+      end
+
+      it "join with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Employee.query.join(:pictures)
+          query.to_sql.should eq(
+            "SELECT \"employees\".* FROM \"employees\" INNER JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee')"
+          )
+
+          query.count.should eq(0)
+        end
+      end
+
+      it "where.missing with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee_without_pictures = Employee.create! name: "Without Pictures"
+          employee_with_pictures = Employee.create! name: "With Pictures"
+          product = Product.create! name: "product"
+
+          employee_without_pictures.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+          Picture.create! name: "Employee picture", imageable_id: employee_with_pictures.id, imageable_type: "Employee"
+
+          query = Employee.query.where.missing(:pictures)
+          query.to_sql.should eq(
+            "SELECT \"employees\".* FROM \"employees\" LEFT JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"pictures\".\"id\" IS NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(employee_without_pictures.id)
+        end
+      end
+
+      it "where.associated with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee_without_pictures = Employee.create! name: "Without Pictures"
+          employee_with_pictures = Employee.create! name: "With Pictures"
+          product = Product.create! name: "product"
+
+          employee_without_pictures.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+          Picture.create! name: "Employee picture", imageable_id: employee_with_pictures.id, imageable_type: "Employee"
+
+          query = Employee.query.where.associated(:pictures)
+          query.to_sql.should eq(
+            "SELECT \"employees\".* FROM \"employees\" INNER JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"pictures\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(employee_with_pictures.id)
+        end
+      end
+
+      it "raises a clear error when using where.missing with polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
+            Picture.query.where.missing(:imageable).to_a
+          end
+        end
+      end
+
+      it "raises a clear error when using where.associated with polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
+            Picture.query.where.associated(:imageable).to_a
+          end
         end
       end
 
@@ -963,6 +1058,36 @@ module CollectionSpec
 
           result = query.first!(fetch_columns: true)
           result.attributes["posts_count"].should eq(2)
+        end
+      end
+
+      it "with_count with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Employee.query.with_count(:pictures, alias_name: "pictures_count")
+          query.to_sql.should eq(
+            "SELECT \"employees\".*, (SELECT COUNT(*) FROM \"pictures\" WHERE \"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') AS pictures_count FROM \"employees\""
+          )
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["pictures_count"].should eq(0)
+        end
+      end
+
+      it "raises a clear error when using with_count with polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used with with_count.*multiple tables/) do
+            Picture.query.with_count(:imageable).to_a
+          end
         end
       end
 
