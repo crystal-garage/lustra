@@ -842,6 +842,24 @@ module Lustra::Model
       where("#{association_primary_key_sql(association)} IS NOT NULL")
     end
 
+    # Add a computed count column for the given association without loading the
+    # associated records.
+    #
+    # ```
+    # User.query.with_count(:posts)
+    # # SELECT "users".*, (SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = "users"."id") AS posts_count FROM "users"
+    # ```
+    def with_count(association : Lustra::SQL::Symbolic, alias_name : String? = nil)
+      table = T.table
+      base_select = "#{Lustra::SQL.escape(table)}.*"
+      count_alias = alias_name || "#{association}_count"
+
+      self.select(base_select) if columns.empty?
+      self.select(SQL::Column.new(association_count_sql(association), count_alias))
+      group_by("#{table}.#{T.__pkey__}") if !joins.empty? && group_bys.empty?
+      self
+    end
+
     # Return the SQL identifier used for the association existence predicate.
     private def association_primary_key_sql(association : Lustra::SQL::Symbolic)
       {% begin %}
@@ -866,6 +884,99 @@ module Lustra::Model
               %through_table = {{ settings[:through] }}.table
               %through_pkey = {{ settings[:through] }}.__pkey__
               "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_pkey)}"
+          {% end %}
+        {% end %}
+        else
+          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
+          {% if available_associations.empty? %}
+            available = "none"
+          {% else %}
+            available = {{ available_associations.join(", ") }}
+          {% end %}
+
+          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
+        end
+      {% end %}
+    end
+
+    # Return a correlated subquery that counts records for the association.
+    private def association_count_sql(association : Lustra::SQL::Symbolic)
+      {% begin %}
+        case association.to_s
+        {% for name, settings in T::RELATIONS %}
+          when "{{ name }}"
+            {% if settings[:relation_type] == :has_many %}
+              %foreign_key =
+                {% if settings[:foreign_key] %}
+                  "{{ settings[:foreign_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              %relation_table = {{ settings[:type] }}.table
+
+              %primary_key =
+                {% if settings[:primary_key] %}
+                  "{{ settings[:primary_key] }}"
+                {% else %}
+                  T.__pkey__
+                {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
+            {% elsif settings[:relation_type] == :has_one %}
+              %foreign_key =
+                {% if settings[:foreign_key] %}
+                  "{{ settings[:foreign_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              %relation_table = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.table
+
+              %primary_key =
+                {% if settings[:primary_key] %}
+                  "{{ settings[:primary_key] }}"
+                {% else %}
+                  T.__pkey__
+                {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
+            {% elsif settings[:relation_type] == :belongs_to %}
+              %foreign_key =
+                {% if settings[:foreign_key] %}
+                  "{{ settings[:foreign_key] }}"
+                {% else %}
+                  "{{ name }}_id"
+                {% end %}
+
+              %relation_table = {{ settings[:type] }}.table
+              %primary_key = {{ settings[:type] }}.__pkey__
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)})"
+            {% elsif settings[:relation_type] == :has_many_through %}
+              %through_table = {{ settings[:through] }}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{ settings[:own_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%through_table)} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
+            {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{ settings[:own_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%through_table)} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
           {% end %}
         {% end %}
         else

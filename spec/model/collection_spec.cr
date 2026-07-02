@@ -943,6 +943,112 @@ module CollectionSpec
         end
       end
 
+      it "with_count with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create! first_name: "user1"
+          user2 = User.create! first_name: "user2"
+
+          Post.create! title: "Post 1", user_id: user1.id
+          Post.create! title: "Post 2", user_id: user1.id
+          Post.create! title: "Post 3", user_id: user2.id
+
+          query = User.query.with_count(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\""
+          )
+
+          query.count.should eq(2)
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["posts_count"].should eq(2)
+        end
+      end
+
+      it "with_count with has_many through association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag = Tag.create! name: "tag"
+          PostTag.create! post_id: post.id, tag_id: tag.id
+
+          query = Tag.query.with_count(:posts, alias_name: "posts_count")
+          query.to_sql.should eq(
+            "SELECT \"tags\".*, (SELECT COUNT(*) FROM \"post_tags\" WHERE \"post_tags\".\"tag_id\" = \"tags\".\"id\") AS posts_count FROM \"tags\""
+          )
+
+          query.count.should eq(1)
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["posts_count"].should eq(1)
+        end
+      end
+
+      it "with_count with has_many through join table" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag = Tag.create! name: "tag"
+          PostTag.create! post_id: post.id, tag_id: tag.id
+
+          query = Tag.query.with_count(:post_tags, alias_name: "tagging_count")
+          query.to_sql.should eq(
+            "SELECT \"tags\".*, (SELECT COUNT(*) FROM \"post_tags\" WHERE \"post_tags\".\"tag_id\" = \"tags\".\"id\") AS tagging_count FROM \"tags\""
+          )
+
+          query.count.should eq(1)
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["tagging_count"].should eq(1)
+        end
+      end
+
+      it "with_count preserves existing group_by used to deduplicate joins" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          Post.create! title: "Post 1", user_id: user.id
+          Post.create! title: "Post 2", user_id: user.id
+
+          query = User.query.join(:posts).group_by("users.id").with_count(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
+          )
+
+          query.count.should eq(1)
+
+          results = query.to_a(fetch_columns: true)
+          results.size.should eq(1)
+          results.first.attributes["posts_count"].should eq(2)
+        end
+      end
+
+      it "with_count deduplicates rows produced by joins" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          Post.create! title: "Post 1", user_id: user.id
+          Post.create! title: "Post 2", user_id: user.id
+
+          query = User.query.join(:posts).with_count(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
+          )
+
+          results = query.to_a(fetch_columns: true)
+          results.size.should eq(1)
+          results.first.id.should eq(user.id)
+          results.all? { |result| result.attributes["posts_count"] == 2 }.should be_true
+        end
+      end
+
       it "join works with String association name" do
         temporary do
           reinit_example_models
