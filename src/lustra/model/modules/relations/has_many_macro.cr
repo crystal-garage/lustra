@@ -7,6 +7,7 @@ module Lustra::Model::Relations::HasManyMacro
     relation_type,
     foreign_key = nil,
     primary_key = nil,
+    polymorphic_as = nil,
     autosave = false,
   )
     # The method {{ method_name }} is a `has_many` relation to {{ relation_type }}
@@ -16,9 +17,21 @@ module Lustra::Model::Relations::HasManyMacro
       %foreign_key =
         {% if foreign_key %}
           "{{ foreign_key }}"
+        {% elsif polymorphic_as %}
+          "{{ polymorphic_as }}_id"
         {% else %}
           (self.class.table.to_s.singularize + "_id")
         {% end %}
+
+      %type_key =
+        {% if polymorphic_as %}
+          "{{ polymorphic_as }}_type"
+        {% else %}
+          nil
+        {% end %}
+
+      %tags = { "#{%foreign_key}" => "#{%primary_key}" }
+      %tags["#{%type_key}"] = self.class.name if %type_key
 
       cache = @cache
 
@@ -27,14 +40,17 @@ module Lustra::Model::Relations::HasManyMacro
           arr = cache.hit("{{ method_name }}", self.__pkey_column__.to_sql_value, {{ relation_type }})
 
           # This relation will trigger the cache if it exists
-          {{ relation_type }}.query
-            .tags({ "#{%foreign_key}" => "#{%primary_key}" })
+          qry = {{ relation_type }}.query
+            .tags(%tags)
             .where { raw(%foreign_key) == %primary_key }
-            .with_cached_result(arr)
+          qry.where { raw(%type_key) == self.class.name } if %type_key
+          qry.with_cached_result(arr)
         else
-          {{ relation_type }}.query
-            .tags({ "#{%foreign_key}" => "#{%primary_key}" })
+          qry = {{ relation_type }}.query
+            .tags(%tags)
             .where { raw(%foreign_key) == %primary_key }
+          qry.where { raw(%type_key) == self.class.name } if %type_key
+          qry
         end
 
       query.append_operation = -> (x : {{ relation_type }}) {
@@ -60,12 +76,27 @@ module Lustra::Model::Relations::HasManyMacro
       def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
         before_query do
           %primary_key = {{ (primary_key || "#{relation_type}.__pkey__").id }}
-          %foreign_key =   {% if foreign_key %} "{{ foreign_key }}" {% else %} ({{ self_type }}.table.to_s.singularize + "_id") {% end %}
+          %foreign_key =
+            {% if foreign_key %}
+              "{{ foreign_key }}"
+            {% elsif polymorphic_as %}
+              "{{ polymorphic_as }}_id"
+            {% else %}
+              ({{ self_type }}.table.to_s.singularize + "_id")
+            {% end %}
+          %type_key =
+            {% if polymorphic_as %}
+              "{{ polymorphic_as }}_type"
+            {% else %}
+              nil
+            {% end %}
+          %type_value = {{ self_type }}.name
 
           #SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM users )
           sub_query = self.dup.clear_select.select("#{{{ self_type }}.table}.#{%primary_key}")
 
           qry = {{ relation_type }}.query.where { raw(%foreign_key).in?(sub_query) }
+          qry.where { raw(%type_key) == %type_value } if %type_key
           block.call(qry)
 
           @cache.active "{{ method_name }}"

@@ -180,4 +180,86 @@ module BelongsToSpec
       end
     end
   end
+
+  describe("polymorphic belongs_to relation") do
+    it "assigns an employee parent" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        picture = Picture.new({name: "picture"})
+        picture.imageable = employee
+
+        picture.imageable_id.should eq(employee.id)
+        picture.imageable_type.should eq("Employee")
+        picture.imageable.should eq(employee)
+      end
+    end
+
+    it "assigns a product parent" do
+      temporary do
+        reinit_example_models
+
+        product = Product.create!(name: "product")
+        picture = Picture.new({name: "picture"})
+        picture.imageable = product
+
+        picture.imageable_id.should eq(product.id)
+        picture.imageable_type.should eq("Product")
+        picture.imageable.should eq(product)
+      end
+    end
+
+    it "resolves the parent using the stored type" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        product = Product.create!(name: "product")
+
+        employee.id.should eq(product.id)
+
+        employee_picture = Picture.create!(
+          name: "employee picture",
+          imageable_id: employee.id,
+          imageable_type: "Employee"
+        )
+        product_picture = Picture.create!(
+          name: "product picture",
+          imageable_id: product.id,
+          imageable_type: "Product"
+        )
+
+        employee_picture.imageable.as(Employee).id.should eq(employee.id)
+        product_picture.imageable.as(Product).id.should eq(product.id)
+      end
+    end
+
+    it "eager loads parents by stored type" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        product = Product.create!(name: "product")
+
+        employee.id.should eq(product.id)
+
+        Picture.create!(
+          name: "employee picture",
+          imageable_id: employee.id,
+          imageable_type: "Employee"
+        )
+        Picture.create!(
+          name: "product picture",
+          imageable_id: product.id,
+          imageable_type: "Product"
+        )
+
+        pictures = Picture.query.with_imageable.order_by(:name).to_a
+
+        pictures[0].imageable.as(Employee).id.should eq(employee.id)
+        pictures[1].imageable.as(Product).id.should eq(product.id)
+      end
+    end
+  end
 end

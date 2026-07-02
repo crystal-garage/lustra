@@ -11,8 +11,11 @@ module Lustra::Model::Relations::BelongsToMacro
     foreign_key_type,
     touch,
     counter_cache,
+    polymorphic = false,
+    polymorphic_types = nil,
   )
     {% foreign_key = foreign_key || method_name.stringify.underscore + "_id" %}
+    {% type_key = method_name.stringify.underscore + "_type" %}
 
     {%
       relation_type_nilable =
@@ -24,6 +27,9 @@ module Lustra::Model::Relations::BelongsToMacro
     %}
 
     column {{ foreign_key.id }} : {{ foreign_key_type }}, primary: {{ primary }}, presence: {{ nilable }}
+    {% if polymorphic %}
+      column {{ type_key.id }} : {{ nilable ? String? : String }}, presence: {{ nilable }}
+    {% end %}
     getter _cached_{{ method_name }} : {{ relation_type }}?
 
     protected def invalidate_caching
@@ -41,23 +47,41 @@ module Lustra::Model::Relations::BelongsToMacro
       else
         cache = @cache
 
-        if cache && cache.active? "{{ method_name }}"
-          {% if nilable %}
-            @_cached_{{ method_name }} = cache.hit("{{ method_name }}",
-              self.{{ foreign_key.id }}_column.to_sql_value, {{ relation_type }}
-            ).first?
-          {% else %}
-            @_cached_{{ method_name }} = cache.hit("{{ method_name }}",
-              self.{{ foreign_key.id }}_column.to_sql_value, {{ relation_type }}
-            ).first? || raise Lustra::SQL::RecordNotFoundError.new
-          {% end %}
-        else
-          {% if nilable %}
-            @_cached_{{ method_name }} = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }.first
-          {% else %}
-            @_cached_{{ method_name }} = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }.first!
-          {% end %}
-        end
+        {% if polymorphic %}
+          @_cached_{{ method_name }} =
+            case self.{{ type_key.id }}
+            {% for target_type in polymorphic_types %}
+              when {{ target_type.stringify }}
+                if cache && cache.active? "{{ method_name }}"
+                  cache.hit("{{ method_name }}",
+                    self.{{ foreign_key.id }}_column.to_sql_value, {{ target_type }}
+                  ).first? || raise Lustra::SQL::RecordNotFoundError.new
+                else
+                  {{ target_type }}.query.where { raw({{ target_type }}.__pkey__) == self.{{ foreign_key.id }} }.first!
+                end
+            {% end %}
+            else
+              raise "Unknown polymorphic type '#{self.{{ type_key.id }}}' for " + {{ "#{self_type}##{method_name}".stringify }} + "."
+            end
+        {% else %}
+          if cache && cache.active? "{{ method_name }}"
+            {% if nilable %}
+              @_cached_{{ method_name }} = cache.hit("{{ method_name }}",
+                self.{{ foreign_key.id }}_column.to_sql_value, {{ relation_type }}
+              ).first?
+            {% else %}
+              @_cached_{{ method_name }} = cache.hit("{{ method_name }}",
+                self.{{ foreign_key.id }}_column.to_sql_value, {{ relation_type }}
+              ).first? || raise Lustra::SQL::RecordNotFoundError.new
+            {% end %}
+          else
+            {% if nilable %}
+              @_cached_{{ method_name }} = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }.first
+            {% else %}
+              @_cached_{{ method_name }} = {{ relation_type }}.query.where { raw({{ relation_type }}.__pkey__) == self.{{ foreign_key.id }} }.first!
+            {% end %}
+          end
+        {% end %}
       end
     end
 
@@ -72,11 +96,17 @@ module Lustra::Model::Relations::BelongsToMacro
             raise "#{model.__pkey_column__.name} must be defined when assigning a belongs_to relation." unless model.__pkey_column__.defined?
 
             @{{ foreign_key.id }}_column.value = model.__pkey__
+            {% if polymorphic %}
+              @{{ type_key.id }}_column.value = model.class.name
+            {% end %}
           end
 
           @_cached_{{ method_name }} = model
         else
           @{{ foreign_key.id }}_column.value = nil
+          {% if polymorphic %}
+            @{{ type_key.id }}_column.value = nil
+          {% end %}
         end
       end
     {% else %}
@@ -85,6 +115,9 @@ module Lustra::Model::Relations::BelongsToMacro
           raise "#{model.__pkey_column__.name} must be defined when assigning a belongs_to relation." unless model.__pkey_column__.defined?
 
           @{{ foreign_key.id }}_column.value = model.__pkey__
+          {% if polymorphic %}
+            @{{ type_key.id }}_column.value = model.class.name
+          {% end %}
         end
 
         @_cached_{{ method_name }} = model
@@ -100,9 +133,15 @@ module Lustra::Model::Relations::BelongsToMacro
 
       if c.persisted?
         @{{ foreign_key.id }}_column.value = c.__pkey__
+        {% if polymorphic %}
+          @{{ type_key.id }}_column.value = c.class.name
+        {% end %}
       else
         if c.save
           @{{ foreign_key.id }}_column.value = c.__pkey__
+          {% if polymorphic %}
+            @{{ type_key.id }}_column.value = c.class.name
+          {% end %}
         else
           add_error("{{ method_name }}", c.print_errors)
         end
@@ -211,30 +250,57 @@ module Lustra::Model::Relations::BelongsToMacro
       {% end %}
     end
 
-    class Collection
-      def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
-        before_query do
-          sub_query = self.dup.clear_select.select("#{{{ self_type }}.table}.{{ foreign_key.id }}")
+    {% if polymorphic %}
+      class Collection
+        def with_{{ method_name }}(fetch_columns = false) : self
+          before_query do
+            base_query = self.dup.clear_select
 
-          cached_qry = {{ relation_type }}.query.where { raw("#{{{ relation_type }}.table}.#{{{ relation_type }}.__pkey__}").in?(sub_query) }
+            @cache.active "{{ method_name }}"
 
-          block.call(cached_qry)
+            {% for target_type in polymorphic_types %}
+              sub_query = base_query
+                .dup
+                .where { raw({{ type_key.stringify }}) == {{ target_type.stringify }} }
+                .select("#{{{ self_type }}.table}.{{ foreign_key.id }}")
 
-          @cache.active "{{ method_name }}"
-
-          cached_qry.each(fetch_columns: fetch_columns) do |mdl|
-            @cache.set("{{ method_name }}", mdl.__pkey__, [mdl])
+              {{ target_type }}.query
+                .where { raw("#{{{ target_type }}.table}.#{{{ target_type }}.__pkey__}").in?(sub_query) }
+                .each(fetch_columns: fetch_columns) do |mdl|
+                  @cache.set("{{ method_name }}", mdl.__pkey__, [mdl])
+                end
+            {% end %}
           end
+
+          self
+        end
+      end
+    {% else %}
+      class Collection
+        def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
+          before_query do
+            sub_query = self.dup.clear_select.select("#{{{ self_type }}.table}.{{ foreign_key.id }}")
+
+            cached_qry = {{ relation_type }}.query.where { raw("#{{{ relation_type }}.table}.#{{{ relation_type }}.__pkey__}").in?(sub_query) }
+
+            block.call(cached_qry)
+
+            @cache.active "{{ method_name }}"
+
+            cached_qry.each(fetch_columns: fetch_columns) do |mdl|
+              @cache.set("{{ method_name }}", mdl.__pkey__, [mdl])
+            end
+          end
+
+          self
         end
 
-        self
-      end
+        def with_{{ method_name }}(fetch_columns = false) : self
+          with_{{ method_name }}(fetch_columns) { }
 
-      def with_{{ method_name }}(fetch_columns = false) : self
-        with_{{ method_name }}(fetch_columns) { }
-
-        self
+          self
+        end
       end
-    end
+    {% end %}
   end
 end
