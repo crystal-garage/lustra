@@ -277,5 +277,37 @@ module BelongsToSpec
         end
       end
     end
+
+    it "supports namespaced target model types" do
+      temporary do
+        reinit_example_models
+
+        employee = PolymorphicSpec::Employee.create!(name: "employee")
+        product = PolymorphicSpec::Product.create!(name: "product")
+
+        employee.id.should eq(product.id)
+
+        picture = PolymorphicSpec::Picture.new({name: "employee picture"})
+        picture.imageable = employee
+
+        picture.imageable_id.should eq(employee.id)
+        picture.imageable_type.should eq("PolymorphicSpec::Employee")
+        picture.save!
+
+        product_picture = PolymorphicSpec::Picture.create!(
+          name: "product picture",
+          imageable_id: product.id,
+          imageable_type: "PolymorphicSpec::Product"
+        )
+
+        employee.pictures.first!.imageable.as(PolymorphicSpec::Employee).id.should eq(employee.id)
+        product_picture.imageable.as(PolymorphicSpec::Product).id.should eq(product.id)
+
+        pictures = PolymorphicSpec::Picture.query.with_imageable.order_by(:name).to_a
+
+        pictures[0].imageable.as(PolymorphicSpec::Employee).id.should eq(employee.id)
+        pictures[1].imageable.as(PolymorphicSpec::Product).id.should eq(product.id)
+      end
+    end
   end
 end

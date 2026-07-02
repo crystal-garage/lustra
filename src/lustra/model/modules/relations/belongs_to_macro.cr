@@ -51,7 +51,14 @@ module Lustra::Model::Relations::BelongsToMacro
           @_cached_{{ method_name }} =
             case self.{{ type_key.id }}
             {% for target_type in polymorphic_types %}
-              when {{ target_type.stringify }}
+              {%
+                target_type_name = target_type.stringify
+                target_type_name = target_type_name[2..] if target_type_name.starts_with?("::")
+                if !target_type_name.includes?("::") && self_type.stringify.includes?("::")
+                  target_type_name = "#{self_type.stringify.split("::")[0...-1].join("::")}::#{target_type_name}"
+                end
+              %}
+              when {{ target_type_name }}
                 if cache && cache.active? "{{ method_name }}"
                   cache.hit("{{ method_name }}",
                     self.{{ foreign_key.id }}_column.to_sql_value, {{ target_type }}
@@ -261,9 +268,16 @@ module Lustra::Model::Relations::BelongsToMacro
             @cache.active "{{ method_name }}"
 
             {% for target_type in polymorphic_types %}
+              {%
+                target_type_name = target_type.stringify
+                target_type_name = target_type_name[2..] if target_type_name.starts_with?("::")
+                if !target_type_name.includes?("::") && self_type.stringify.includes?("::")
+                  target_type_name = "#{self_type.stringify.split("::")[0...-1].join("::")}::#{target_type_name}"
+                end
+              %}
               sub_query = base_query
                 .dup
-                .where { raw({{ type_key.stringify }}) == {{ target_type.stringify }} }
+                .where { raw({{ type_key.stringify }}) == {{ target_type_name }} }
                 .select("#{{{ self_type }}.table}.{{ foreign_key.id }}")
 
               {{ target_type }}.query

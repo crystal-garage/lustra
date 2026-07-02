@@ -191,6 +191,44 @@ class Picture
   belongs_to imageable : Employee | Product, polymorphic: true
 end
 
+module PolymorphicSpec
+  class Employee
+    include Lustra::Model
+
+    self.table = "polymorphic_spec_employees"
+
+    primary_key
+
+    column name : String
+
+    has_many pictures : Picture, as: :imageable
+  end
+
+  class Product
+    include Lustra::Model
+
+    self.table = "polymorphic_spec_products"
+
+    primary_key
+
+    column name : String
+
+    has_many pictures : Picture, as: :imageable
+  end
+
+  class Picture
+    include Lustra::Model
+
+    self.table = "polymorphic_spec_pictures"
+
+    primary_key
+
+    column name : String
+
+    belongs_to imageable : PolymorphicSpec::Employee | PolymorphicSpec::Product, polymorphic: true
+  end
+end
+
 class Relationship
   include Lustra::Model
 
@@ -382,6 +420,20 @@ class ModelSpecMigration123
     end
 
     create_table "pictures" do |t|
+      t.column "name", "string", null: false
+      t.column "imageable_id", "bigint", null: false
+      t.column "imageable_type", "string", null: false
+    end
+
+    create_table "polymorphic_spec_employees" do |t|
+      t.column "name", "string", null: false
+    end
+
+    create_table "polymorphic_spec_products" do |t|
+      t.column "name", "string", null: false
+    end
+
+    create_table "polymorphic_spec_pictures" do |t|
       t.column "name", "string", null: false
       t.column "imageable_id", "bigint", null: false
       t.column "imageable_type", "string", null: false
