@@ -61,7 +61,7 @@ module Lustra::Model::Relations::BelongsToMacro
                 end
             {% end %}
             else
-              raise "Unknown polymorphic type '#{self.{{ type_key.id }}}' for " + {{ "#{self_type}##{method_name}".stringify }} + "."
+              raise "Unknown polymorphic type '#{self.{{ type_key.id }}}' for " + {{ "#{self_type}##{method_name}" }} + "."
             end
         {% else %}
           if cache && cache.active? "{{ method_name }}"
@@ -252,6 +252,8 @@ module Lustra::Model::Relations::BelongsToMacro
 
     {% if polymorphic %}
       class Collection
+        # Eager loading a polymorphic belongs_to relation runs one query for each
+        # declared target type, then stores parents in the association cache.
         def with_{{ method_name }}(fetch_columns = false) : self
           before_query do
             base_query = self.dup.clear_select

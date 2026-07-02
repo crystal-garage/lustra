@@ -261,5 +261,21 @@ module BelongsToSpec
         pictures[1].imageable.as(Product).id.should eq(product.id)
       end
     end
+
+    it "raises a clear error for an unknown stored type" do
+      temporary do
+        reinit_example_models
+
+        picture = Picture.create!(
+          name: "picture",
+          imageable_id: 1,
+          imageable_type: "Unknown"
+        )
+
+        expect_raises(Exception, /Unknown polymorphic type 'Unknown' for Picture#imageable/) do
+          picture.imageable
+        end
+      end
+    end
   end
 end

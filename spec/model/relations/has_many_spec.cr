@@ -374,6 +374,35 @@ describe "Lustra::Model::Relations::HasMany" do
           product.pictures.count.should eq(2)
         end
       end
+
+      it "raises a clear error when the parent is not persisted" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.new({name: "Alice"})
+
+          expect_raises(Exception, /Cannot access polymorphic association 'pictures' on an unsaved Employee.*Employee\.id is not defined/) do
+            employee.pictures << Picture.new({name: "Appended picture"})
+          end
+        end
+      end
+
+      it "moves an already associated child to the new parent" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create!({name: "Alice"})
+          product = Product.create!({name: "Keyboard"})
+          picture = employee.pictures.create!({name: "Profile picture"})
+
+          product.pictures << picture
+
+          picture.imageable_id.should eq(product.id)
+          picture.imageable_type.should eq("Product")
+          employee.pictures.count.should eq(0)
+          product.pictures.count.should eq(1)
+        end
+      end
     end
   end
 

@@ -12,6 +12,12 @@ module Lustra::Model::Relations::HasManyMacro
   )
     # The method {{ method_name }} is a `has_many` relation to {{ relation_type }}
     def {{ method_name }} : {{ relation_type }}::Collection
+      {% if polymorphic_as %}
+        unless self.__pkey_column__.defined?
+          raise "Cannot access polymorphic association '{{ method_name }}' on an unsaved {{ self_type }} because {{ self_type }}.#{self.__pkey_column__.name} is not defined."
+        end
+      {% end %}
+
       %primary_key = {{ (primary_key || "__pkey__").id }}
 
       %foreign_key =
@@ -54,8 +60,19 @@ module Lustra::Model::Relations::HasManyMacro
         end
 
       query.append_operation = -> (x : {{ relation_type }}) {
-        x.reset(query.tags)
-        x.save!
+        {% if polymorphic_as %}
+          if x.persisted?
+            x.set(query.tags)
+            x.save!
+          else
+            x.reset(query.tags)
+            x.save!
+          end
+        {% else %}
+          x.reset(query.tags)
+          x.save!
+        {% end %}
+
         x
       }
 

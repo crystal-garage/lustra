@@ -876,6 +876,8 @@ module Lustra::Model
               "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
             {% elsif settings[:relation_type] == :belongs_to %}
               {% if settings[:polymorphic] %}
+                # A polymorphic belongs_to can point at multiple tables, so
+                # there is no single SQL JOIN target to infer here.
                 raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
               {% else %}
                 %relation_table = {{ settings[:type] }}.table
@@ -956,6 +958,8 @@ module Lustra::Model
               "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
             {% elsif settings[:relation_type] == :belongs_to %}
               {% if settings[:polymorphic] %}
+                # A polymorphic belongs_to can point at multiple tables, so a
+                # single correlated count subquery would be ambiguous.
                 raise "Polymorphic association '#{association}' for #{T} cannot be used with with_count because it can target multiple tables. Filter or count each concrete type directly."
               {% else %}
                 %foreign_key =
@@ -1064,6 +1068,8 @@ module Lustra::Model
                 join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
               {% if settings[:polymorphic] %}
+                # A polymorphic belongs_to can point at multiple tables, so
+                # there is no single SQL JOIN target to infer here.
                 raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
               {% else %}
                 # belongs_to :user => posts.user_id = users.id
