@@ -275,6 +275,7 @@ class RangeData
   column name : String?
   column int32_range : Range(Int32?, Int32?)?
   column int64_range : Range(Int64?, Int64?)?
+  column numeric_range : Range(BigDecimal?, BigDecimal?)?
   column time_range : Range(Time?, Time?)?
 
   self.table = "range_data"
@@ -507,6 +508,7 @@ class ModelSpecMigration123
       t.column "name", "string", null: true
       t.column "int32_range", "int4range", null: true
       t.column "int64_range", "int8range", null: true
+      t.column "numeric_range", "numrange", null: true
       t.column "time_range", "tsrange", null: true
 
       t.timestamps

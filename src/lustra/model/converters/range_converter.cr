@@ -91,9 +91,33 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
       to_column(x.to_crystal_range)
     when Range(PG::Numeric?, PG::Numeric?)
       x
+    else
+    end
+  end
+
+  def self.to_db(x)
+    case x
+    when Nil
+      nil
     when Range
-      b = x.begin.nil? ? nil : (x.begin.is_a?(PG::Numeric) ? x.begin : BigDecimal.new(x.begin.to_s))
-      e = x.end.nil? ? nil : (x.end.is_a?(PG::Numeric) ? x.end : BigDecimal.new(x.end.to_s))
+      Lustra::Model::Converter.format_numeric_range(x)
+    else
+    end
+  end
+end
+
+module Lustra::Model::Converter::RangeConverterBigDecimal
+  def self.to_column(x) : Range(BigDecimal?, BigDecimal?)?
+    case x
+    when Nil
+      nil
+    when PG::Range
+      to_column(x.to_crystal_range)
+    when Range(BigDecimal?, BigDecimal?)
+      x
+    when Range
+      b = x.begin.nil? ? nil : BigDecimal.new(x.begin.to_s)
+      e = x.end.nil? ? nil : BigDecimal.new(x.end.to_s)
 
       Range.new(b, e, x.excludes_end?)
     when String
@@ -175,4 +199,5 @@ module Lustra::Model::Converter
   add_converter("Range(Int64 | Nil, Int64 | Nil)", Lustra::Model::Converter::RangeConverterInt64)
   add_converter("Range(Time | Nil, Time | Nil)", Lustra::Model::Converter::RangeConverterTime)
   add_converter("Range(PG::Numeric | Nil, PG::Numeric | Nil)", Lustra::Model::Converter::RangeConverterPGNumeric)
+  add_converter("Range(BigDecimal | Nil, BigDecimal | Nil)", Lustra::Model::Converter::RangeConverterBigDecimal)
 end
