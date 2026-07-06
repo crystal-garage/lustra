@@ -587,6 +587,173 @@ module ModelSpec
         end
       end
 
+      it "inserts one row without instantiating a model" do
+        temporary do
+          reinit_example_models
+
+          result = Tag.insert({name: "crystal"}).not_nil!
+
+          result.has_key?("id").should be_true
+          Tag.query.count.should eq 1
+          Tag.query.where(name: "crystal").count.should eq 1
+        end
+      end
+
+      it "returns nil when insert skips a duplicate" do
+        temporary do
+          reinit_example_models
+
+          Tag.create!({name: "existing"})
+
+          result = Tag.insert({name: "existing"}, unique_by: :name)
+
+          result.should be_nil
+          Tag.query.count.should eq 1
+        end
+      end
+
+      it "inserts many rows without instantiating models" do
+        temporary do
+          reinit_example_models
+
+          result = Tag.insert_all([
+            {name: "crystal"},
+            {name: "orm"},
+          ])
+
+          result.size.should eq 2
+          result.first.has_key?("id").should be_true
+          Tag.query.count.should eq 2
+          Tag.query.where(name: "crystal").count.should eq 1
+          Tag.query.where(name: "orm").count.should eq 1
+        end
+      end
+
+      it "skips duplicates during insert_all by unique key" do
+        temporary do
+          reinit_example_models
+
+          Tag.create!({name: "existing"})
+
+          result = Tag.insert_all([
+            {name: "existing"},
+            {name: "imported"},
+          ], unique_by: :name, returning: [:id, :name])
+
+          result.size.should eq 1
+          result.first["name"].should eq "imported"
+          Tag.query.count.should eq 2
+          Tag.query.where(name: "existing").count.should eq 1
+          Tag.query.where(name: "imported").count.should eq 1
+        end
+      end
+
+      it "can omit returning rows during insert_all" do
+        temporary do
+          reinit_example_models
+
+          result = Tag.insert_all([
+            {name: "crystal"},
+          ], returning: false)
+
+          result.should be_empty
+          Tag.query.count.should eq 1
+        end
+      end
+
+      it "upserts a model by primary key" do
+        temporary do
+          reinit_example_models
+
+          inserted = User.upsert({id: 1, first_name: "John"}).not_nil!
+          inserted.persisted?.should be_true
+          inserted.first_name.should eq "John"
+
+          updated = User.upsert({id: 1, first_name: "Louis"}, unique_by: [:id]).not_nil!
+          updated.persisted?.should be_true
+          updated.first_name.should eq "Louis"
+
+          User.query.count.should eq 1
+          User.query.find!(1).first_name.should eq "Louis"
+        end
+      end
+
+      it "upserts many models by primary key" do
+        temporary do
+          reinit_example_models
+
+          User.create!({id: 1, first_name: "John"})
+
+          users = User.upsert_all([
+            {id: 1, first_name: "Louis"},
+            {id: 2, first_name: "Jane"},
+          ])
+
+          users.size.should eq 2
+          User.query.count.should eq 2
+          User.query.find!(1).first_name.should eq "Louis"
+          User.query.find!(2).first_name.should eq "Jane"
+        end
+      end
+
+      it "skips duplicates during upsert" do
+        temporary do
+          reinit_example_models
+
+          User.create!({id: 1, first_name: "John"})
+
+          skipped = User.upsert({id: 1, first_name: "Louis"}, on_duplicate: :skip)
+          skipped.should be_nil
+
+          users = User.upsert_all([
+            {id: 1, first_name: "Ignored"},
+            {id: 2, first_name: "Jane"},
+          ], on_duplicate: :skip)
+
+          users.size.should eq 1
+          users.first.id.should eq 2
+          User.query.count.should eq 2
+          User.query.find!(1).first_name.should eq "John"
+          User.query.find!(2).first_name.should eq "Jane"
+        end
+      end
+
+      it "skips duplicates by a non-primary unique key during upsert" do
+        temporary do
+          reinit_example_models
+
+          Tag.create!({name: "existing"})
+
+          tags = Tag.upsert_all([
+            {name: "existing"},
+            {name: "imported"},
+          ], unique_by: :name, on_duplicate: :skip)
+
+          tags.size.should eq 1
+          tags.first.name.should eq "imported"
+          Tag.query.count.should eq 2
+          Tag.query.where(name: "existing").count.should eq 1
+          Tag.query.where(name: "imported").count.should eq 1
+        end
+      end
+
+      it "upserts only selected columns" do
+        temporary do
+          reinit_example_models
+
+          User.create!({id: 1, first_name: "John", last_name: "Doe"})
+
+          User.upsert(
+            {id: 1, first_name: "Louis", last_name: "Ignored"},
+            update_only: ["first_name"]
+          )
+
+          user = User.query.find!(1)
+          user.first_name.should eq "Louis"
+          user.last_name.should eq "Doe"
+        end
+      end
+
       it "save with conflict resolution" do
         temporary do
           reinit_example_models
