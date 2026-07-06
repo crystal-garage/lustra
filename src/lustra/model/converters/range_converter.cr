@@ -29,6 +29,8 @@ module Lustra::Model::Converter::RangeConverterInt32
     case x
     when Nil
       nil
+    when PG::Range
+      to_column(x.to_crystal_range)
     when Range
       b = x.begin.nil? ? nil : x.begin.to_s.to_i32
       e = x.end.nil? ? nil : x.end.to_s.to_i32
@@ -56,6 +58,8 @@ module Lustra::Model::Converter::RangeConverterInt64
     case x
     when Nil
       nil
+    when PG::Range
+      to_column(x.to_crystal_range)
     when Range
       b = x.begin.nil? ? nil : x.begin.to_s.to_i64
       e = x.end.nil? ? nil : x.end.to_s.to_i64
@@ -83,6 +87,8 @@ module Lustra::Model::Converter::RangeConverterPGNumeric
     case x
     when Nil
       nil
+    when PG::Range
+      to_column(x.to_crystal_range)
     when Range(PG::Numeric?, PG::Numeric?)
       x
     when Range
@@ -112,6 +118,8 @@ module Lustra::Model::Converter::RangeConverterTime
     case x
     when Nil
       nil
+    when PG::Range
+      to_column(x.to_crystal_range)
     when Range
       b =
         if x.begin.nil?
