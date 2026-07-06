@@ -30,13 +30,11 @@ class Lustra::SQL::ConnectionPool
         end
       else
         database.using_connection do |new_connection|
-          begin
-            @@connections[fiber_target] = new_connection
+          @@connections[fiber_target] = new_connection
 
-            yield new_connection
-          ensure
-            @@connections.delete(fiber_target)
-          end
+          yield new_connection
+        ensure
+          @@connections.delete(fiber_target)
         end
       end
     end

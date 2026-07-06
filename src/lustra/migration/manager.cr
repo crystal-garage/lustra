@@ -79,14 +79,14 @@ class Lustra::Migration::Manager
 
     # We migrate to a specific point; we apply all migrations
     # not yet done to this point
-    # We apply migration until requested version...
+    # Apply migrations until the requested version...
     uid_to_apply = list_of_migrations.map(&.uid).reject(&.>(version)) - @migrations_up.to_a
 
     uid_to_apply.each do |uid|
       operations << {uid, Migration::Direction::Up}
     end
 
-    # Then we revert migration from requested version to now
+    # Then revert migrations from the requested version to the current version.
     uid_to_apply = list_of_migrations.map(&.uid).select(&.>(version)) & @migrations_up.to_a
 
     uid_to_apply.each do |uid|
@@ -152,7 +152,7 @@ class Lustra::Migration::Manager
     Lustra::View.apply(:create)
   end
 
-  # Return `true` if the migration has been commited (already applied into the database)
+  # Return `true` if the migration has been committed (already applied to the database).
   # or `false` otherwise
   def commited?(m : Lustra::Migration)
     @migrations_up.includes?(m.uid)

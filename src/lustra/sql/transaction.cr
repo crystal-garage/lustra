@@ -1,8 +1,9 @@
 module Lustra::SQL::Transaction
-  # Represents the differents levels of transactions
+  # Represents the different transaction isolation levels,
   #   as described in https://www.postgresql.org/docs/9.5/transaction-iso.html
   #
-  #   ReadUncommited is voluntarly ommited as it fallback to ReadCommited in PostgreSQL
+  #   ReadUncommitted is intentionally omitted because it falls back to
+  #   ReadCommitted in PostgreSQL.
   enum Level
     ReadCommitted
     RepeatableRead
@@ -24,26 +25,25 @@ module Lustra::SQL::Transaction
   @@savepoint_uid : UInt64 = 0_u64
   @@commit_callbacks = Hash(DB::Connection, Array(DB::Connection ->)).new { [] of DB::Connection -> }
 
-  # Check whether the current pair of fiber/connection is in transaction
-  # block or not.
+  # Check whether the current fiber/connection pair is in a transaction block.
   def in_transaction?(connection : String = "default")
     Lustra::SQL::ConnectionPool.with_connection(connection, &._in_transaction?)
   end
 
-  # Enter new transaction block for the current connection/fiber pair.
+  # Enter a new transaction block for the current connection/fiber pair.
   #
   # Example:
   #
   # ```
   # Lustra::SQL.transaction do
   #   # do something
-  #   Lustra::SQL.transaction do # Technically, this block do nothing, since we already are in transaction
-  #     rollback                 # < Rollback the up-most `transaction` block.
+  #   Lustra::SQL.transaction do # Technically, this block does nothing, since we already are in a transaction
+  #     rollback                 # < Roll back the outermost `transaction` block.
   #   end
   # end
   # ```
   #
-  # see #with_savepoint to use a stackable version using savepoints.
+  # See #with_savepoint for a stackable version using savepoints.
   #
   def transaction(connection : String = "default", level : Level = Level::Serializable, &)
     Lustra::SQL::ConnectionPool.with_connection(connection) do |cnx|
@@ -69,9 +69,9 @@ module Lustra::SQL::Transaction
           unless has_rollback
             execute("COMMIT")
 
-            # Remove the list from the global hash, and execute after the commits
-            # this should prevent the proc to be called twice in case of usage
-            # of a new Lustra transaction into the `after_commit` block.
+            # Remove the list from the global hash and execute after commit.
+            # This prevents the proc from being called twice if a new Lustra
+            # transaction is opened inside the `after_commit` block.
             callbacks.try &.each &.call(cnx)
           end
         end
@@ -79,11 +79,10 @@ module Lustra::SQL::Transaction
     end
   end
 
-  # Register a callback function which will be fired once when SQL `COMMIT`
-  # operation is called
+  # Register a callback function that fires once when SQL `COMMIT` is called.
   #
-  # This can be used for example to send email, or perform others tasks
-  # when you want to be sure the data is secured in the database.
+  # This can be used to send email or perform other tasks when you want to be
+  # sure the data is committed in the database.
   #
   # ```
   # transaction do
@@ -93,7 +92,7 @@ module Lustra::SQL::Transaction
   # end
   # ```
   #
-  # In case the transaction fail and eventually rollback, the code won't be called.
+  # If the transaction fails and rolls back, the callback won't be called.
   #
   def after_commit(connection : String = "default", &block : DB::Connection -> Nil)
     Lustra::SQL::ConnectionPool.with_connection(connection) do |cnx|
@@ -105,8 +104,7 @@ module Lustra::SQL::Transaction
     end
   end
 
-  # Create a transaction, but this one is stackable
-  # using savepoints.
+  # Create a stackable transaction using savepoints.
   #
   # Example:
   #

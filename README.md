@@ -1,4 +1,4 @@
-<p align="center"><img src="design/logo.png" alt="lustra" height="200px"></p>
+<p align="center"><img src="design/logo.png" alt="Lustra" height="200px"></p>
 
 # Lustra
 
@@ -6,1614 +6,176 @@
 [![GitHub release](https://img.shields.io/github/release/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/releases)
 [![License](https://img.shields.io/github/license/crystal-garage/lustra.svg)](https://github.com/crystal-garage/lustra/blob/main/LICENSE)
 
-Lustra is an ORM built specifically for PostgreSQL in Crystal.
+Lustra is a PostgreSQL-focused ORM and SQL builder for Crystal.
 
-It's probably the most advanced ORM for PG on Crystal in term of features offered.
-It features Active Record pattern models, and low-level SQL builder.
+It provides an Active Record style model layer, expressive query collections,
+migrations, associations, validations, lifecycle callbacks, and direct access to
+PostgreSQL features such as JSONB, arrays, CTEs, cursors, full-text search,
+enums, UUIDs, and geometric types.
 
-You can deal out of the box with jsonb, tsvectors, cursors, CTE, bcrypt password,
-array, uuid primary key, foreign constraints... and other things !
-It also has a powerful DSL to construct `where` and `having` clauses.
+Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version
+0.8 and has since evolved as an independent project.
 
-The philosophy beneath is to please me (and you !) with emphasis made on business
-code readability and minimal setup.
+## Why Lustra?
 
-The project is quite active and well maintened, too !
+Use Lustra when you want:
 
-Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version 0.8, and it is not compatible with later Clear releases. Over time it evolved into an independent project. To keep it compatible with newer Crystal versions, I continued development, added missing features, improved existing ones, and expanded test coverage. Today Lustra is far beyond its upstream origins — a distinct, mature project in its own right.
+- PostgreSQL-first behavior instead of database-agnostic lowest-common-denominator APIs
+- readable Active Record style models for application code
+- a composable SQL builder for lower-level queries
+- typed Crystal model fields with explicit nilability
+- associations, eager loading, scopes, callbacks, validations, and migrations
+- PostgreSQL-specific querying for JSONB, arrays, full-text search, CTEs, and more
 
-## Why to use Lustra ?
+Lustra is PostgreSQL-only. It is not designed for MySQL, MariaDB, or SQLite.
 
-In few seconds, you want to use Lustra if:
+## Installation
 
-- [x] You want an expressive ORM. Put straight your thought to your code !
-- [x] You'd like to use advanced Postgres features without hassle
-- [x] You are at aware of the pro and cons of Active Records pattern
+Add Lustra to `shards.yml`:
 
-You don't want to use Lustra if:
-
-- [ ] You're not willing to use on PostgreSQL
-- [ ] You look for a minimalist ORM / Data Mapper
-
-## Features
-
-- Active Record pattern based ORM
-- Expressiveness as mantra - even with advanced features like jsonb, regexp... -
-
-```crystal
-# Like ...
-Product.query.where { ( type == "Book" ) & ( metadata.jsonb("author.full_name") == "Philip K. Dick" ) }
-# ^--- will use @> operator, to relay on your gin index. For real.
-
-Product.query.where { ( products.type == "Book" ) & ( products.metadata.jsonb("author.full_name") != "Philip K. Dick" ) }
-# ^--- this time will use -> notation, because no optimizations possible :/
-
-# Or...
-User.query.where { created_at.in? 5.days.ago .. 1.day.ago }
-
-# Or even...
-ORM.query.where { ( description =~ /(^| )awesome($| )/i ) }.first!.name
-```
-
-## Core ORM Features
-
-**Model & Database Management**
-- Complete migration system with versioning and rollbacks
-- Comprehensive validation system with custom validators
-- Model lifecycle hooks (before/after callbacks for create, update, delete, validate, save)
-- Primary key support (auto-incrementing integers, UUIDs)
-- Timestamps (created_at, updated_at) with automatic touch functionality
-
-**Associations & Relations**
-- belongs_to, has_many, has_one relationships with full support
-- Through associations for complex relationships
-- Polymorphic associations and Single Table Inheritance (STI)
-- Counter cache with atomic updates and reset functionality
-- Touch functionality for automatic timestamp updates on related models
-
-**Query Interface**
-- Chainable and expressive query builder
-- Scopes for reusable query fragments with parameter support
-- Advanced WHERE clauses with complex conditions
-- JOIN operations (inner, left, right, full outer)
-- Subqueries and CTEs (Common Table Expressions)
-- Window functions and advanced SQL features
-- Pagination with limit/offset
-- Ordering and grouping
-- Aggregation functions (count, sum, avg, etc.)
-
-**Performance & Optimization**
-- N+1 query avoidance with eager loading
-- Query result caching
-- Database connection pooling
-- Lazy loading and batch processing
-- Query optimization and SQL analysis
-
-**Data Types & Storage**
-- Full PostgreSQL JSON and JSONB support with complex queries
-- Array columns (strings, integers, booleans)
-- UUID columns and primary keys
-- Enum support with type-safe database integration
-- **PostgreSQL Geometric Types** (Point, Circle, Polygon, Box, Line, Path, LineSegment)
-- Custom data type converters
-- Null handling and presence validation
-
-## Advanced Features
-
-**Full-Text Search**
-- PostgreSQL TSVector integration
-- Natural language query parsing
-- Weighted search with relevance scoring
-- Complex search operators (AND, OR, NOT, phrases)
-
-**Database Features**
-- Transaction support with rollback and savepoint
-- Database locking (optimistic and pessimistic)
-- Multiple database connections
-- Database views as models
-- Raw SQL execution when needed
-- Stored procedures and functions support
-
-**Developer Experience**
-- Comprehensive error messages and debugging
-- Query logging with colorized output
-- Crash reporting with last executed query
-- Compile-time type checking and validation
-- Intuitive API design following ActiveRecord conventions
-
-**Data Management**
-- Database seeding utilities
-- Model factories for testing
-- Bulk operations and batch processing
-- Data import/export capabilities
-
-### Installation
-
-In `shards.yml`
-
-```yml
+```yaml
 dependencies:
   lustra:
     github: crystal-garage/lustra
-    version: ">= 0.17.1"
+    version: ">= 0.18.1"
 ```
 
-Then:
+Require it in your application:
 
 ```crystal
 require "lustra"
 ```
 
-### Database Setup
-
-Initialize your database connection:
+Initialize the database connection:
 
 ```crystal
-Lustra::SQL.init("postgres://user:password@localhost/database_name")
+Lustra::SQL.init("postgres://user:password@localhost/my_app")
 ```
 
-For multiple database connections:
+For production applications, configure the connection pool explicitly:
 
 ```crystal
-Lustra::SQL.init("readonly", "postgres://user:password@localhost/readonly_db")
-Lustra::SQL.init("primary", "postgres://user:password@localhost/primary_db")
+Lustra::SQL.init("postgres://user:password@localhost/my_app?max_pool_size=10&initial_pool_size=1&max_idle_pool_size=2&checkout_timeout=5")
 ```
 
-**Using specific connections:**
+Tune `max_pool_size` per running process and keep the total below PostgreSQL's
+`max_connections`.
 
-At the model level:
+## Quick Start
 
-```crystal
-class ReadOnlyModel
-  include Lustra::Model
-
-  self.connection = "readonly" # All queries use readonly connection
-
-  column id : Int64, primary: true
-  column data : String
-end
-```
-
-At the query level:
-
-```crystal
-# For model queries
-User.query.use_connection("readonly").where { active.true? }
-
-# For raw SQL queries
-Lustra::SQL.execute("readonly", "SELECT * FROM users")
-Lustra::SQL.select.from("users").where { active == true }.use_connection("readonly").to_a
-
-# For querying system tables or complex data without models
-Lustra::SQL.select("name", "abbrev").from(:pg_timezone_names).where { raw("abbrev IS NOT NULL") }.fetch do |row|
-  name = row["name"]
-  abbrev = row["abbrev"]
-  puts "#{name}: #{abbrev}"
-end
-
-# Other ways to get data from raw queries
-results = Lustra::SQL.select.from(:pg_timezone_names).to_a  # Get all results as array
-first = Lustra::SQL.select.from(:pg_timezone_names).first   # Get first result
-```
-
-### Model definition
-
-Lustra offers some mixins, just include them in your classes:
-
-#### Column mapping
+Define a model:
 
 ```crystal
 class User
   include Lustra::Model
 
-  column id : Int64, primary: true
+  primary_key
 
   column email : String
-
   column first_name : String?
-  column last_name : String?
 
-  column encrypted_password : Crypto::Bcrypt::Password
-
-  def password=(password : String)
-    self.encrypted_password = Crypto::Bcrypt::Password.create(password)
-  end
-
-  def authenticate(password : String) : Bool
-    encrypted_password.verify(password)
-  end
-end
-
-```
-
-#### Column types
-
-- `Number`, `String`, `Time`, `Boolean` and `Jsonb` structures are already mapped.
-- `Array` of primitives too.
-  For other type of data, just create your own converter !
-
-```crystal
-class Lustra::Model::Converter::MyClassConversion
-  def self.to_column(x) : MyClass?
-    case x
-    when String
-      MyClass.from_string(x)
-    when Slice(UInt8)
-      MyClass.from_slice(x)
-    else
-      raise "Cannot convert from #{x.class} to MyClass"
-    end
-  end
-
-  def self.to_db(x : UUID?)
-    x.to_s
-  end
-end
-
-Lustra::Model::Converter.add_converter("MyClass", Lustra::Model::Converter::MyClassConversion)
-```
-
-##### Column presence
-
-Most of the ORM for Crystal are mapping column type as `Type | Nil` union.
-It makes sens so we allow selection of some columns only of a model.
-However, this have a caveats: columns are still accessible, and will return nil,
-even if the real value of the column is not null !
-
-Moreover, most of the developers will enforce nullity only on their programming
-language level via validation, but not on the database, leading to inconsistency.
-
-Therefore, we choose to throw exception whenever a column is accessed before
-it has been initialized and to enforce presence through the union system of
-Crystal.
-
-Lustra offers this through the use of column wrapper.
-Wrapper can be of the type of the column as in postgres, or in `UNKNOWN` state.
-This approach offers more flexibility:
-
-```crystal
-User.query.select("last_name").each do |usr|
-  puts usr.first_name # Will raise an exception, as first_name hasn't been fetched.
-end
-
-u = User.new
-u.first_name_column.defined? # Return false
-u.first_name_column.value("") # Call the value or empty string if not defined :-)
-u.first_name = "bonjour"
-u.first_name_column.defined? # Return true now !
-```
-
-Wrapper give also some pretty useful features:
-
-```crystal
-u = User.new
-u.email = "me@myaddress.com"
-u.email_column.changed? # TRUE
-u.email_column.revert
-u.email_column.defined? # No more
-```
-
-#### Associations
-
-Lustra offers `has_many`, `has_one`, `belongs_to` and `has_many through` associations:
-
-```crystal
-class Security::Action
-  belongs_to role : Role
-end
-
-class Security::Role
-  has_many user : User
-end
-
-class User
-  include Lustra::Model
-
-  has_one user_info : UserInfo
-  has_many posts : Post
-
-  belongs_to role : Security::Role
-
-  # Use of the standard keys (users_id <=> security_role_id)
-  has_many actions : Security::Action, through: Security::Role
+  timestamps
 end
 ```
 
-### Querying
-
-Lustra offers a collection system for your models. The collection system
-takes origin to the lower API `Lustra::SQL`, used to build requests.
-
-#### Simple query
-
-##### Fetch a model
-
-To fetch one model:
+Create the table with a migration:
 
 ```crystal
-# 1. Get the first user
-User.query.first # Get the first user, ordered by primary key
-
-# Get a specific user by primary key
-User.find!(1) # Returns user with id=1, or raises exception if not found
-User.find(1)  # Returns user with id=1, or nil if not found
-
-# Find multiple users by array of IDs
-users = User.find([1, 2, 3])    # Returns Array(User), may be partial if some IDs don't exist
-users = User.find!([1, 2, 3])   # Raises error if ANY ID is not found
-
-# Find by other columns
-user = User.find_by(email: "test@example.com")  # Returns nil if not found
-user = User.find_by!(email: "test@example.com") # Raises error if not found
-
-# Find by multiple columns
-user = User.find_by(first_name: "John", last_name: "Doe")
-
-# Using query with expression engine
-u : User? = User.query.find_by { email =~ /yacine/i }
-```
-
-##### Fetch multiple models
-
-To prepare a collection, just use `Model#query`.
-Collections include `SQL::Select` object, so all the low level API
-(`where`, `where.not`, `where.or`, `join`, `group_by`, `lock`...) can be used in this context.
-
-```crystal
-# Basic filtering with where
-User.query.where { (id >= 100) & (id <= 200) }.each do |user|
-  # Do something with user !
-end
-
-# Negative filtering with where.not
-User.query.where.not { active == false }.each do |user|
-  # Get all users that are not inactive
-end
-
-# Chaining where, where.not, and where.or conditions
-User.query
-  .where { active == true }
-  .not { role == "admin" }
-  .or(id: [1, 2, 3])
-  .each do |user|
-    # Complex filtering with chained conditions
-  end
-# Generated SQL:
-# SELECT * FROM "users" WHERE ((("active" = TRUE) AND NOT ("role" = 'admin')) OR "id" IN (1, 2, 3))
-
-# Check if any records exist
-if User.query.where { active == true }.exists?
-  puts "There are active users!"
-end
-
-# Extract specific column values
-user_names = User.query.pluck_col("first_name")
-user_data = User.query.pluck("first_name", "last_name")
-
-# Get array of IDs (shortcut for pluck_col primary key)
-active_user_ids = User.query.where { active == true }.ids  # => [1, 2, 3, 4, 5]
-
-# Bulk update without loading models (bypasses validations and callbacks)
-affected = User.query.where { active == false }.update_all(status: "inactive")
-puts "Updated #{affected} users"
-
-# Update multiple columns at once
-User.query.where { role == "guest" }.update_all(role: "user", verified: true)
-
-# In case you know there's millions of rows, use a cursor to avoid memory issues!
-User.query.where { (id >= 1) & (id <= 20_000_000) }.each_cursor(batch: 100) do |user|
-  # Do something with user; only 100 users will be stored in memory
-  # This method is using pg cursor, so it's 100% transaction-safe
-end
-```
-
-##### JOIN operations
-
-Lustra supports automatic join detection from associations, as well as manual joins with custom conditions.
-
-```crystal
-class User
-  include Lustra::Model
-
-  has_many posts : Post
-  has_many categories : Category, through: Post
-  has_one info : UserInfo
-end
-
-class Post
-  include Lustra::Model
-
-  belongs_to user : User
-  belongs_to category : Category
-end
-
-class UserInfo
-  include Lustra::Model
-
-  belongs_to user : User
-end
-
-class Category
-  include Lustra::Model
-
-  has_many posts : Post
-  has_many users : User, through: Post
-end
-```
-
-###### Auto-joins
-
-Simply pass the association name and Lustra will auto-detect the join conditions:
-
-```crystal
-# has_many association
-User.query.join(:posts)
-# Equivalent to:
-User.query.join(:posts) { posts.user_id == users.id }
-# SQL: `INNER JOIN "posts" ON ("posts"."user_id" = "users"."id")`
-
-# belongs_to association
-Post.query.join(:user)
-# Equivalent to:
-Post.query.join(:users) { posts.user_id == users.id }
-# SQL: `INNER JOIN "users" ON ("posts"."user_id" = "users"."id")`
-
-# has_one association
-User.query.join(:info)
-# Equivalent to:
-User.query.join(:user_infos) { user_infos.user_id == users.id }
-# SQL: `INNER JOIN "user_infos" ON ("user_infos"."user_id" = "users"."id")`
-
-# has_many through (automatically generates TWO joins!)
-User.query.join(:categories)  # has_many :categories, through: Post
-# Equivalent to:
-User.query
-  .join(:posts) { posts.user_id == users.id }
-  .join(:categories) { categories.id == posts.category_id }
-# SQL: `INNER JOIN "posts" ON ("posts"."user_id" = "users"."id")
-#      INNER JOIN "categories" ON ("categories"."id" = "posts"."category_id")`
-
-# All join types supported
-User.query.left_join(:posts)
-User.query.right_join(:posts)
-User.query.full_outer_join(:posts)
-User.query.inner_join(:posts)
-
-# Chaining joins
-Post.query
-  .join(:user)
-  .join(:category)
-  .where { (users.active == true) & (categories.name == "Tech") }
-# Equivalent to:
-Post.query
-  .join(:user) { posts.user_id == users.id }
-  .join(:categories) { posts.category_id == categories.id }
-  .where { (users.active == true) & (categories.name == "Tech") }
-```
-
-###### Manual joins with custom conditions
-
-For complex joins or when you need custom conditions, use the block syntax:
-
-```crystal
-# Custom join condition
-User.query.join("infos") { infos.user_id == users.id }
-
-# Multiple joins with custom conditions
-Post.query
-  .join("users") { users.id == posts.user_id }
-  .join("categories") { categories.id == posts.category_id }
-  .where { users.active == true }
-
-# Mix auto-join and manual joins
-User.query
-  .join(:posts)
-  .join("custom_table") { custom_table.user_id == users.id }
-```
-
-##### Aggregate functions
-
-Call aggregate functions from the query is possible. For complex aggregation,
-I would recommend to use the `SQL::View` API (note: Not yet developed),
-and keep the model query for _fetching_ models only
-
-```crystal
-# count
-user_on_gmail = User.query.where { email.ilike "@gmail.com%" }.count # Note: count return is Int64
-# min/max
-max_id = User.query.where { email.ilike "@gmail.com%" }.max("id", Int32)
-# your own aggregate
-weighted_avg = User.query.agg("SUM(performance_weight * performance_score) / SUM(performance_weight)", Float64)
-```
-
-##### Fetching associations
-
-Associations are basically getter which create predefined SQL.
-To access to an association, just call it !
-
-```crystal
-User.query.each do |user|
-  puts "User #{user.id} posts:"
-  user.posts.each do |post| # Works, but will trigger a request for each user.
-    puts "• #{post.id}"
-  end
-end
-```
-
-###### Caching association for N+1 request
-
-For every association, you can tell Lustra to encache the results to avoid
-N+1 queries, using `with_XXX` on the collection:
-
-```crystal
-# Will call two requests only.
-User.query.with_posts.each do |user|
-  puts "User #{user.id} posts:"
-  user.posts.each do |post|
-    puts "• #{post.id}"
-  end
-end
-```
-
-Note: For association eager loading (like `with_posts`), Lustra uses separate queries with the `IN` operator rather than JOINs for optimal performance.
-
-In the case above:
-
-- The first request will be
-
-```sql
-SELECT * FROM users;
-```
-
-- Thanks to the cache, a second request will be called before fetching the users:
-
-```sql
-SELECT * FROM posts WHERE user_id IN ( SELECT id FROM users )
-```
-
-I have plan in a late future to offer different query strategies for the cache (e.g. joins, unions...)
-
-###### Associations caching examples
-
-When you use the caching system of the association, using filters on association will
-invalidate the cache, and N+1 query will happens.
-
-For example:
-
-```crystal
-User.query.with_posts.each do |user|
-  puts "User #{user.id} published posts:"
-  # Here: The cache system will not work. The cache on association
-  # is invalidated by the filter `where`.
-  user.posts.where({published: true}).each do |post|
-    puts "• #{post.id}"
-  end
-end
-```
-
-The way to fix it is to filter on the association itself:
-
-```crystal
-User.query.with_posts(&.where({published: true})).each do |user|
-  puts "User #{user.id} published posts:"
-  # The posts collection of user is already encached with the published filter
-  user.posts.each do |post|
-    puts "• #{post.id}"
-  end
-end
-```
-
-Note than, of course in this example `user.posts` are not ALL the posts but only the
-`published` posts
-
-Thanks to this system, we can stack it to encache long distance relations:
-
-```crystal
-# Will cache users<=>posts & posts<=>category
-# Total: 3 requests !
-User.query.with_posts(&.with_category).each do |user|
-  #...
-end
-```
-
-##### Querying computed or foreign columns
-
-In case you want columns computed by postgres, or stored in another table, you can use `fetch_column`.
-By default, for performance reasons, `fetch_columns` option is set to false.
-
-```crystal
-users = User.query.select(email: "users.email", remark: "infos.remark")
-  .join("infos") { infos.user_id == users.id }.to_a(fetch_columns: true)
-
-# Now the column "remark" will be fetched into each user object.
-# Access can be made using `[]` operator on the model.
-
-users.each do |u|
-  puts "email: `#{u.email}`, remark: `#{u["remark"]?}`"
-end
-```
-
-### Scopes and Default Scopes
-
-#### Scopes
-
-Scopes allow you to define reusable query fragments that make your code more readable and maintainable:
-
-```crystal
-class Post
-  include Lustra::Model
-
-  column title : String
-  column published : Bool
-  column view_count : Int32
-
-  # Simple scope
-  scope("published") { where(published: true) }
-
-  # Scope with parameter
-  scope("popular") { |min_views| where { view_count >= min_views } }
-
-  # Scope that chains multiple conditions
-  scope("recent") { where { created_at > 7.days.ago }.order_by(created_at: :desc) }
-end
-
-# Usage
-Post.published                    # All published posts
-Post.popular(100)                 # Posts with 100+ views
-Post.published.recent             # Published posts from last 7 days
-Post.published.popular(50).first  # Most popular published post
-```
-
-#### Default Scopes
-
-Default scopes automatically apply conditions to **all** queries on a model. This is particularly useful for soft deletes and multi-tenancy:
-
-```crystal
-class Post
-  include Lustra::Model
-
-  column title : String
-  column deleted_at : Time?
-
-  # This filter is applied to ALL queries automatically
-  default_scope { where { deleted_at.null? } }
-end
-
-# All these queries automatically exclude deleted posts:
-Post.find(1)          # WHERE id = 1 AND deleted_at IS NULL
-Post.query.first      # WHERE deleted_at IS NULL ORDER BY id LIMIT 1
-Post.query.where(...) # WHERE ... AND deleted_at IS NULL
-
-# To bypass the default scope when needed:
-Post.query.unscoped.count      # Count all posts including deleted
-Post.query.unscoped.first      # Get first record ignoring scope
-Post.query.unscoped.where(...) # Build query without default scope
-```
-
-**Warning:** Default scopes can be confusing because they're implicit. Use them sparingly and document them clearly. Always provide an `unscoped` escape hatch when you need to bypass them.
-
-### Inspection & SQL logging
-
-#### Inspection
-
-`inspect` over model offers debugging insights:
-
-```text
-p # => #<Post:0x10c5f6720
-        @attributes={},
-        @cache=
-         #<Lustra::Model::QueryCache:0x10c6e8100
-          @cache={},
-          @cache_activation=Set{}>,
-        @content_column=
-         "...",
-        @errors=[],
-        @id_column=38,
-        @persisted=true,
-        @published_column=true,
-        @read_only=false,
-        @title_column="Lorem ipsum torquent inceptos"*,
-        @user_id_column=5>
-```
-
-In this case, the `*` means a column is changed and the object is dirty and diverge from the database.
-
-#### Query Performance Analysis
-
-Lustra provides PostgreSQL `EXPLAIN` support to analyze and optimize your queries:
-
-```crystal
-# Get query execution plan (doesn't modify data, but may read for planning)
-plan = User.query.where { active == true }.explain
-puts plan
-# Output:
-# Seq Scan on users  (cost=0.00..35.50 rows=10 width=116)
-#   Filter: (active = true)
-
-# Get actual execution statistics (RUNS the query)
-plan = User.query.where { active == true }.join(:posts).explain_analyze
-puts plan
-# Output includes:
-# - Actual execution time
-# - Rows processed
-# - Memory usage
-# - Index usage details
-# - Join algorithms used
-
-# Optimize complex queries
-slow_query = Post.query
-  .join(:user)
-  .join(:category)
-  .where { published == true }
-  .order_by(created_at: :desc)
-
-# Analyze to find bottlenecks
-puts slow_query.explain_analyze
-
-# Use insights to add indexes, rewrite query, etc.
-```
-
-**Common use cases:**
-- **Finding missing indexes**: Look for "Seq Scan" on large tables
-- **Understanding join performance**: See which join algorithms are used
-- **Debugging slow queries**: Get actual timing and row counts
-- **Capacity planning**: Understand query costs before deploying
-
-**Difference between `explain` and `explain_analyze`:**
-
-| Method | Modifies Data | Shows Actual Stats | Use When |
-|--------|---------------|-------------------|----------|
-| `explain` | No | No (estimated) | Safe for all queries, get execution plan |
-| `explain_analyze` | Yes* | Yes (actual) | Need actual performance data |
-
-- `explain` is safe - shows estimated plan without modifying data
-- `explain_analyze` EXECUTES the query fully, including INSERT/UPDATE/DELETE
-- For write operations with `explain_analyze`, wrap in a transaction with rollback if testing
-
-**Safe pattern for testing write operations:**
-
-```crystal
-# Analyze a DELETE or UPDATE without permanently modifying data
-Lustra::SQL.transaction do
-  plan = User.query.where { inactive == true }.to_delete.explain_analyze
-  puts plan # See actual execution statistics
-
-  # Rollback to undo changes
-  raise Lustra::SQL::RollbackError.new
-end
-
-# Data is unchanged - safe for production analysis!
-```
-
-#### SQL Logging
-
-One thing very important for a good ORM is to offer vision of the SQL
-called under the hood.
-Lustra is offering SQL logging tools, with SQL syntax colorizing in your terminal.
-
-For activation, simply setup the logger to `DEBUG` level !
-
-```crystal
-Log.builder.bind "lustra.*", :debug, Log::IOBackend.new(STDOUT)
-```
-
-### Save & validation
-
-#### Save
-
-Object can be persisted, saved, updated:
-
-```crystal
-u = User.new
-u.email = "test@example.com"
-u.save! # Save or throw if unsavable (validation failed).
-```
-
-##### Attribute Change Tracking
-
-Lustra automatically tracks changes to model attributes:
-
-```crystal
-user = User.create!({first_name: "John", last_name: "Doe", email: "john@test.com"})
-
-# Make some changes
-user.first_name = "Jane"
-user.email = "jane@test.com"
-
-# Get change for specific attribute as {old, new} tuple
-user.first_name_column.change # => {"John", "Jane"}
-user.email_column.change      # => {"john@test.com", "jane@test.com"}
-user.last_name_column.change  # => nil (not changed)
-
-# Get all changes at once
-user.changes
-# => {"first_name" => {"John", "Jane"}, "email" => {"john@test.com", "jane@test.com"}}
-
-# Get list of changed attribute names
-user.changed # => ["first_name", "email"]
-
-# After saving, changes are cleared
-user.save!
-user.changed # => []
-user.changes # => {}
-```
-
-**Column-level access:**
-
-```crystal
-# Access change tracking via column objects
-user.email_column.changed?  # Check if changed
-user.email_column.old_value # Get raw old value
-user.email_column.change    # Get {old, new} tuple (nil if not changed)
-user.email_column.revert    # Revert to old value
-```
-
-##### Atomic Counter Updates
-
-Increment or decrement numeric columns atomically without running validations or callbacks:
-
-```crystal
-# Increment/decrement with immediate save (bypasses validations and callbacks)
-user.increment!(:login_count)        # Increment by 1
-user.increment!(:score, 10)          # Increment by custom amount
-user.decrement!(:attempts_left)      # Decrement by 1
-user.decrement!(:balance, 5.5)       # Decrement by custom amount
-
-# Increment/decrement in-memory only (requires save! to persist)
-user.increment(:login_count)
-user.decrement(:attempts_left, 2)
-user.save!  # Persist both changes together
-
-# Thread-safe atomic updates (using SQL: SET column = column + amount)
-user.increment!(:view_count)  # Safe for concurrent requests
-```
-
-The `!` versions update the database immediately using atomic SQL operations, making them thread-safe for counters like views, likes, or login counts.
-
-##### Direct Column Updates
-
-Update columns directly without running validations or callbacks. Useful for performance-critical updates when you know the data is valid:
-
-```crystal
-# Update single column (bypasses validations, callbacks, and timestamp updates)
-user.update_column(:login_count, 10)
-user.update_column(:last_login_at, Time.utc)
-
-# Update multiple columns at once
-user.update_columns(login_count: 5, status: "active", verified: true)
-
-# With NamedTuple or Hash
-user.update_columns({admin: true, role: "superuser"})
-```
-
-**Warning:** `update_column` and `update_columns` bypass:
-- Validations
-- Callbacks (before/after hooks)
-- Automatic timestamp updates (`updated_at` will NOT change)
-
-Use these methods only when you need raw performance and are certain the data is valid.
-
-##### Deleting Records
-
-Lustra provides two ways to delete records:
-
-```crystal
-# delete - Fast deletion WITHOUT callbacks (just removes from DB)
-user.delete
-user.persisted? # => false
-
-# destroy - Safe deletion WITH callbacks (triggers before/after :destroy hooks)
-user.destroy
-user.persisted? # => false
-
-# Bulk operations on collections
-User.query.where { active == false }.delete_all   # Fast bulk delete, NO callbacks
-User.query.where { active == false }.destroy_all  # Loads each record, calls destroy, HAS callbacks
-```
-
-**Example with callbacks:**
-
-```crystal
-class Post
-  include Lustra::Model
-
-  belongs_to user : User, counter_cache: true
-
-  after(:destroy) do |model|
-    post = model.as(Post)
-    # Clean up associated data
-    Comment.query.where(post_id: post.id).delete_all
-  end
-end
-
-# This will trigger the callback and clean up comments
-post.destroy
-
-# This will NOT trigger callbacks - comments remain orphaned
-post.delete
-```
-
-#### Validation
-
-##### Presence validator
-
-Presence validator is done using the type of the column:
-
-```crystal
-class User
-  include Lustra::Model
-
-  column first_name : String # Must be present
-  column last_name : String? # Can be null
-end
-```
-
-###### `NOT NULL DEFAULT ...` CASE
-
-There's a case when a column CAN be null inside Crystal, if not persisted,
-but CANNOT be null inside Postgres.
-
-It's for example the case of the `id` column, which take value after saving !
-
-In this case, you can write:
-
-```crystal
-class User
-  column id : Int64, primary: true, presence: false # id will be set using pg serial !
-end
-```
-
-Thus, in all case this will fail:
-
-```crystal
-u = User.new
-u.id # raise error
-```
-
-##### Other validators
-
-When you save your model, Lustra will call first the presence validators, then
-call your custom made validators. All you have to do is to reimplement
-the `validate` method:
-
-```crystal
-class MyModel
-  #...
-  def validate
-    # Your code goes here
-  end
-end
-```
-
-Validation fails if `model#errors` is not empty:
-
-```crystal
-class MyModel
-  #...
-  def validate
-    if first_name_column.defined? && first_name != "ABCD" # < See below why `defined?` must be called.
-      add_error("first_name", "must be ABCD!")
-    end
-  end
-end
-```
-
-##### Unique validator
-
-Please use `unique` feature of postgres. Unique validator at crystal level is a
-non-go and lead to terrible race concurrency issues if your deploy on multiple nodes/pods.
-It's an anti-pattern and must be avoided at any cost.
-
-##### The validation and the presence system
-
-In the case you try validation on a column which has not been initialized,
-Lustra will complain, telling you you cannot access to the column.
-Let's see an example here:
-
-```crystal
-class MyModel
-  #...
-  def validate
-    add_error("first_name", "should not be empty") if first_name == ""
-  end
-end
-
-MyModel.new.save! # < Raise unexpected exception, not validation failure :(
-```
-
-This validator will raise an exception, because first_name has never been initialized.
-To avoid this, we have many way:
-
-```crystal
-# 1. Check presence:
-def validate
-  if first_name_column.defined? # Ensure we have a value here.
-    add_error("first_name", "should not be empty") if first_name == ""
-  end
-end
-
-# 2. Use column object + default value
-def validate
-  add_error("first_name", "should not be empty") if first_name_column.value("") == ""
-end
-
-# 3. Use the helper macro `on_presence`
-def validate
-  on_presence(first_name) do
-    add_error("first_name", "should not be empty") if first_name == ""
-  end
-end
-
-# 4. Use the helper macro `ensure_than`
-def validate
-  ensure_than(first_name, "should not be empty", &.!=(""))
-end
-
-# 5. Use the `ensure_than` helper (but with block notation) !
-def validate
-  ensure_than(first_name, "should not be empty") do |column|
-    column != ""
-  end
-end
-
-```
-
-I recommend the 4th method in most of the cases you will faces.
-Simple to write and easy to read !
-
-#### Lifecycle Callbacks
-
-Lustra provides a comprehensive callback system to hook into model lifecycle events. Callbacks allow you to execute code at specific points during a model's lifecycle.
-
-##### Available Callback Events
-
-- `:validate` - Triggered during validation
-- `:save` - Triggered for any save operation (wraps create/update)
-- `:create` - Triggered when a new record is inserted
-- `:update` - Triggered when an existing record is updated
-- `:destroy` - Triggered when a record is destroyed (via `destroy` method, not `delete`)
-
-##### Callback Directions
-
-- `before` - Executed before the event
-- `after` - Executed after the event
-
-##### Basic Usage
-
-```crystal
-class User
-  include Lustra::Model
-
-  column email : String
-  column name : String
-
-  # Block syntax
-  before(:validate) do |model|
-    user = model.as(User)
-    user.email = user.email.downcase
-  end
-
-  after(:create) do |model|
-    user = model.as(User)
-    puts "New user created: #{user.first_name}"
-  end
-
-  # Method syntax (cleaner for complex logic - auto-casts for you)
-  before(:save, :normalize_email)
-  after(:destroy, :cleanup_user_data)
-
-  def normalize_email
-    self.email = email.strip.downcase
-  end
-
-  def cleanup_user_data
-    # Custom cleanup logic
-    puts "User #{id} deleted, cleaning up..."
-  end
-end
-```
-
-##### Callback Execution Order
-
-**Before callbacks:** Last defined -> First defined (reverse order)
-```crystal
-before(:save) { puts "1" }
-before(:save) { puts "2" }
-before(:save) { puts "3" }
-# Execution order: 3, 2, 1
-```
-
-**After callbacks:** First defined -> Last defined (normal order)
-```crystal
-after(:save) { puts "1" }
-after(:save) { puts "2" }
-after(:save) { puts "3" }
-# Execution order: 1, 2, 3
-```
-
-##### Common Patterns
-
-**Sanitizing data before validation:**
-```crystal
-before(:validate) do |model|
-  user = model.as(User)
-  user.email = user.email.strip.downcase if user.email_column.defined?
-end
-```
-
-**Sending notifications after creation:**
-```crystal
-after(:create) do |model|
-  user = model.as(User)
-  WelcomeMailer.send(user.email)
-end
-```
-
-**Cleanup after deletion:**
-```crystal
-after(:destroy) do |model|
-  user = model.as(User)
-  FileStorage.delete(user.avatar_path) if user.avatar_path
-end
-```
-
-**Auditing changes:**
-```crystal
-after(:update) do |model|
-  user = model.as(User)
-  AuditLog.create!(
-    model_type: "User",
-    model_id: user.id,
-    action: "update"
-  )
-end
-```
-
-##### Callbacks with Associations
-
-Callbacks work seamlessly with associations like `counter_cache` and `touch`:
-
-```crystal
-class Post
-  include Lustra::Model
-
-  belongs_to user : User, counter_cache: true  # Uses after(:create) and after(:destroy)
-  belongs_to category : Category, touch: true   # Uses after(:create) and after(:update)
-end
-```
-
-The `counter_cache` automatically registers `after(:create)` and `after(:destroy)` callbacks to increment/decrement the counter on the parent model.
-
-### Migration
-
-Lustra offers of course a migration system.
-
-Migration should have an `order` column set.
-This number can be wrote at the end of the class itself:
-
-```crystal
-class Migration1
+class CreateUsers
   include Lustra::Migration
 
   def change(dir)
-    #...
-  end
-end
-```
-
-#### Using filename
-
-Another way is to write down all your migrations one file per migration, and
-naming the file using the `[number]_migration_description.cr` pattern.
-In this case, the migration class name doesn't need to have a number at the end of the class name.
-
-```crystal
-# in src/db/migrations/1234_create_table.cr
-class CreateTable
-  include Lustra::Migration
-
-  def change(dir)
-    #...
-  end
-end
-```
-
-#### Migration examples
-
-Migration must implement the method `change(dir : Migration::Direction)`
-
-Direction is the current direction of the migration (up or down).
-It provides few methods: `up?`, `down?`, `up(&block)`, `down(&block)`
-
-##### Creating Tables
-
-You can create a table:
-
-```crystal
-def change(dir)
-  create_table(:test) do |t|
-    t.column :email, :string, index: true, unique: true, null: false
-    t.column :first_name, :string, index: true
-    t.column :last_name, :string, index: true
-
-    t.index "lower(first_name || ' ' || last_name)", using: :btree
-
-    t.timestamps
-  end
-end
-```
-
-##### Column Operations
-
-In addition to defining columns during table creation, you can also modify columns using standalone migration operations:
-
-###### Adding Columns
-
-```crystal
-def change(dir)
-  # Simple column addition
-  add_column "users", "phone", "varchar(20)"
-
-  # Column with default value
-  add_column "users", "status", "varchar", default: "'active'"
-
-  # Nullable column
-  add_column "users", "bio", "text", nullable: true
-
-  # Column with constraint
-  add_column "users", "email_verified", "boolean", default: "false", nullable: false
-
-  # Add with WITH VALUES for NOT NULL columns with existing data
-  add_column "posts", "category", "varchar", nullable: false, default: "'uncategorized'", with_values: true
-end
-```
-
-###### Removing Columns
-
-```crystal
-def change(dir)
-  drop_column "users", "phone", "varchar(20)"
-end
-```
-
-###### Renaming Columns
-
-```crystal
-def change(dir)
-  rename_column "users", "old_name", "new_name"
-end
-```
-
-###### Changing Column Types
-
-```crystal
-def change(dir)
-  # Convert integer to bigint
-  change_column_type "users", "id", "integer", "bigint"
-
-  # Convert varchar to text
-  change_column_type "posts", "description", "varchar", "text"
-end
-```
-
-###### Changing Null Constraints
-
-```crystal
-def change(dir)
-  # Add NOT NULL constraint
-  change_column_null "users", "email", false
-
-  # Add NOT NULL with value replacement for existing NULLs
-  change_column_null "posts", "content", false, "'No content provided'"
-
-  # Allow NULLs
-  change_column_null "users", "phone", true
-end
-```
-
-###### Column Comments
-
-```crystal
-def change(dir)
-  # Set comment (not automatically reversible)
-  change_column_comment "users", "email", "Primary email address"
-
-  # Remove comment
-  change_column_comment "users", "bio", nil
-
-  # Reversible change using from/to
-  change_column_comment "posts", "state", {from: "old_comment", to: "new_comment"}
-end
-```
-
-  ###### Changing Default Values
-
-  ```crystal
-  def change(dir)
-    # Set a new default (SQL literal as String)
-    change_column_default "suppliers", "qualification", "'new'"
-
-    # Numeric default
-    change_column_default "accounts", "authorized", "1"
-
-    # Drop default
-    change_column_default "users", "email", nil
-
-    # Reversible change using from/to
-    change_column_default "posts", "state", {from: nil, to: "'draft'"}
-  end
-  ```
-
-##### Indexing
-
-Add indexes to improve query performance:
-
-```crystal
-def change(dir)
-  # Simple index on single column
-  add_index "users", "email"
-
-  # Unique index
-  add_index "users", "email", unique: true
-
-  # Composite index on multiple columns
-  add_index "posts", ["user_id", "created_at"]
-
-  # GIN index for array/JSONB columns
-  add_index "posts", "tags", using: "gin"
-
-  # GIST index for geometric/range types
-  add_index "locations", "coordinates", using: "gist"
-
-  # Custom index name
-  add_index "users", "email", name: "idx_users_email_unique", unique: true
-end
-```
-
-##### Raw SQL Migrations
-
-For complex operations not covered by the built-in helpers, use `execute` with `dir.up` and `dir.down`:
-
-```crystal
-def change(dir)
-  dir.up do
-    execute "ALTER TABLE users DROP CONSTRAINT users_pkey"
-    execute "ALTER TABLE users DROP COLUMN id"
-    execute "ALTER TABLE users ADD COLUMN email_hash TEXT UNIQUE"
-  end
-
-  dir.down do
-    execute "ALTER TABLE users DROP COLUMN email_hash"
-    execute "ALTER TABLE users ADD COLUMN id BIGSERIAL PRIMARY KEY"
-  end
-end
-```
-
-Another example - adding custom constraints:
-
-```crystal
-def change(dir)
-  dir.up do
-    # Username format validation (alphanumeric + underscore, 3-32 chars, starts with letter)
-    execute "ALTER TABLE users ADD CONSTRAINT valid_username CHECK (username ~ '^[a-zA-Z][a-zA-Z0-9_]{2,31}$')"
-  end
-
-  dir.down do
-    execute "ALTER TABLE users DROP CONSTRAINT valid_username"
-  end
-end
-```
-
-##### Schema Introspection
-
-Query table schema information (columns, indexes) programmatically:
-
-```crystal
-# Get table schema snapshot
-info = Admin.schema_description
-
-# Access column details
-info.columns.each do |col|
-  puts "#{col.name} => #{col.data_type} (nullable: #{col.nullable})"
-end
-
-# Access indexes
-info.indexes.each do |idx|
-  puts "#{idx.name}: #{idx.definition}"
-end
-```
-
-Using `execute` for complex modifications:
-
-```crystal
-def change(dir)
-  dir.up do
-    execute "CREATE INDEX idx_users_lower_email ON users (LOWER(email))"
-    execute "UPDATE users SET email = LOWER(email) WHERE email IS NOT NULL"
-  end
-
-  dir.down do
-    execute "DROP INDEX idx_users_lower_email"
-  end
-end
-```
-
-#### Constraints
-
-I strongly encourage to use the foreign key constraints of postgres for your references:
-
-```crystal
-t.references to: "users", on_delete: "cascade", null: false
-```
-
-There's no plan to offer on Crystal level the `on_delete` feature, like
-`dependent` in ActiveRecord. That's a standard PG feature, just set it
-up in migration
-
-### PostgreSQL Geometric Types
-
-Lustra provides comprehensive support for PostgreSQL's geometric data types, enabling you to work with spatial data using PostgreSQL's native geometric operators and functions.
-
-#### Supported Geometric Types
-
-Lustra supports all PostgreSQL geometric types through the crystal-pg library:
-
-- **Point** (`PG::Geo::Point`) - A point in 2D space
-- **Circle** (`PG::Geo::Circle`) - A circle with center point and radius
-- **Polygon** (`PG::Geo::Polygon`) - A closed polygon with multiple vertices
-- **Box** (`PG::Geo::Box`) - A rectangular box defined by two corner points
-- **Line** (`PG::Geo::Line`) - An infinite line defined by linear equation
-- **Path** (`PG::Geo::Path`) - A series of connected points (open or closed)
-- **LineSegment** (`PG::Geo::LineSegment`) - A line segment between two points
-
-#### Geometric Column Definitions
-
-Use standard column syntax for clean model definitions:
-
-```crystal
-class Location
-  include Lustra::Model
-
-  column id : Int64, primary: true
-  column name : String
-
-  # Standard column syntax with PostgreSQL geometric types
-  column coordinates : PG::Geo::Point
-  column coverage_area : PG::Geo::Circle?
-  column service_boundary : PG::Geo::Polygon?
-  column bounding_box : PG::Geo::Box?
-  column trajectory : PG::Geo::Line?
-  column delivery_route : PG::Geo::Path?
-  column connection : PG::Geo::LineSegment?
-end
-```
-
-#### Geometric Operations in Expression Engine
-
-The expression engine provides natural syntax for spatial queries using PostgreSQL geometric operators:
-
-```crystal
-# Distance operations (<-> operator)
-Location.query.where { coordinates.distance_from(target_point) <= 1000.0 }
-Location.query.where { coordinates.within_distance?(center_point, 500.0) }
-
-# Containment operations (@> operator)
-Store.query.where { delivery_area.contains?(customer_location) }
-Location.query.where { coordinates.contained_by?(search_polygon) }
-
-# Overlap operations (&& operator)
-Location.query.where { coverage_area.overlaps?(competitor_area) }
-
-# Intersection operations (?# operator)
-Route.query.where { path.intersects?(road_segment) }
-
-# Positioning operations (<<, >>, |>>, <<| operators)
-Location.query.where { coordinates.left_of?(reference_point) }
-Location.query.where { coordinates.above?(baseline_point) }
-
-# Combining geometric operations
-Location.query.where do
-  (coordinates.distance_from(target_point) <= max_distance) &
-    (coverage_area.contains?(user_location)) &
-    (service_boundary.overlaps?(search_area))
-end
-```
-
-#### Real-World Examples
-
-**Store Locator with Delivery Areas:**
-
-```crystal
-class Store
-  include Lustra::Model
-
-  column name : String
-  column coordinates : PG::Geo::Point
-  column delivery_area : PG::Geo::Polygon?
-  column pickup_radius : PG::Geo::Circle?
-
-  # Find stores that can deliver to a location
-  scope("can_deliver_to") do |location_point|
-    where { delivery_area.contains?(location_point) }
-  end
-
-  # Find stores within pickup distance
-  scope("pickup_available") do |location_point|
-    where { pickup_radius.contains?(location_point) }
-  end
-end
-
-# Usage
-customer_location = PG::Geo::Point.new(40.7128, -74.0060)  # NYC coordinates
-
-# Find delivery options
-delivery_stores = Store.can_deliver_to(customer_location)
-
-# Find pickup options within 5 miles
-pickup_stores = Store.pickup_available(customer_location)
-
-# Find nearest 3 stores using ordering by distance
-nearest_stores = Store.query
-  .order_by("coordinates <-> point(#{customer_location.x},#{customer_location.y})")
-  .limit(3)
-```
-
-**Spatial Analysis Queries:**
-
-```crystal
-# Complex spatial query combining multiple operations
-results =
-  Location
-  .query
-  .where { coordinates.within_distance?(city_center, 10_000.0) } # Within 10km of center
-  .where { service_boundary.overlaps?(target_neighborhood) }     # Overlaps target area
-  .where { coverage_radius >= 1000.0 }                           # Minimum coverage
-  .order("coordinates <-> ?", city_center)                       # Order by distance
-  .limit(20)
-
-# Find potential service gaps
-uncovered_areas = ServiceArea.query
-  .where { active == true }
-  .where.not { coverage_area.overlaps?(competitor_areas.any) }
-```
-
-**Migration with Geometric Constraints:**
-
-```crystal
-class CreateLocationsTable
-  include Lustra::Migration
-
-  def change(dir)
-    create_table :locations do |t|
-      t.column "coordinates", "point", null: false
-      t.column "coverage_area", "circle"
-
-      # Create spatial indexes
-      t.index("coordinates", using: "gist")
-      t.index("coverage_area", using: "gist")
-
+    create_table :users do |t|
+      t.column :email, :string, null: false
+      t.column :first_name, :string
       t.timestamps
     end
-
-    # Add exclusion constraint to prevent overlapping coverage areas
-    add_exclusion_constraint("locations", "coverage_area")
   end
 end
 ```
 
-The geometric extension seamlessly integrates with Lustra's existing features like scopes, associations, validations, and the expression engine, providing a powerful toolkit for spatial data applications.
+Create, query, and update records:
 
-## Licensing
+```crystal
+user = User.create!(email: "ada@example.com", first_name: "Ada")
 
-This shard is provided under the MIT license.
+found = User.query.find_by!(email: "ada@example.com")
+found.first_name = "Ada Lovelace"
+found.save!
+```
 
-## Contribution
+## Querying
 
-All contributions are welcome ! As a specialized ORM for PostgreSQL,
-be sure a great contribution on a very specific PG feature will be incorporated
-to this shard.
-I hope one day we will cover all the features of PG here !
+Lustra queries are model collections. They are chainable and execute when you
+use terminal helpers such as `each`, `to_a`, `first`, `count`, or `exists?`.
 
-### Running Tests
+```crystal
+users = User.query
+  .where(active: true)
+  .order_by(created_at: :desc)
+  .limit(20)
+```
 
-In order to run the test suite, you will need to have the PostgresSQL service locally available via a socket for access with psql. psql will attempt to use the 'postgres' user to create the test database. If you are working with a newly installed database that may not have the postgres user, this can be created with `createuser -s postgres`.
+Associations can be joined by name:
+
+```crystal
+User.query.join(:posts).where { posts.published.true? }
+```
+
+Presence filters are available for association queries:
+
+```crystal
+User.query.where.associated(:posts)
+User.query.where.missing(:posts)
+```
+
+Related-record counts can be selected without loading associated records:
+
+```crystal
+User.query.with_count(:posts)
+Tag.query.with_count(:post_tags, alias_name: "tagging_count")
+```
+
+Eager loading avoids N+1 queries when reading associations:
+
+```crystal
+Post.query.with_user.each do |post|
+  puts post.user.email
+end
+```
+
+Collections are mutable. Use `dup` when branching from a reusable base query:
+
+```crystal
+base = User.query.where(active: true)
+admins = base.dup.where(role: "admin")
+editors = base.dup.where(role: "editor")
+```
+
+## Documentation
+
+- Manual: https://crystal-garage.gitbook.io/lustra-docs/
+- API documentation: https://crystal-garage.github.io/lustra/
+- Releases: https://github.com/crystal-garage/lustra/releases
+
+Start with the manual if you are new to Lustra. It covers model definitions,
+associations, querying, migrations, PostgreSQL-specific features, and production
+connection-pool setup.
+
+## Development
+
+Run the test suite:
+
+```sh
+crystal spec
+```
+
+Build the project:
+
+```sh
+shards build
+```
+
+## License
+
+Lustra is released under the MIT License.

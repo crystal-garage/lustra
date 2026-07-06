@@ -38,23 +38,21 @@ module SQLMiscSpec
       end
 
       it "truncate a table" do
-        begin
-          Lustra::SQL.execute("CREATE TABLE truncate_tests (id serial PRIMARY KEY, value int)")
+        Lustra::SQL.execute("CREATE TABLE truncate_tests (id serial PRIMARY KEY, value int)")
 
-          5.times do |x|
-            Lustra::SQL.insert("truncate_tests", {value: x}).execute
-          end
-
-          count = Lustra::SQL.select.from("truncate_tests").count
-          count.should eq 5
-
-          # Truncate the table
-          Lustra::SQL.truncate("truncate_tests")
-          count = Lustra::SQL.select.from("truncate_tests").count
-          count.should eq 0
-        ensure
-          Lustra::SQL.execute("DROP TABLE truncate_tests;")
+        5.times do |x|
+          Lustra::SQL.insert("truncate_tests", {value: x}).execute
         end
+
+        count = Lustra::SQL.select.from("truncate_tests").count
+        count.should eq 5
+
+        # Truncate the table
+        Lustra::SQL.truncate("truncate_tests")
+        count = Lustra::SQL.select.from("truncate_tests").count
+        count.should eq 0
+      ensure
+        Lustra::SQL.execute("DROP TABLE truncate_tests;")
       end
     end
   end

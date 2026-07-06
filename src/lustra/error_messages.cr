@@ -155,6 +155,8 @@ module Lustra::ErrorMessages
         "Ensure that the column `#{name}` exists in your table",
         "If the model comes from a collection query, there was maybe a filtering on your `select` clause, " +
         "and you forgot to declare the column `#{name}`",
+        "If you reused a collection after calling model-fetching helpers such as `first`, `last`, `find`, " +
+        "`find_by`, or `[]`, call `dup` before the helper to keep the original query unchanged.",
         "In the case of unpersisted models, please initialize by calling `#{name}=` first",
         "For validator, try `ensure_than` method, or use `#{name}_column.defined?` to avoid your validation code.",
         "Are you calling `#{name}_column.revert` somewhere before?",
@@ -186,11 +188,11 @@ module Lustra::ErrorMessages
 
   def lack_of_primary_key(model_name)
     build_error_message(
-      "Model `#{model_name}` lacks of primary key field",
+      "Model `#{model_name}` does not define a primary key.",
       {
-        "Define a column as primary key",
+        "For the default serial id, add `primary_key` inside the model.",
+        "For an explicit column, use `column id : Int64, primary: true` or set `primary: true` on your primary key column.",
         "Only one column can be primary key (no compound keys are allowed in Lustra for now)",
-        "You can use the helpers for primary key (see manual page)",
       }
     )
   end

@@ -47,7 +47,7 @@ module ColumnSpec
           u = User.new({id: 1, first_name: "Henry"})
 
           u.last_name_column.defined?.should be_false
-          expect_raises(Exception) { u.last_name }
+          expect_raises(Exception, /reused a collection[\s\S]*first[\s\S]*find_by[\s\S]*dup/) { u.last_name }
         end
       end
 

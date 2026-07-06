@@ -11,12 +11,12 @@ struct Time
     end
   end
 
-  def +(time_in_day : Lustra::TimeInDay)
-    self + time_in_day.microseconds.microseconds
+  def +(other : Lustra::TimeInDay)
+    self + other.microseconds.microseconds
   end
 
-  def -(time_in_day : Lustra::TimeInDay)
-    self - time_in_day.microseconds.microseconds
+  def -(other : Lustra::TimeInDay)
+    self - other.microseconds.microseconds
   end
 end
 
@@ -28,7 +28,7 @@ module Lustra::TimeInDay::Converter
     when UInt64
       TimeInDay.new(x)
     when Slice
-      mem = IO::Memory.new(x, writeable: false)
+      mem = IO::Memory.new(x, false)
       TimeInDay.new(mem.read_bytes(UInt64, IO::ByteFormat::BigEndian))
     when String
       TimeInDay.parse(x)

@@ -127,6 +127,22 @@ describe "Lustra::Model::Relations::HasMany" do
         end
       end
 
+      it "does not run eager loading hooks when checking empty?" do
+        temporary do
+          reinit_example_models
+          User.create!({first_name: "John", last_name: "Doe"})
+
+          hook_called = false
+          users = User.query.with_posts { hook_called = true }
+
+          users.empty?.should be_false
+          hook_called.should be_false
+
+          users.each { }
+          hook_called.should be_true
+        end
+      end
+
       it "can find posts" do
         temporary do
           reinit_example_models
@@ -256,6 +272,135 @@ describe "Lustra::Model::Relations::HasMany" do
           comment.persisted?.should be_true
           comment.user_id.should eq(user.id)
           user.comments.count.should eq(1)
+        end
+      end
+    end
+  end
+
+  context "polymorphic has_many relationship" do
+    describe "basic operations" do
+      it "filters by polymorphic id and type" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create!({name: "Alice"})
+          product = Product.create!({name: "Keyboard"})
+
+          Picture.create!({name: "Employee picture", imageable_id: employee.id, imageable_type: "Employee"})
+          Picture.create!({name: "Product picture", imageable_id: product.id, imageable_type: "Product"})
+
+          employee.pictures.to_sql.should eq(
+            "SELECT * FROM \"pictures\" WHERE (imageable_id = #{employee.id}) AND (imageable_type = 'Employee')"
+          )
+
+          employee.pictures.count.should eq(1)
+          employee.pictures.first!.name.should eq("Employee picture")
+          product.pictures.count.should eq(1)
+          product.pictures.first!.name.should eq("Product picture")
+        end
+      end
+
+      it "gets pictures for a specific employee" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create!({name: "Alice"})
+          other_employee = Employee.create!({name: "Bob"})
+          product = Product.create!({name: "Keyboard"})
+
+          Picture.create!({name: "First employee picture", imageable_id: employee.id, imageable_type: "Employee"})
+          Picture.create!({name: "Second employee picture", imageable_id: employee.id, imageable_type: "Employee"})
+          Picture.create!({name: "Other employee picture", imageable_id: other_employee.id, imageable_type: "Employee"})
+          Picture.create!({name: "Product picture", imageable_id: product.id, imageable_type: "Product"})
+
+          employee.pictures.map(&.name).should eq([
+            "First employee picture",
+            "Second employee picture",
+          ])
+        end
+      end
+
+      it "sets polymorphic columns when appending" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create!({name: "Alice"})
+          picture = Picture.new({name: "Appended picture"})
+
+          employee.pictures << picture
+
+          picture.persisted?.should be_true
+          picture.imageable_id.should eq(employee.id)
+          picture.imageable_type.should eq("Employee")
+          employee.pictures.count.should eq(1)
+        end
+      end
+
+      it "sets polymorphic columns when building" do
+        temporary do
+          reinit_example_models
+
+          product = Product.create!({name: "Keyboard"})
+
+          picture = product.pictures.build({name: "Built picture"})
+
+          picture.persisted?.should be_false
+          picture.imageable_id.should eq(product.id)
+          picture.imageable_type.should eq("Product")
+
+          picture.save!
+          product.pictures.count.should eq(1)
+        end
+      end
+
+      it "sets polymorphic columns when creating" do
+        temporary do
+          reinit_example_models
+
+          product = Product.create!({name: "Keyboard"})
+
+          picture = product.pictures.create({name: "Created picture"})
+
+          picture.persisted?.should be_true
+          picture.imageable_id.should eq(product.id)
+          picture.imageable_type.should eq("Product")
+          product.pictures.count.should eq(1)
+
+          picture = product.pictures.create!({name: "Created picture!"})
+
+          picture.persisted?.should be_true
+          picture.imageable_id.should eq(product.id)
+          picture.imageable_type.should eq("Product")
+          product.pictures.count.should eq(2)
+        end
+      end
+
+      it "raises a clear error when the parent is not persisted" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.new({name: "Alice"})
+
+          expect_raises(Exception, /Cannot access polymorphic association 'pictures' on an unsaved Employee.*Employee\.id is not defined/) do
+            employee.pictures << Picture.new({name: "Appended picture"})
+          end
+        end
+      end
+
+      it "moves an already associated child to the new parent" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create!({name: "Alice"})
+          product = Product.create!({name: "Keyboard"})
+          picture = employee.pictures.create!({name: "Profile picture"})
+
+          product.pictures << picture
+
+          picture.imageable_id.should eq(product.id)
+          picture.imageable_type.should eq("Product")
+          employee.pictures.count.should eq(0)
+          product.pictures.count.should eq(1)
         end
       end
     end

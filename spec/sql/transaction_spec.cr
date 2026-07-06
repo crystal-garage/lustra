@@ -93,13 +93,13 @@ module TransactionSpec
             Lustra::SQL.after_commit { called = "first" }
             channel.receive # Wait for the message to commit.
           end
-          channel.send nil # We have now commited
+          channel.send nil # We have now committed.
         end
 
         called.should eq("nope")  # No call yet.
         channel.send nil          # Call the commit of the other transaction
         channel.receive           # Wait for the other transaction to commit
-        called.should eq("first") # Now we commited the first transaction
+        called.should eq("first") # Now we committed the first transaction.
       end                         # Finish second transaction
 
       called.should eq("last")

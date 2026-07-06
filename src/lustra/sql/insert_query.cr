@@ -6,7 +6,7 @@ require "./query/*"
 #
 # An insert query
 #
-# cf. postgres documentation
+# cf. PostgreSQL documentation
 #
 # ```
 # [ WITH [ RECURSIVE ] with_query [, ...] ]
@@ -164,7 +164,7 @@ class Lustra::SQL::InsertQuery
     change!
   end
 
-  # Number of rows of this insertion request
+  # Number of rows in this insertion request.
   def size : Int32
     v = @values
     v.is_a?(Array) ? v.size : -1

@@ -14,13 +14,13 @@ module ReflectionSpec
         temporary do
           first_table = Lustra::Reflection::Table.query.first!
 
-          expect_raises Lustra::Model::ReadOnlyError do
+          expect_raises Lustra::Model::ReadOnlyError, /Lustra::Reflection::Table.*read-only.*cannot be saved.*database views or system catalogs/ do
             first_table.save!
           end
 
           first_table.columns.first!.save.should be_false
 
-          expect_raises Lustra::Model::ReadOnlyError do
+          expect_raises Lustra::Model::ReadOnlyError, /Lustra::Reflection::Column.*read-only.*cannot be saved.*database views or system catalogs/ do
             first_table.columns.first!.save!
           end
         end

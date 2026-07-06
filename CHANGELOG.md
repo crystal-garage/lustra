@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added `where.associated(:association)` and `where.missing(:association)` relation filters for querying records with or without associated rows.
+- Added `with_count(:association)` for selecting related record counts without loading the associated records.
+- Added polymorphic `has_many ..., as:` associations backed by `<name>_id` and `<name>_type` columns.
+- Added polymorphic `belongs_to ..., polymorphic: true` associations for explicit union target types, including `with_<association>` eager loading.
+- Added concrete `belongs_to ..., polymorphic_type:` aliases for joining and eager loading one polymorphic target type through a shared foreign key.
+
+### Changed
+- Unknown association errors now include available association names.
+- Read-only model save errors now explain that read-only models commonly map database views or system catalogs.
+- Uninitialized column errors now mention reusing mutable collections after model-fetching helpers as a possible cause.
+- Association append and unlink errors now explain that the operation requires a writable association collection.
+- Missing primary key errors now show the concrete declarations for defining a primary key.
+
+### Removed
+- Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.
+
+## [v0.18.3] - 2026-06-11
+
+### Fixed
+- `pluck` and `pluck_col` no longer mutate the collection query or run eager-loading hooks.
+
+## [v0.18.2] - 2026-06-10
+
+### Fixed
+- `Collection#any?` and `Collection#empty?` no longer mutate the collection query or run eager-loading hooks while checking for matching rows.
+
+## [v0.18.1] - 2026-06-09
+
+### Maintenance
+- Maintenance release without new features.
+
+## [v0.17.2] - 2026-05-08
+
+### Added
+- Collections/Queries: `in_order_of(column, values)` for custom-sequence ordering via a SQL `CASE` expression (e.g. `Post.query.in_order_of(:status, ["started", "enrolled", "completed"])`).
+
+### Fixed
+- SQL: `SelectQuery#to_a` now consumes and closes result sets inside the active connection checkout.
+
 ## [v0.17.1] - 2026-03-06
 
 ### Fixed
@@ -280,6 +320,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
+- [v0.17.1](https://github.com/crystal-garage/lustra/releases/tag/v0.17.2)
 - [v0.17.1](https://github.com/crystal-garage/lustra/releases/tag/v0.17.1)
 - [v0.17.0](https://github.com/crystal-garage/lustra/releases/tag/v0.17.0)
 - [v0.16.3](https://github.com/crystal-garage/lustra/releases/tag/v0.16.3)

@@ -8,11 +8,10 @@ require "./errors"
 require "./logger"
 require "./transaction"
 
-# Add a field to DB::Database to handle
-#   the state of transaction of a specific
-#   connection
+# Add a field to DB::Database to track the transaction state of a specific
+# connection.
 abstract class DB::Connection
-  # add getter to transaction status for this specific DB::Connection
+  # Add a getter for the transaction status of this DB::Connection.
   property? _in_transaction : Bool = false
 end
 
@@ -36,16 +35,16 @@ module Lustra
   # +------------------------------------+
   # ```
   #
-  # On the bottom stack, Lustra offer SQL query building.
-  # Theses features are then used by top level parts of the engine.
+  # At the bottom of the stack, Lustra offers SQL query building.
+  # These features are then used by higher-level parts of the engine.
   #
-  # The SQL module provide a simple API to generate `delete`, `insert`, `select`
+  # The SQL module provides a simple API to generate `delete`, `insert`, `select`
   # and `update` methods.
   #
-  # Each requests can be duplicated then modified and executed.
+  # Each request can be duplicated, modified, and executed.
   #
-  # Note: Each request object is mutable. Therefore, to update and store a request,
-  # you must use manually the `dup` method.
+  # Note: Each request object is mutable. To update and store a request, manually
+  # use the `dup` method.
   #
   module SQL
     extend self
@@ -73,7 +72,8 @@ module Lustra
       Lustra::Expression[x]
     end
 
-    # This provide a fast way to create SQL fragment while escaping items, both with `?` and `:key` system:
+    # This provides a fast way to create SQL fragments while escaping items, both
+    # with the `?` and `:key` systems:
     #
     # ```
     # query = Model.query.select(Lustra::SQL.raw("CASE WHEN x=:x THEN 1 ELSE 0 END AS check", x: "blabla"))
@@ -95,9 +95,9 @@ module Lustra
 
     # Escape the expression, double quoting it.
     #
-    # It allows use of reserved keywords as table or column name
-    # NOTE: Escape is used for escaping postgresql keyword. For example
-    # if you have a column named order (which is a reserved word), you want
+    # It allows use of reserved keywords as table or column names.
+    # NOTE: Escape is used for escaping PostgreSQL keywords. For example,
+    # if you have a column named order (which is a reserved word), you need
     # to escape it by double-quoting it.
     #
     # For escaping STRING value, please use Lustra::SQL.sanitize

@@ -120,6 +120,39 @@ module Lustra::SQL::Query::OrderBy
     end
   end
 
+  # Applies an `ORDER BY` clause based on a given `column`, ordered and filtered by a specific set of `values`.
+  #
+  # Generates a `CASE` expression in the ORDER BY clause so rows appear in the given value order.
+  # Rows whose column value is not present in the list sort last.
+  #
+  # ```
+  # Post.query.in_order_of(:status, ["started", "enrolled", "completed"])
+  # # ORDER BY CASE "status" WHEN 'started' THEN 0 WHEN 'enrolled' THEN 1 WHEN 'completed' THEN 2 ELSE 3 END ASC
+  #
+  # Post.query.in_order_of(:priority, [3, 1, 2])
+  # # ORDER BY CASE "priority" WHEN 3 THEN 0 WHEN 1 THEN 1 WHEN 2 THEN 2 ELSE 3 END ASC
+  # ```
+  #
+  # Can be combined with other `order_by` calls; the `CASE` clause is appended
+  # to the existing ORDER BY list.
+  def in_order_of(column : Symbol, values : Array(T)) forall T
+    in_order_of(SQL.escape(column.to_s), values)
+  end
+
+  # :ditto:
+  #
+  # When passing a `String`, the column expression is used as-is, which allows
+  # table-qualified references such as `"\"posts\".\"status\""`.
+  def in_order_of(column : String, values : Array(T)) forall T
+    whens = String.build do |io|
+      values.each_with_index do |v, i|
+        io << " WHEN " << Lustra::Expression[v] << " THEN " << i
+      end
+    end
+    @order_bys << Record.new("CASE #{column}#{whens} ELSE #{values.size} END", :asc, nil)
+    change!
+  end
+
   # :nodoc:
   protected def print_order_bys
     return if @order_bys.empty?

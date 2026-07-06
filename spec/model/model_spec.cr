@@ -2,8 +2,20 @@ require "../spec_helper"
 require "../data/example_models"
 
 module ModelSpec
+  class ModelWithoutPrimaryKey
+    include Lustra::Model
+
+    column name : String
+  end
+
   describe "Lustra::Model" do
     context "fields management" do
+      it "raises helpful error when primary key is missing" do
+        expect_raises(Exception, /ModelWithoutPrimaryKey[\s\S]*primary key[\s\S]*primary_key[\s\S]*primary: true/) do
+          ModelWithoutPrimaryKey.new.__pkey__
+        end
+      end
+
       it "load from tuple" do
         temporary do
           reinit_example_models
@@ -38,6 +50,36 @@ module ModelSpec
         end
       end
 
+      it "pluck does not mutate selected columns" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John", middle_name: "William")
+
+          users = User.query.where(id: 1)
+          sql = users.to_sql
+
+          users.pluck_col("first_name").should eq(["John"])
+          users.to_sql.should eq(sql)
+          users.each(&.first_name.should(eq("John")))
+        end
+      end
+
+      it "pluck does not run eager loading hooks" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+
+          hook_called = false
+          users = User.query.with_posts { hook_called = true }
+
+          users.pluck_col("first_name").should eq(["John"])
+          hook_called.should be_false
+
+          users.each { }
+          hook_called.should be_true
+        end
+      end
+
       it "exists?" do
         temporary do
           reinit_example_models
@@ -59,6 +101,20 @@ module ModelSpec
         end
       end
 
+      it "empty? does not mutate selected columns" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+
+          users = User.query.where(id: 1)
+          sql = users.to_sql
+
+          users.empty?.should be_false
+          users.to_sql.should eq(sql)
+          users.each(&.first_name.should(eq("John")))
+        end
+      end
+
       it "find with array of IDs" do
         temporary do
           reinit_example_models
@@ -72,8 +128,8 @@ module ModelSpec
           # Test finding multiple users by array of IDs
           users = User.find([1, 2, 3])
           users.size.should eq(3)
-          users.map(&.id).sort.should eq([1, 2, 3])
-          users.map(&.first_name).sort.should eq(["Bob", "Jane", "John"])
+          users.map(&.id).sort!.should eq([1, 2, 3])
+          users.map(&.first_name).sort!.should eq(["Bob", "Jane", "John"])
 
           # Test with empty array
           users = User.find([] of Int64)
@@ -88,7 +144,7 @@ module ModelSpec
           # Test with some non-existent IDs (should only return existing ones)
           users = User.find([1, 99, 3, 100])
           users.size.should eq(2)
-          users.map(&.id).sort.should eq([1, 3])
+          users.map(&.id).sort!.should eq([1, 3])
 
           # Test with all non-existent IDs
           users = User.find([99, 100, 101])
@@ -97,7 +153,7 @@ module ModelSpec
           # Test find! with valid IDs
           users = User.find!([1, 2, 3])
           users.size.should eq(3)
-          users.map(&.id).sort.should eq([1, 2, 3])
+          users.map(&.id).sort!.should eq([1, 2, 3])
 
           # Test find! raises error when some IDs not found
           expect_raises(Lustra::SQL::RecordNotFoundError, /Couldn't find all records/) do
@@ -1417,6 +1473,45 @@ module ModelSpec
 
         # Test insertion of empty array
         Post.create!({title: "A post", user_id: u.id, tags_list: [] of String})
+      end
+    end
+
+    it "queries array columns with PostgreSQL array operators" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "John"})
+        Post.create!({title: "Crystal ORM", user_id: user.id, tags_list: ["crystal", "orm"]})
+        Post.create!({title: "ORM only", user_id: user.id, tags_list: ["orm", "orm"]})
+        Post.create!({title: "PostgreSQL", user_id: user.id, tags_list: ["postgres", "sql"]})
+
+        Post.query
+          .where { raw("? = ANY(tags_list)", "orm") }
+          .order_by(:title)
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM", "ORM only"])
+
+        Post.query
+          .where { raw("? = ALL(tags_list)", "orm") }
+          .pluck_col("title", String)
+          .should eq(["ORM only"])
+
+        Post.query
+          .where { raw("tags_list @> ARRAY[?]::text[]", "crystal") }
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM"])
+
+        Post.query
+          .where { raw("tags_list <@ ARRAY[?, ?]::text[]", "orm", "crystal") }
+          .order_by(:title)
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM", "ORM only"])
+
+        Post.query
+          .where { raw("tags_list && ARRAY[?, ?]::text[]", "sql", "crystal") }
+          .order_by(:title)
+          .pluck_col("title", String)
+          .should eq(["Crystal ORM", "PostgreSQL"])
       end
     end
 

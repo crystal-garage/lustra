@@ -507,6 +507,28 @@ module CollectionSpec
             PostTag.query.count.should eq(1) # No duplicates!
           end
         end
+
+        it "raises helpful error on plain query collection" do
+          temporary do
+            reinit_example_models
+
+            expect_raises(Exception, /Cannot append Post.*plain Post\.query result.*user\.posts/) do
+              Post.query << Post.new({title: "Test Post"})
+            end
+          end
+        end
+      end
+
+      describe "#unlink" do
+        it "raises helpful error on plain query collection" do
+          temporary do
+            reinit_example_models
+
+            expect_raises(Exception, /Cannot unlink Tag.*has_many through.*plain Tag\.query result/) do
+              Tag.query.unlink(Tag.new({name: "Tag1"}))
+            end
+          end
+        end
       end
 
       context "autosave functionality" do
@@ -610,7 +632,7 @@ module CollectionSpec
       end
 
       it "with find_or_build" do
-        # same test than find_or_create, persistance check changing.
+        # Same test as find_or_create, with the persistence check changed.
         temporary do
           reinit_example_models
 
@@ -823,6 +845,38 @@ module CollectionSpec
         end
       end
 
+      it "joins concrete polymorphic belongs_to alias" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Employee picture", imageable_id: employee.id, imageable_type: "Employee"
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Picture.query.join(:employee).where { employees.name == "employee" }
+          query.to_sql.should eq(
+            "SELECT \"pictures\".* FROM \"pictures\" INNER JOIN \"employees\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE (\"employees\".\"name\" = 'employee')"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.name.should eq("Employee picture")
+        end
+      end
+
+      it "raises a clear error when joining polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
+            Picture.query.join(:imageable).to_a
+          end
+        end
+      end
+
       it "left_join with has_many association" do
         temporary do
           reinit_example_models
@@ -838,6 +892,351 @@ module CollectionSpec
 
           results = query.to_a
           results.size.should eq(2)
+        end
+      end
+
+      it "where.missing with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user_with_posts = User.create! first_name: "With Posts"
+          user_without_posts = User.create! first_name: "Without Posts"
+          Post.create! title: "Post 1", user_id: user_with_posts.id
+
+          query = User.query.where.missing(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" LEFT JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE \"posts\".\"id\" IS NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user_without_posts.id)
+        end
+      end
+
+      it "where.associated with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user_with_posts = User.create! first_name: "With Posts"
+          user_without_posts = User.create! first_name: "Without Posts"
+          Post.create! title: "Post 1", user_id: user_with_posts.id
+
+          query = User.query.where.associated(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE \"posts\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(user_with_posts.id)
+        end
+      end
+
+      it "join with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Employee.query.join(:pictures)
+          query.to_sql.should eq(
+            "SELECT \"employees\".* FROM \"employees\" INNER JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee')"
+          )
+
+          query.count.should eq(0)
+        end
+      end
+
+      it "where.missing with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee_without_pictures = Employee.create! name: "Without Pictures"
+          employee_with_pictures = Employee.create! name: "With Pictures"
+          product = Product.create! name: "product"
+
+          employee_without_pictures.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+          Picture.create! name: "Employee picture", imageable_id: employee_with_pictures.id, imageable_type: "Employee"
+
+          query = Employee.query.where.missing(:pictures)
+          query.to_sql.should eq(
+            "SELECT \"employees\".* FROM \"employees\" LEFT JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"pictures\".\"id\" IS NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(employee_without_pictures.id)
+        end
+      end
+
+      it "where.associated with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee_without_pictures = Employee.create! name: "Without Pictures"
+          employee_with_pictures = Employee.create! name: "With Pictures"
+          product = Product.create! name: "product"
+
+          employee_without_pictures.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+          Picture.create! name: "Employee picture", imageable_id: employee_with_pictures.id, imageable_type: "Employee"
+
+          query = Employee.query.where.associated(:pictures)
+          query.to_sql.should eq(
+            "SELECT \"employees\".* FROM \"employees\" INNER JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"pictures\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(employee_with_pictures.id)
+        end
+      end
+
+      it "raises a clear error when using where.missing with polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
+            Picture.query.where.missing(:imageable).to_a
+          end
+        end
+      end
+
+      it "raises a clear error when using where.associated with polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
+            Picture.query.where.associated(:imageable).to_a
+          end
+        end
+      end
+
+      it "filters associated records through concrete polymorphic belongs_to alias" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Employee picture", imageable_id: employee.id, imageable_type: "Employee"
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Picture.query.where.associated(:employee)
+          query.to_sql.should eq(
+            "SELECT \"pictures\".* FROM \"pictures\" INNER JOIN \"employees\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"employees\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.name.should eq("Employee picture")
+        end
+      end
+
+      it "where.missing with has_many through join table" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag_with_post = Tag.create! name: "used"
+          tag_without_post = Tag.create! name: "orphan"
+          PostTag.create! post_id: post.id, tag_id: tag_with_post.id
+
+          query = Tag.query.where.missing(:post_tags)
+          query.to_sql.should eq(
+            "SELECT \"tags\".* FROM \"tags\" LEFT JOIN \"post_tags\" ON (\"post_tags\".\"tag_id\" = \"tags\".\"id\") WHERE \"post_tags\".\"id\" IS NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(tag_without_post.id)
+        end
+      end
+
+      it "where.associated with has_many through join table" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag_with_post = Tag.create! name: "used"
+          tag_without_post = Tag.create! name: "orphan"
+          PostTag.create! post_id: post.id, tag_id: tag_with_post.id
+
+          query = Tag.query.where.associated(:post_tags)
+          query.to_sql.should eq(
+            "SELECT \"tags\".* FROM \"tags\" INNER JOIN \"post_tags\" ON (\"post_tags\".\"tag_id\" = \"tags\".\"id\") WHERE \"post_tags\".\"id\" IS NOT NULL"
+          )
+
+          results = query.to_a
+          results.size.should eq(1)
+          results.first.id.should eq(tag_with_post.id)
+        end
+      end
+
+      it "with_count with has_many association" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create! first_name: "user1"
+          user2 = User.create! first_name: "user2"
+
+          Post.create! title: "Post 1", user_id: user1.id
+          Post.create! title: "Post 2", user_id: user1.id
+          Post.create! title: "Post 3", user_id: user2.id
+
+          query = User.query.with_count(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\""
+          )
+
+          query.count.should eq(2)
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["posts_count"].should eq(2)
+        end
+      end
+
+      it "with_count with polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Employee.query.with_count(:pictures, alias_name: "pictures_count")
+          query.to_sql.should eq(
+            "SELECT \"employees\".*, (SELECT COUNT(*) FROM \"pictures\" WHERE \"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') AS pictures_count FROM \"employees\""
+          )
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["pictures_count"].should eq(0)
+        end
+      end
+
+      it "raises a clear error when using with_count with polymorphic belongs_to association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used with with_count.*multiple tables/) do
+            Picture.query.with_count(:imageable).to_a
+          end
+        end
+      end
+
+      it "with_count with concrete polymorphic belongs_to alias" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create! name: "employee"
+          product = Product.create! name: "product"
+
+          employee.id.should eq(product.id)
+          Picture.create! name: "Employee picture", imageable_id: employee.id, imageable_type: "Employee"
+          Picture.create! name: "Product picture", imageable_id: product.id, imageable_type: "Product"
+
+          query = Picture.query.with_count(:employee, alias_name: "employee_count").order_by(:name)
+          query.to_sql.should eq(
+            "SELECT \"pictures\".*, (SELECT COUNT(*) FROM \"employees\" WHERE \"employees\".\"id\" = \"pictures\".\"imageable_id\" AND \"pictures\".\"imageable_type\" = 'Employee') AS employee_count FROM \"pictures\" ORDER BY \"name\" ASC"
+          )
+
+          results = query.to_a(fetch_columns: true)
+          results[0].attributes["employee_count"].should eq(1)
+          results[1].attributes["employee_count"].should eq(0)
+        end
+      end
+
+      it "with_count with has_many through association" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag = Tag.create! name: "tag"
+          PostTag.create! post_id: post.id, tag_id: tag.id
+
+          query = Tag.query.with_count(:posts, alias_name: "posts_count")
+          query.to_sql.should eq(
+            "SELECT \"tags\".*, (SELECT COUNT(*) FROM \"post_tags\" WHERE \"post_tags\".\"tag_id\" = \"tags\".\"id\") AS posts_count FROM \"tags\""
+          )
+
+          query.count.should eq(1)
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["posts_count"].should eq(1)
+        end
+      end
+
+      it "with_count with has_many through join table" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          post = Post.create! title: "Post 1", user_id: user.id
+          tag = Tag.create! name: "tag"
+          PostTag.create! post_id: post.id, tag_id: tag.id
+
+          query = Tag.query.with_count(:post_tags, alias_name: "tagging_count")
+          query.to_sql.should eq(
+            "SELECT \"tags\".*, (SELECT COUNT(*) FROM \"post_tags\" WHERE \"post_tags\".\"tag_id\" = \"tags\".\"id\") AS tagging_count FROM \"tags\""
+          )
+
+          query.count.should eq(1)
+
+          result = query.first!(fetch_columns: true)
+          result.attributes["tagging_count"].should eq(1)
+        end
+      end
+
+      it "with_count preserves existing group_by used to deduplicate joins" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          Post.create! title: "Post 1", user_id: user.id
+          Post.create! title: "Post 2", user_id: user.id
+
+          query = User.query.join(:posts).group_by("users.id").with_count(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
+          )
+
+          query.count.should eq(1)
+
+          results = query.to_a(fetch_columns: true)
+          results.size.should eq(1)
+          results.first.attributes["posts_count"].should eq(2)
+        end
+      end
+
+      it "with_count deduplicates rows produced by joins" do
+        temporary do
+          reinit_example_models
+
+          user = User.create! first_name: "user"
+          Post.create! title: "Post 1", user_id: user.id
+          Post.create! title: "Post 2", user_id: user.id
+
+          query = User.query.join(:posts).with_count(:posts)
+          query.to_sql.should eq(
+            "SELECT \"users\".*, (SELECT COUNT(*) FROM \"posts\" WHERE \"posts\".\"user_id\" = \"users\".\"id\") AS posts_count FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
+          )
+
+          results = query.to_a(fetch_columns: true)
+          results.size.should eq(1)
+          results.first.id.should eq(user.id)
+          results.all? { |result| result.attributes["posts_count"] == 2 }.should be_true
         end
       end
 
@@ -916,7 +1315,7 @@ module CollectionSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Exception, /Unknown association/) do
+          expect_raises(Exception, /Unknown association 'unknown_association' for User.*Available associations: categories, comments, dependencies, dependents, info, posts, relationships.*Use join with a block/) do
             User.query.join(:unknown_association).to_a
           end
         end

@@ -17,7 +17,7 @@ module Lustra::SQL::Query::Where
   # # Note: in this example, InArray node use unsafe strings
   # ```
   #
-  # If useful for moving a where clause from a request to another one:
+  # Useful for moving a where clause from one request to another:
   #
   # ```
   # query1.where { a == b } # WHERE a = b

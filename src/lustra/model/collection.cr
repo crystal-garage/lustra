@@ -11,7 +11,8 @@ require "../sql/select_query"
 # end
 # ```
 #
-# We just created a new model, linked to your database, mapping the column `my_column` of type String (`text` in postgres).
+# We just created a new model linked to your database, mapping the column
+# `my_column` as String (`text` in PostgreSQL).
 #
 # Now, you can play with your model:
 #
@@ -21,8 +22,9 @@ require "../sql/select_query"
 # row.save! # insert the new row in the database !
 # ```
 #
-# By convention, the table name will follow an underscore, plural version of your model: `my_models`.
-# A model into a module will prepend the module name before, so `Logistic::MyModel` will check for `logistic_my_models` in your database.
+# By convention, the table name follows an underscored, plural version of your
+# model: `my_models`. A model inside a module prepends the module name, so
+# `Logistic::MyModel` checks for `logistic_my_models` in your database.
 # You can force a specific table name using:
 #
 # ```
@@ -34,11 +36,13 @@ require "../sql/select_query"
 #
 # ## Presence validation
 #
-# Unlike many ORM around, Lustra carry about non-nullable pattern in crystal. Meaning `column my_column : String` assume than a call to `row.my_column` will return a String.
+# Unlike many ORMs, Lustra cares about non-nullable patterns in Crystal. That
+# means `column my_column : String` assumes that `row.my_column` returns a String.
 #
-# But it exists cases where the column is not yet initialized:
-# - When the object is built with constructor without providing the value (See above).
-# - When an object is semi-fetched through the database query. This is useful to ignore some large fields non-interesting in the body of the current operation.
+# But there are cases where the column is not initialized yet:
+# - When the object is built without providing the value (see above).
+# - When an object is partially fetched through a database query. This is useful
+#   for skipping large fields that are not needed for the current operation.
 #
 # For example, this code will compile:
 #
@@ -47,32 +51,33 @@ require "../sql/select_query"
 # puts row.my_column
 # ```
 #
-# However, it will throw a runtime exception `You cannot access to the field 'my_column' because it never has been initialized`
+# However, it will raise a runtime exception because the field has never been initialized.
 #
 # Same way, trying to save the object will raise an error:
 #
 # ```
 # row.save      # Will return false
-# pp row.errors # Will tell you than `my_column` presence is mandatory.
+# pp row.errors # Will tell you that `my_column` presence is mandatory.
 # ```
 #
-# Thanks to expressiveness of the Crystal language, we can handle presence validation by simply using the `Nilable` type in crystal:
+# Thanks to Crystal's expressiveness, we can handle presence validation by using
+# a nilable type:
 #
 # ```
 # class MyModel
 #   include Lustra::Model
 #
-#   column my_column : String? # Now, the column can be NULL or text in postgres.
+#   column my_column : String? # Now, the column can be NULL or text in PostgreSQL.
 # end
 # ```
 #
-# This time, the code above will works; in case of no value, my_column will be `nil` by default.
+# This time, the code above works; if there is no value, `my_column` is nil by default.
 #
-# ## Querying your code
+# ## Querying Your Model
 #
-# Whenever you want to fetch data from your database, you must create a new collection query:
+# To fetch data from your database, create a collection query:
 #
-# `MyModel.query # Will setup a vanilla 'SELECT * FROM my_models'`
+# `MyModel.query # Builds SELECT * FROM my_models`
 #
 # Queries are fetchable using `each`:
 #
@@ -82,33 +87,41 @@ require "../sql/select_query"
 # end
 # ```
 #
-# ## Refining your query
+# ## Refining Your Query
 #
-# A collection query offers a lot of functionalities.
+# A collection query can be refined with `where`, `join`, `order_by`, `limit`,
+# `select`, `group_by`, and the other query helpers mixed in from
+# `Lustra::SQL::SelectBuilder`.
 #
-# ## Column type
+# ## Column Types
 #
-# By default, Lustra map theses columns types:
+# By default, Lustra maps these Crystal types through converters:
 #
 # - `String` => `text`
-# - `Numbers` (any from 8 to 64 bits, float, double, big number, big float) => `int, large int etc... (depends of your choice)`
-# - `Bool` => `text or bool`
+# - `Int8`, `Int16`, `Int32`, `Int64`, `Float32`, `Float64`, `BigDecimal` => PostgreSQL numeric types
+# - `Bool` => `boolean`
 # - `Time` => `timestamp without timezone or text`
-# - `JSON::Any` => `json and jsonb`
-# - `Nilable` => `NULL` (treated as special !)
+# - `JSON::Any` => `json` or `jsonb`
+# - `Array(Bool)`, `Array(String)`, `Array(Float32)`, `Array(Float64)`, `Array(Int32)`, `Array(Int64)` => PostgreSQL array columns
+# - Nilable types such as `String?` or `Int64?` => nullable columns
 #
-# _NOTE_: The `crystal-pg` gems map also some structures like GIS coordinates, but their implementation is not tested in Lustra. Use them at your own risk. Tell me if it's working 😉
+# `crystal-pg` also maps additional PostgreSQL-specific values such as
+# geometric types. Lustra provides converters for some of them through
+# extensions, but support depends on the converter being registered.
 #
-# If you need to map special structure, see [Mapping Your Data](Mapping) guides for more informations.
+# If you need to map a special structure, see the [Mapping Your Data](Mapping)
+# guide for more information.
 #
-# ## Primary key
+# ## Primary Key
 #
-# Primary key is essential for relational mapping. Currently Lustra support only one column primary key.
+# A primary key is essential for relational mapping. Lustra currently supports
+# only one primary key column.
 #
-# A model without primary key can work in sort of degraded mode, throwing error in case of using some methods on them:
-# - `collection#first` will be throwing error if no `order_by` has been setup
+# A model without a primary key can work in a degraded mode, raising errors when
+# some methods are used:
+# - `collection#first` raises if no `order_by` has been set.
 #
-# To setup a primary key, you can add the modifier `primary: true` to the column:
+# To set up a primary key, add `primary: true` to the column:
 #
 # ```
 # class MyModel
@@ -119,13 +132,16 @@ require "../sql/select_query"
 # end
 # ```
 #
-# Note the flag `presence: false` added to the column. This tells Lustra than presence checking on save is not mandatory. Usually this happens if you setup a default value in postgres. In the case of our primary key `id`, we use a serial auto-increment default value.
-# Therefore, saving the model without primary key will works. The id will be fetched after insertion:
+# Note the `presence: false` flag added to the column. This tells Lustra that
+# presence checking on save is not mandatory. This usually happens when you set
+# up a default value in PostgreSQL. In the case of our primary key `id`, we use a
+# serial auto-increment default value.
+# Therefore, saving the model without a primary key works. The id is fetched after insertion:
 #
 # ```
-# m = MyModel
+# m = MyModel.new
 # m.save!
-# m.id # Now the id value is setup.
+# m.id # Now the id value is set.
 # ```
 #
 # ## Helpers
@@ -137,11 +153,12 @@ require "../sql/select_query"
 # ```
 # class MyModel
 #   include Lustra::Model
-#   timestamps # Will map the two columns 'created_at' and 'updated_at', and map some hooks to update their values.
+#   timestamps # Maps 'created_at' and 'updated_at', and adds hooks to update their values.
 # end
 # ```
 #
-# Theses fields are automatically updated whenever you call `save` methods, and works as Rails ActiveRecord.
+# These fields are automatically updated whenever you call `save` methods, like
+# Rails ActiveRecord.
 #
 # ### With Serial Pkey
 #
@@ -152,33 +169,30 @@ require "../sql/select_query"
 # end
 # ```
 #
-# Basically rewrite `column id : UInt64, primary: true, presence: false`
+# With the default `:bigserial` type, this rewrites to
+# `column id : Int64, primary: true, presence: false`.
 #
-# Argument is optional (default = id)
+# The column name is optional and defaults to `id`. The key type is optional and
+# defaults to `:bigserial`; supported built-in types include `:bigserial`,
+# `:serial`, `:text`, `:int`, and `:bigint`. Extensions can register additional
+# primary key types, such as `:uuid`.
 module Lustra::Model
-  # `CollectionBase(T)` is the base class for collection of model.
-  # Collection of model are a SQL `SELECT` query mapping & building system. They are Enumerable and are
-  # `Lustra::SQL::SelectBuilder` behavior; therefore, they can be used array-like and are working with low-level SQL
-  # Building.
+  # `CollectionBase(T)` is the base class for model collections.
+  # Model collections are a SQL `SELECT` query mapping and building system. They
+  # are Enumerable and include `Lustra::SQL::SelectBuilder` behavior; therefore,
+  # they can be used array-like and also work with low-level SQL building.
   #
-  # The `CollectionBase(T)` is extended by each model. For example, generating the model `MyModel` will generate the
-  # class `MyModel::Collection` which inherits from `CollectionBase(MyModel)`
+  # The `CollectionBase(T)` is extended by each model. For example, generating
+  # the model `MyModel` generates the class `MyModel::Collection`, which
+  # inherits from `CollectionBase(MyModel)`.
   #
-  # Collection are instantiated using `Model.query` method.
+  # Collections are instantiated using the `Model.query` method.
   class CollectionBase(T)
     include Enumerable(T)
     include Lustra::SQL::SelectBuilder
 
-    # Used for build from collection
+    # Used for build from collection.
     @tags : Hash(String, Lustra::SQL::Any)
-
-    # Redefinition of the fields,
-    # because of a bug in the compiler
-    # https://github.com/crystal-lang/crystal/issues/5281
-    @limit : Int64?
-    @offset : Int64?
-    @lock : String?
-    @distinct_value : String?
 
     @polymorphic : Bool = false
     @polymorphic_key : String?
@@ -195,7 +209,7 @@ module Lustra::Model
     # :nodoc:
     property unlink_operation : Proc(T, T)?
 
-    # Parent model context for autosave functionality
+    # Parent model context for autosave functionality.
     property parent_model : Lustra::Model?
     property association_name : String?
     property? autosave : Bool = false
@@ -231,18 +245,19 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # Setup the connection of this query to be equal to the one of the model class
+    # Set this query's connection to the model class connection.
     def connection_name
       T.connection
     end
 
-    # Return the model class for this collection
+    # Return the model class for this collection.
     def item_class
       T
     end
 
     # :nodoc:
-    # Set a query cache on this Collection. Fetching and enumerate will use the cache instead of calling the SQL.
+    # Set a query cache on this Collection. Fetching and enumeration will use
+    # the cache instead of calling SQL.
     def cached(cache : Lustra::Model::QueryCache)
       @cache = cache
 
@@ -257,7 +272,7 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # Used internally to fetch the models if the collection is flagged as polymorphic
+    # Used internally to fetch models if the collection is flagged as polymorphic.
     def flag_as_polymorphic!(@polymorphic_key, scope : Enumerable(String))
       @polymorphic = true
       polymorphic_scope = @polymorphic_scope = Set(String).new
@@ -267,7 +282,7 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # Clear the current cache
+    # Clear the current cache.
     def clear_cached_result
       @cached_result = nil
 
@@ -276,7 +291,7 @@ module Lustra::Model
 
     # :nodoc:
     def change!
-      # In case we filter this collection, we remove the cache
+      # If we filter this collection, remove the cache.
       clear_cached_result
     end
 
@@ -299,13 +314,13 @@ module Lustra::Model
     end
 
     # :nodoc:
-    # redefine where with tuple as argument which add tags
+    # Redefine where with a tuple argument that adds tags.
     def where(**tuple)
       hash = tuple.to_h.transform_keys &.to_s
 
       any_hash = {} of String => Lustra::SQL::Any
 
-      # remove terms which are not real value but conditions like range or array
+      # Remove terms that are not real values but conditions like range or array.
       hash.each do |k, v|
         any_hash[k] = v if v.is_a?(Lustra::SQL::Any)
       end
@@ -322,8 +337,8 @@ module Lustra::Model
       self
     end
 
-    # Build the SQL, send the query then iterate through each models
-    # gathered by the request.
+    # Build the SQL, send the query, then iterate through each model gathered by
+    # the request.
     def each(fetch_columns = false, & : T ->) : Nil
       result = @cached_result
 
@@ -347,8 +362,8 @@ module Lustra::Model
       end
     end
 
-    # Build the SQL, send the query then build and array by applying the
-    # block transformation over it.
+    # Build the SQL, send the query, then build an array by applying the block
+    # transformation over it.
     def map(fetch_columns = false, &block : T -> X) : Array(X) forall X
       o = [] of X
       each(fetch_columns) { |mdl| o << block.call(mdl) }
@@ -356,9 +371,9 @@ module Lustra::Model
       o
     end
 
-    # Build the SQL, send the query then iterate through each models
-    # gathered by the request.
-    # Use a postgres cursor to avoid memory bloating.
+    # Build the SQL, send the query, then iterate through each model gathered by
+    # the request.
+    # Use a PostgreSQL cursor to avoid memory bloat.
     # Useful to fetch millions of rows at once.
     def each_with_cursor(batch = 1000, fetch_columns = false, &block : T ->)
       cr = @cached_result
@@ -380,9 +395,9 @@ module Lustra::Model
     end
 
     # Build a new collection; if the collection comes from a has_many relation
-    # (e.g. `my_model.associations.build`), the foreign column which store
-    # the primary key of `my_model` will be setup by default, preventing you
-    # to forget it.
+    # (e.g. `my_model.associations.build`), the foreign column that stores the
+    # primary key of `my_model` will be set by default, preventing you from
+    # forgetting it.
     # You can pass extra parameters using a named tuple:
     # `my_model.associations.build({a_column: "value"}) `
     def build(**tuple, & : T -> Nil) : T
@@ -393,7 +408,7 @@ module Lustra::Model
 
       yield(r)
 
-      # Register with parent model for autosave functionality
+      # Register with parent model for autosave functionality.
       if autosave? && (pm = parent_model) && (an = association_name)
         pm.add_built_association(an, r)
       end
@@ -416,8 +431,7 @@ module Lustra::Model
       build(**x, &block)
     end
 
-    # Build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Build a new object and set the fields from the condition tuple.
     # Just after building, save the object.
     def create(**tuple, & : T -> Nil) : T
       r = build(**tuple) { |mdl| yield(mdl) }
@@ -444,11 +458,10 @@ module Lustra::Model
       create(**x, &block)
     end
 
-    # Build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Build a new object and set the fields from the condition tuple.
     # Just after building, save the object.
-    # But instead of returning self if validation failed,
-    # raise `Lustra::Model::InvalidError` exception
+    # Instead of returning self if validation fails, raise
+    # `Lustra::Model::InvalidError`.
     def create!(**tuple, & : T -> Nil) : T
       r = build(**tuple) { |mdl| yield(mdl) }
 
@@ -474,23 +487,25 @@ module Lustra::Model
       create(**x, &block)
     end
 
-    # Check whether the query return any row.
-    def any?
+    # Check whether the query returns any row.
+    def any? : Bool
       cr = @cached_result
 
       return !cr.empty? if cr
 
-      clear_select.select("1").limit(1).fetch { |_| return true }
+      query = dup.clear_before_query_triggers.clear_select.clear_order_bys.select("1")
+      query.limit(1) unless query.limit == 0
+      query.fetch { |_| return true }
 
       false
     end
 
-    # Inverse of `any?`, return true if the request return no rows.
-    def empty?
+    # Inverse of `any?`; return true if the request returns no rows.
+    def empty? : Bool
       !any?
     end
 
-    # Use SQL `COUNT` over your query, and return this number as a Int64
+    # Use SQL `COUNT` over your query, and return this number as an Int64.
     def count(type : X.class = Int64) forall X
       cr = @cached_result
 
@@ -501,14 +516,15 @@ module Lustra::Model
 
     # Add an item to the current collection.
     #
-    # If the current collection is not originated from a `has_many` or `has_many through:` relation, calling `<<` over
-    # the collection will raise a `Lustra::SQL::OperationNotPermittedError`
+    # If the current collection does not originate from a `has_many` or
+    # `has_many through:` relation, calling `<<` over the collection will raise a
+    # `Lustra::SQL::OperationNotPermittedError`.
     #
-    # Returns `self` and therefore can be chained
+    # Returns `self` and therefore can be chained.
     def <<(item : T)
       append_operation = self.append_operation
 
-      raise "Operation not permitted on this collection." unless append_operation
+      raise relation_operation_not_permitted("append", item) unless append_operation
 
       append_operation.call(item)
       @cached_result.try &.<<(item)
@@ -528,29 +544,46 @@ module Lustra::Model
       end
     end
 
-    # Save a model and handle append_operation for has_many through relationships
-    # This allows the build + save pattern to work
+    # Save a model and handle append_operation for has_many through relationships.
+    # This allows the build + save pattern to work.
     def save!(item : T)
       item.save!
       handle_append_operation(item)
       item
     end
 
-    # Unlink the model currently referenced through a relation `has_many through`
+    # Unlink the model currently referenced through a `has_many through` relation.
     #
-    # If the current colleciton doesn't come from a `has_many through` relation,
-    # this method will throw `Lustra::SQL::OperationNotPermittedError`
+    # If the current collection doesn't come from a `has_many through` relation,
+    # this method will throw `Lustra::SQL::OperationNotPermittedError`.
     #
-    # Returns `true` if unlinking is successful (e.g. one or more rows have been updated), or `false` otherwise
+    # Returns `true` if unlinking is successful (e.g. one or more rows have been
+    # updated), or `false` otherwise.
     def unlink(item : T)
       unlink_operation = self.unlink_operation
 
-      raise "Operation not permitted on this collection." unless unlink_operation
+      raise relation_operation_not_permitted("unlink", item) unless unlink_operation
 
       unlink_operation.call(item)
       @cached_result.try &.delete(item)
 
       self
+    end
+
+    private def relation_operation_not_permitted(operation : String, item : T)
+      relation = if parent = parent_model
+                   if name = association_name
+                     " Association context: #{parent.class}##{name}."
+                   else
+                     " Association context: #{parent.class}."
+                   end
+                 else
+                   " This collection is a plain #{T}.query result."
+                 end
+
+      "Cannot #{operation} #{item.class} on this collection. " \
+      "This operation is only available on writable `has_many` or `has_many through` association collections." \
+      "#{relation} Use an association collection such as `user.posts`, not `#{T}.query`."
     end
 
     # Create an array from the query.
@@ -575,7 +608,7 @@ module Lustra::Model
       offset(off).first(fetch_columns)
     end
 
-    # Get a range of models
+    # Get a range of models.
     def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
       offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
     end
@@ -591,27 +624,7 @@ module Lustra::Model
       where { raw("1 = 0") }
     end
 
-    # A convenient way to write `where { condition }.first(fetch_columns)`
-    @[Deprecated("Use `#find_by` instead.")]
-    def find(fetch_columns = false, &) : T?
-      x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
-
-      where(x).first(fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first(fetch_columns)`
-    @[Deprecated("Use `#find_by` instead.")]
-    def find(tuple : NamedTuple, fetch_columns = false) : T?
-      find_by(tuple, fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first`
-    @[Deprecated("Use `#find_by` instead.")]
-    def find(**tuple) : T?
-      find_by(**tuple)
-    end
-
-    # Returns a model using primary key equality
+    # Returns a model using primary key equality.
     # Returns `nil` if not found.
     def find(x)
       where { raw(T.__pkey__) == x }.first
@@ -623,34 +636,14 @@ module Lustra::Model
       where { raw(T.__pkey__).in?(ids) }.to_a
     end
 
-    # A convenient way to write `where { condition }.first!(fetch_columns)`
-    @[Deprecated("Use `#find_by!` instead.")]
-    def find!(fetch_columns = false, &) : T
-      x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
-
-      where(x).first!(fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first!(fetch_columns)`
-    @[Deprecated("Use `#find_by!` instead.")]
-    def find!(tuple : NamedTuple, fetch_columns = false) : T
-      find_by!(tuple, fetch_columns)
-    end
-
-    # A convenient way to write `where({any_column: "any_value"}).first!`
-    @[Deprecated("Use `#find_by!` instead.")]
-    def find!(**tuple) : T
-      find_by!(tuple)
-    end
-
     # Returns a model using primary key equality.
-    # Raises error if the model is not found.
+    # Raises an error if the model is not found.
     def find!(x)
       find(x) || raise Lustra::SQL::RecordNotFoundError.new
     end
 
     # Find multiple models by an array of primary keys.
-    # Raises error if ANY of the IDs are not found.
+    # Raises an error if ANY of the IDs are not found.
     def find!(ids : Array)
       results = find(ids)
       if results.size != ids.size
@@ -702,8 +695,8 @@ module Lustra::Model
       where(**tuple).first!(fetch_columns)
     end
 
-    # Try to fetch a row. If not found, build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Try to fetch a row. If not found, build a new object and set the fields
+    # from the condition tuple.
     def find_or_build(**tuple, & : T -> Nil) : T
       where(tuple) unless tuple.size == 0
       r = first
@@ -734,8 +727,8 @@ module Lustra::Model
       find_or_build(**x, &block)
     end
 
-    # Try to fetch a row. If not found, build a new object and setup
-    # the fields like setup in the condition tuple.
+    # Try to fetch a row. If not found, build a new object and set the fields
+    # from the condition tuple.
     # Just after building, save the object.
     def find_or_create(**tuple, & : T -> Nil) : T
       r = find_or_build(**tuple) { |mdl| yield(mdl) }
@@ -832,6 +825,209 @@ module Lustra::Model
       end
     {% end %}
 
+    # Filter records missing the given association.
+    #
+    # ```
+    # User.query.where.missing(:posts)
+    # # SELECT "users".* FROM "users"
+    # # LEFT JOIN "posts" ON ("posts"."user_id" = "users"."id")
+    # # WHERE ("posts"."id" IS NULL)
+    # ```
+    def missing(association : Lustra::SQL::Symbolic)
+      auto_join_association(association, :left, false)
+      where("#{association_primary_key_sql(association)} IS NULL")
+    end
+
+    # Filter records having at least one matching association.
+    #
+    # ```
+    # User.query.where.associated(:posts)
+    # # SELECT "users".* FROM "users"
+    # # INNER JOIN "posts" ON ("posts"."user_id" = "users"."id")
+    # # WHERE ("posts"."id" IS NOT NULL)
+    # ```
+    def associated(association : Lustra::SQL::Symbolic)
+      auto_join_association(association, :inner, false)
+      where("#{association_primary_key_sql(association)} IS NOT NULL")
+    end
+
+    # Add a computed count column for the given association without loading the
+    # associated records.
+    #
+    # ```
+    # User.query.with_count(:posts)
+    # # SELECT "users".*, (SELECT COUNT(*) FROM "posts" WHERE "posts"."user_id" = "users"."id") AS posts_count FROM "users"
+    # ```
+    def with_count(association : Lustra::SQL::Symbolic, alias_name : String? = nil)
+      table = T.table
+      base_select = "#{Lustra::SQL.escape(table)}.*"
+      count_alias = alias_name || "#{association}_count"
+
+      self.select(base_select) if columns.empty?
+      self.select(SQL::Column.new(association_count_sql(association), count_alias))
+      group_by("#{table}.#{T.__pkey__}") if !joins.empty? && group_bys.empty?
+      self
+    end
+
+    # Return the SQL identifier used for the association existence predicate.
+    private def association_primary_key_sql(association : Lustra::SQL::Symbolic)
+      {% begin %}
+        case association.to_s
+        {% for name, settings in T::RELATIONS %}
+          when "{{ name }}"
+            {% if settings[:relation_type] == :has_many || settings[:relation_type] == :has_many_through %}
+              %relation_table = {{ settings[:type] }}.table
+              %primary_key = {{ settings[:type] }}.__pkey__
+              "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+            {% elsif settings[:relation_type] == :has_one %}
+              %relation_table = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.table
+              %primary_key = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.__pkey__
+              "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+            {% elsif settings[:relation_type] == :belongs_to %}
+              {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
+                # A polymorphic belongs_to can point at multiple tables, so
+                # there is no single SQL JOIN target to infer here.
+                raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
+              {% else %}
+                %relation_table = {{ settings[:type] }}.table
+                %primary_key = {{ settings[:type] }}.__pkey__
+                "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+              {% end %}
+            {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+              %through_pkey = {{ settings[:through] }}.__pkey__
+              "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_pkey)}"
+          {% end %}
+        {% end %}
+        else
+          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
+          {% if available_associations.empty? %}
+            available = "none"
+          {% else %}
+            available = {{ available_associations.join(", ") }}
+          {% end %}
+
+          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
+        end
+      {% end %}
+    end
+
+    # Return a correlated subquery that counts records for the association.
+    private def association_count_sql(association : Lustra::SQL::Symbolic)
+      {% begin %}
+        case association.to_s
+        {% for name, settings in T::RELATIONS %}
+          when "{{ name }}"
+            {% if settings[:relation_type] == :has_many %}
+              %foreign_key =
+                {% if settings[:foreign_key] %}
+                  "{{ settings[:foreign_key] }}"
+                {% elsif settings[:as] %}
+                  "{{ settings[:as] }}_id"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              %relation_table = {{ settings[:type] }}.table
+
+              %primary_key =
+                {% if settings[:primary_key] %}
+                  "{{ settings[:primary_key] }}"
+                {% else %}
+                  T.__pkey__
+                {% end %}
+
+              count_condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
+
+              {% if settings[:as] %}
+                %type_key = "{{ settings[:as] }}_type"
+                count_condition += " AND #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[T.name]}"
+              {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{count_condition})"
+            {% elsif settings[:relation_type] == :has_one %}
+              %foreign_key =
+                {% if settings[:foreign_key] %}
+                  "{{ settings[:foreign_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              %relation_table = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.table
+
+              %primary_key =
+                {% if settings[:primary_key] %}
+                  "{{ settings[:primary_key] }}"
+                {% else %}
+                  T.__pkey__
+                {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
+            {% elsif settings[:relation_type] == :belongs_to %}
+              {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
+                # A polymorphic belongs_to can point at multiple tables, so a
+                # single correlated count subquery would be ambiguous.
+                raise "Polymorphic association '#{association}' for #{T} cannot be used with with_count because it can target multiple tables. Filter or count each concrete type directly."
+              {% else %}
+                %foreign_key =
+                  {% if settings[:foreign_key] %}
+                    "{{ settings[:foreign_key] }}"
+                  {% else %}
+                    "{{ name }}_id"
+                  {% end %}
+
+                %relation_table = {{ settings[:type] }}.table
+                %primary_key = {{ settings[:type] }}.__pkey__
+
+                count_condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)}"
+                {% if settings[:polymorphic_type] %}
+                  %type_key = %foreign_key.gsub(/_id$/, "_type")
+                  count_condition += " AND #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[{{ settings[:polymorphic_type] }}]}"
+                {% end %}
+
+                "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{count_condition})"
+              {% end %}
+            {% elsif settings[:relation_type] == :has_many_through %}
+              %through_table = {{ settings[:through] }}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{ settings[:own_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%through_table)} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
+            {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{ settings[:own_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%through_table)} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
+          {% end %}
+        {% end %}
+        else
+          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
+          {% if available_associations.empty? %}
+            available = "none"
+          {% else %}
+            available = {{ available_associations.join(", ") }}
+          {% end %}
+
+          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
+        end
+      {% end %}
+    end
+
     # Helper to auto-detect join conditions from association metadata
     private def auto_join_association(association : Lustra::SQL::Symbolic, type, lateral)
       {% begin %}
@@ -843,6 +1039,8 @@ module Lustra::Model
               %foreign_key =
                 {% if settings[:foreign_key] %}
                   "{{ settings[:foreign_key] }}"
+                {% elsif settings[:as] %}
+                  "{{ settings[:as] }}_id"
                 {% else %}
                   T.table.to_s.singularize + "_id"
                 {% end %}
@@ -857,6 +1055,10 @@ module Lustra::Model
                 {% end %}
 
               condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
+              {% if settings[:as] %}
+                %type_key = "{{ settings[:as] }}_type"
+                condition += " AND #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[T.name]}"
+              {% end %}
               join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :has_one %}
                 # has_one :info => user_infos.user_id = users.id
@@ -880,19 +1082,29 @@ module Lustra::Model
                 condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
                 join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
-              # belongs_to :user => posts.user_id = users.id
-              %foreign_key =
-                {% if settings[:foreign_key] %}
-                  "{{ settings[:foreign_key] }}"
-                {% else %}
-                  "{{ name }}_id"
+              {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
+                # A polymorphic belongs_to can point at multiple tables, so
+                # there is no single SQL JOIN target to infer here.
+                raise "Polymorphic association '#{association}' for #{T} cannot be used for SQL joins because it can target multiple tables. Filter the polymorphic id/type columns directly."
+              {% else %}
+                # belongs_to :user => posts.user_id = users.id
+                %foreign_key =
+                  {% if settings[:foreign_key] %}
+                    "{{ settings[:foreign_key] }}"
+                  {% else %}
+                    "{{ name }}_id"
+                  {% end %}
+
+                %relation_table = {{ settings[:type] }}.table
+                %primary_key = {{ settings[:type] }}.__pkey__
+
+                condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
+                {% if settings[:polymorphic_type] %}
+                  %type_key = %foreign_key.gsub(/_id$/, "_type")
+                  condition += " AND #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[{{ settings[:polymorphic_type] }}]}"
                 {% end %}
-
-              %relation_table = {{ settings[:type] }}.table
-              %primary_key = {{ settings[:type] }}.__pkey__
-
-              condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
-              join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+                join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+              {% end %}
             {% elsif settings[:relation_type] == :has_many_through %}
               # has_many through requires two joins
               # Example: User has_many :categories, through: Post
@@ -926,10 +1138,30 @@ module Lustra::Model
               final_condition = "#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)} = #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_key)}"
               join(Lustra::SQL.escape(%final_table), type, final_condition, lateral)
             {% end %}
+          {% if settings[:relation_type] == :has_many_through %}
+            when {{ settings[:through] }}.table
+              %through_table = {{ settings[:through] }}.table
+
+              %own_key =
+                {% if settings[:own_key] %}
+                  "{{ settings[:own_key] }}"
+                {% else %}
+                  T.table.to_s.singularize + "_id"
+                {% end %}
+
+              condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
+              join(Lustra::SQL.escape(%through_table), type, condition, lateral)
+          {% end %}
         {% end %}
         else
-          # Unknown association - provide helpful error
-          raise "Unknown association '#{association}' for #{T}. Use join with a block for table names."
+          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
+          {% if available_associations.empty? %}
+            available = "none"
+          {% else %}
+            available = {{ available_associations.join(", ") }}
+          {% end %}
+
+          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
         end
       {% end %}
     end

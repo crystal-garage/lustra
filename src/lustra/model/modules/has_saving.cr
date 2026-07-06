@@ -1,5 +1,6 @@
-# This module handles saving models to the database and triggers lifecycle callbacks.
-# It's where the actual `:create`, `:update`, `:destroy`, and `:save` callbacks are triggered.
+# This module handles saving models to the database and triggering lifecycle
+# callbacks. It is where the actual `:create`, `:update`, `:destroy`, and
+# `:save` callbacks are triggered.
 #
 # Key callback trigger points:
 # - `:save` callbacks: triggered for the entire save operation (wraps create/update)
@@ -7,20 +8,21 @@
 # - `:update` callbacks: triggered when an existing record is updated
 # - `:destroy` callbacks: triggered when a record is destroyed
 #
-# The callbacks are triggered via `with_triggers` which calls `Lustra::Model::EventManager`
+# The callbacks are triggered via `with_triggers`, which calls
+# `Lustra::Model::EventManager`.
 module Lustra::Model::HasSaving
   # Default class-wise read_only? method is `false`
   macro included # When included into Model
     macro included # When included into final Model
       class_property? read_only : Bool = false
 
-      # Import a bulk of models in one SQL insert query.
+      # Import a batch of models in one SQL insert query.
       # Each model must be non-persisted.
       #
-      # `on_conflict` callback can be optionnaly turned on
-      # to manage constraints of the database.
+      # `on_conflict` callback can be optionally enabled to manage database
+      # constraints.
       #
-      # Note: Old models are not modified. This method return a copy of the
+      # Note: Old models are not modified. This method returns a copy of the
       # models as saved in the database.
       #
       # ## Example:
@@ -60,14 +62,14 @@ module Lustra::Model::HasSaving
 
   getter? persisted : Bool
 
-  # Save the model. If the model is already persisted, will call `UPDATE` query.
-  # If the model is not persisted, will call `INSERT`
+  # Save the model. If the model is already persisted, it calls an `UPDATE`
+  # query. If the model is not persisted, it calls `INSERT`.
   #
   # Optionally, you can pass a `Proc` to refine the `INSERT` with on conflict
   # resolution functions.
   #
-  # Return `false` if the model cannot be saved (validation issue)
-  # Return `true` if the model has been correctly saved.
+  # Return `false` if the model cannot be saved due to validation issues.
+  # Return `true` if the model has been saved correctly.
   #
   # Example:
   #
@@ -88,10 +90,10 @@ module Lustra::Model::HasSaving
   # ```
   # u = User.new id: 123, email: "email@example.com"
   # u.save(-> (qry) { qry.on_conflict.do_update { |u| u.set(email: "email@example.com") } #update
-  # # IMPORTANT NOTICE: user may not be saved, but will be still detected as persisted !
+  # # IMPORTANT NOTICE: user may not be saved, but will still be detected as persisted!
   # ```
   #
-  # You may want to use a block for `on_conflict` optional parameter:
+  # You may want to use a block for the optional `on_conflict` parameter:
   #
   # ```
   # u = User.new id: 123, email: "email@example.com"

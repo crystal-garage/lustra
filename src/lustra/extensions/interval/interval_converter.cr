@@ -1,25 +1,25 @@
 struct Time
-  def +(interval : Lustra::Interval)
+  def +(other : Lustra::Interval)
     [
-      interval.months.months,
-      interval.days.days,
-      interval.hours.hours,
-      interval.minutes.minutes,
-      interval.seconds.seconds,
-      interval.milliseconds.milliseconds,
-      interval.microseconds.microseconds,
+      other.months.months,
+      other.days.days,
+      other.hours.hours,
+      other.minutes.minutes,
+      other.seconds.seconds,
+      other.milliseconds.milliseconds,
+      other.microseconds.microseconds,
     ].reduce(self) { |acc, e| acc + e }
   end
 
-  def -(interval : Lustra::Interval)
+  def -(other : Lustra::Interval)
     [
-      interval.months.months,
-      interval.days.days,
-      interval.hours.hours,
-      interval.minutes.minutes,
-      interval.seconds.seconds,
-      interval.milliseconds.milliseconds,
-      interval.microseconds.microseconds,
+      other.months.months,
+      other.days.days,
+      other.hours.hours,
+      other.minutes.minutes,
+      other.seconds.seconds,
+      other.milliseconds.milliseconds,
+      other.microseconds.microseconds,
     ].reduce(self) { |acc, e| acc - e }
   end
 end

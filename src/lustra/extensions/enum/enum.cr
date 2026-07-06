@@ -24,8 +24,8 @@ module Lustra
       json.string(@value)
     end
 
-    def ==(x)
-      super(x) || @value == x
+    def ==(other)
+      super(other) || @value == other
     end
 
     module Converter(T)
@@ -44,7 +44,7 @@ module Lustra
 
   # ## Enum
   #
-  # Lustra offers full support of postgres enum strings.
+  # Lustra offers full support for PostgreSQL enum strings.
   #
   # ### Example
   #

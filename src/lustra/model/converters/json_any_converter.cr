@@ -34,7 +34,7 @@ module Lustra
   # class YourModel
   #   include Lustra::Model
   #   # ...
-  #   column my_column : MyJsonType # jsonb (recommended), json or string column in postgresql.
+  #   column my_column : MyJsonType # jsonb (recommended), json or string column in PostgreSQL.
   # end
   # ```
   macro json_serializable_converter(type)
