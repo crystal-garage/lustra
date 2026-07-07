@@ -277,6 +277,206 @@ module Lustra::Model::ClassMethods
         create!(**x, &block)
       end
 
+      # Insert one row with one SQL statement.
+      #
+      # This bypasses model instantiation, validations, and callbacks.
+      def self.insert(row : NamedTuple, returning = __pkey__, unique_by = nil, record_timestamps = nil) : Hash(String, Lustra::SQL::Any)?
+        insert_all([row], returning: returning, unique_by: unique_by, record_timestamps: record_timestamps).first?
+      end
+
+      # Insert many rows with one SQL statement.
+      #
+      # This bypasses model instantiation, validations, and callbacks.
+      #
+      # By default, duplicate rows are skipped by any unique index PostgreSQL
+      # reports during `ON CONFLICT DO NOTHING`.
+      def self.insert_all(rows : Array(NamedTuple), returning = __pkey__, unique_by = nil, record_timestamps = nil) : Array(Hash(String, Lustra::SQL::Any))
+        return [] of Hash(String, Lustra::SQL::Any) if rows.empty?
+        raise ArgumentError.new("insert_all does not support record_timestamps yet.") if record_timestamps
+
+        insert_rows = rows.map { |row| __insert_all_row_to_h(row) }
+        __ensure_insert_all_rows_have_same_keys(insert_rows)
+
+        query = Lustra::SQL.insert_into(self.full_table_name)
+          .values(insert_rows)
+          .on_conflict(__insert_all_conflict_target(unique_by))
+          .do_nothing
+
+        if returning_sql = __insert_all_returning(returning)
+          result = [] of Hash(String, Lustra::SQL::Any)
+          query.returning(returning_sql).fetch(@@connection) do |hash|
+            result << hash.dup
+          end
+          result
+        else
+          query.execute(@@connection)
+          [] of Hash(String, Lustra::SQL::Any)
+        end
+      end
+
+      # Insert or update a single row by conflict target.
+      #
+      # This bypasses validations and callbacks, like Rails' `upsert`.
+      # Use `save` with an `on_conflict` block when lifecycle hooks are needed.
+      def self.upsert(row : NamedTuple, unique_by : Symbol | String = __pkey__, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : self?
+        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only).first?
+      end
+
+      # Insert or update a single row by array conflict target.
+      def self.upsert(row : NamedTuple, unique_by : Array(Lustra::SQL::Symbolic), on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : self?
+        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only).first?
+      end
+
+      # Insert or update a single row by composite conflict target.
+      #
+      # ```
+      # Model.upsert({tenant_id: 1, slug: "intro", title: "Intro"}, unique_by: {:tenant_id, :slug})
+      # ```
+      def self.upsert(row : NamedTuple, unique_by : Tuple, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : self?
+        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only).first?
+      end
+
+      # Insert or update many rows by conflict target.
+      #
+      # Returns the rows saved by PostgreSQL's `RETURNING *`.
+      def self.upsert_all(rows : Array(NamedTuple), unique_by : Symbol | String = __pkey__, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : Array(self)
+        return [] of self if rows.empty?
+
+        upsert_all(rows, unique_by: {unique_by}, on_duplicate: on_duplicate, update_only: update_only)
+      end
+
+      # Insert or update many rows by array conflict target.
+      #
+      # Returns the rows saved by PostgreSQL's `RETURNING *`.
+      def self.upsert_all(rows : Array(NamedTuple), unique_by : Array(Lustra::SQL::Symbolic), on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : Array(self)
+        return [] of self if rows.empty?
+
+        __upsert_all(rows, unique_by, on_duplicate, update_only)
+      end
+
+      # Insert or update many rows by composite conflict target.
+      #
+      # Returns the rows saved by PostgreSQL's `RETURNING *`.
+      def self.upsert_all(rows : Array(NamedTuple), unique_by : Tuple, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : Array(self)
+        return [] of self if rows.empty?
+
+        __upsert_all(rows, unique_by, on_duplicate, update_only)
+      end
+
+      private def self.__upsert_all(rows : Array(NamedTuple), unique_by, on_duplicate : Symbol, update_only) : Array(self)
+        conflict_columns = __upsert_column_names(unique_by)
+        update_columns = __upsert_update_columns(rows.first.keys, conflict_columns, update_only)
+
+        query = Lustra::SQL.insert_into(self.full_table_name, rows.map { |row| build(row).to_h })
+          .returning("*")
+          .on_conflict(__upsert_conflict_target(conflict_columns))
+
+        case on_duplicate
+        when :skip
+          query.do_nothing
+        when :update
+          if update_columns.empty?
+            query.do_nothing
+          else
+            query.do_update do |update|
+              update.set(update_columns.join(", ") do |column|
+                escaped = Lustra::SQL.escape(column)
+                "#{escaped} = excluded.#{escaped}"
+              end)
+            end
+          end
+        else
+          raise ArgumentError.new("Unsupported on_duplicate value: #{on_duplicate}. Use :update or :skip.")
+        end
+
+        saved = [] of self
+        query.fetch(@@connection) do |hash|
+          saved << Lustra::Model::Factory.build(self.name, hash, persisted: true,
+            fetch_columns: false, cache: nil).as(self)
+        end
+        saved
+      end
+
+      private def self.__upsert_column_names(unique_by : Array(Lustra::SQL::Symbolic)) : Array(String)
+        unique_by.map(&.to_s)
+      end
+
+      private def self.__upsert_column_names(unique_by : Tuple) : Array(String)
+        unique_by.to_a.map(&.to_s)
+      end
+
+      private def self.__upsert_conflict_target(columns : Array(String)) : String
+        "(" + columns.join(", ") { |column| Lustra::SQL.escape(column) } + ")"
+      end
+
+      private def self.__upsert_update_columns(row_columns, conflict_columns : Array(String), update_only) : Array(String)
+        selected_columns =
+          if update_only
+            update_only.map(&.to_s).to_a
+          else
+            row_columns.to_a.map(&.to_s)
+          end
+
+        selected_columns.reject { |column| conflict_columns.includes?(column) }
+      end
+
+      private def self.__insert_all_row_to_h(row : NamedTuple) : Hash(String, Lustra::SQL::InsertQuery::Inserable)
+        out = {} of String => Lustra::SQL::InsertQuery::Inserable
+        row.each do |key, value|
+          out[key.to_s] = value.as(Lustra::SQL::InsertQuery::Inserable)
+        end
+        out
+      end
+
+      private def self.__ensure_insert_all_rows_have_same_keys(rows)
+        keys = rows.first.keys
+        rows.each do |row|
+          unless row.keys == keys
+            raise ArgumentError.new("All rows passed to insert_all must have the same keys.")
+          end
+        end
+      end
+
+      private def self.__insert_all_conflict_target(unique_by : Nil)
+        true
+      end
+
+      private def self.__insert_all_conflict_target(unique_by : Symbol | String)
+        __upsert_conflict_target([unique_by.to_s])
+      end
+
+      private def self.__insert_all_conflict_target(unique_by : Array(Lustra::SQL::Symbolic))
+        __upsert_conflict_target(unique_by.map(&.to_s))
+      end
+
+      private def self.__insert_all_conflict_target(unique_by : Tuple)
+        __upsert_conflict_target(unique_by.to_a.map(&.to_s))
+      end
+
+      private def self.__insert_all_returning(returning : Nil)
+        Lustra::SQL.escape(__pkey__)
+      end
+
+      private def self.__insert_all_returning(returning : Bool)
+        returning ? Lustra::SQL.escape(__pkey__) : nil
+      end
+
+      private def self.__insert_all_returning(returning : Symbol)
+        Lustra::SQL.escape(returning)
+      end
+
+      private def self.__insert_all_returning(returning : String)
+        returning
+      end
+
+      private def self.__insert_all_returning(returning : Array(Lustra::SQL::Symbolic))
+        returning.join(", ") { |column| Lustra::SQL.escape(column) }
+      end
+
+      private def self.__insert_all_returning(returning : Tuple)
+        returning.to_a.join(", ") { |column| column.is_a?(Symbol) ? Lustra::SQL.escape(column) : column.to_s }
+      end
+
       def self.columns
         @@columns
       end
