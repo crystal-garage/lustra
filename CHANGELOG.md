@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Collection#first` and `Collection#last` now restore the collection's ordering and limit after fetching while preserving eager-loading constraints.
 - Collection index and range accessors now restore their offset and limit after fetching while preserving eager-loading constraints.
 - Collection finders now restore filters and model-building attributes after fetching while preserving eager-loading constraints.
+- Low-level `fetch_first` and `first` queries now restore their original limit after fetching.
 - Counter updates now use escaped query expressions, support string primary keys safely, and reject nonnumeric increment and decrement amounts.
 - `Collection#create!` now raises `Lustra::Model::InvalidError` for invalid NamedTuple input, matching its keyword-argument overload.
 - Non-persisting `increment` and `decrement` now use the model's current in-memory value without querying the database.
