@@ -11,6 +11,14 @@ module InsertSpec
 
   describe "Lustra::SQL" do
     describe "InsertQuery" do
+      it "builds an insert with the zero-argument fluent API" do
+        Lustra::SQL.insert
+          .into(:users)
+          .values({a: "c", b: 12})
+          .to_sql
+          .should eq %(INSERT INTO "users" ("a", "b") VALUES ('c', 12))
+      end
+
       it "build an insert" do
         insert_request.values({a: "c", b: 12}).to_sql.should eq(
           "INSERT INTO \"users\" (\"a\", \"b\") VALUES ('c', 12)"

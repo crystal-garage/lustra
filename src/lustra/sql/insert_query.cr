@@ -27,6 +27,9 @@ class Lustra::SQL::InsertQuery
   getter! table : Symbol | String
   getter returning : String?
 
+  def initialize
+  end
+
   def initialize(@table : Symbol | String)
   end
 
@@ -35,6 +38,7 @@ class Lustra::SQL::InsertQuery
   end
 
   def into(@table : Symbol | String)
+    change!
   end
 
   def fetch(connection_name : String = "default", & : Hash(String, ::Lustra::SQL::Any) -> Nil)

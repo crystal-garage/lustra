@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Counter updates now use escaped query expressions, support string primary keys safely, and reject nonnumeric increment and decrement amounts.
 - `Collection#create!` now raises `Lustra::Model::InvalidError` for invalid NamedTuple input, matching its keyword-argument overload.
 - Non-persisting `increment` and `decrement` now use the model's current in-memory value without querying the database.
+- Zero-argument `Lustra::SQL.insert` now supports fluent query construction with `into`.
 
 ### Removed
 - Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.
