@@ -79,7 +79,6 @@ class Lustra::SQL::InsertQuery
       s = to_sql
       Lustra::SQL.execute(connection_name, s)
     else
-      # return {} of String => ::Lustra::SQL::Any
       fetch(connection_name) { |x| o = x }
     end
 
@@ -97,19 +96,14 @@ class Lustra::SQL::InsertQuery
   # insert({field: "value"}).into(:table)
   #
   def values(row : NamedTuple)
-    @keys = row.keys.to_a.map(&.as(Symbolic))
-
-    case v = @values
-    when Array(Array(Inserable))
-      v << row.values.to_a.map(&.as(Inserable))
-    else # when SelectBuilder
-      raise "Cannot insert both from SELECT query and from data"
-    end
-
-    change!
+    append_row(row)
   end
 
   def values(row : Hash(Symbolic, Inserable))
+    append_row(row)
+  end
+
+  private def append_row(row)
     @keys = row.keys.to_a.map(&.as(Symbolic))
 
     case v = @values
