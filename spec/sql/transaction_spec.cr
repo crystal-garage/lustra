@@ -11,6 +11,85 @@ module TransactionSpec
       Lustra::SQL.transaction(level: Lustra::SQL::Transaction::Level::ReadCommitted) { Lustra::SQL.select("1").execute }
       Lustra::SQL.transaction(level: Lustra::SQL::Transaction::Level::RepeatableRead) { Lustra::SQL.select("1").execute }
     end
+
+    it "rolls back queries on a named connection" do
+      Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+
+      begin
+        Lustra::SQL.transaction("secondary") do
+          Lustra::SQL.execute("secondary", "INSERT INTO models_post_stats (post_id) VALUES (1)")
+          Lustra::SQL.rollback
+        end
+
+        count = Lustra::SQL::ConnectionPool.with_connection("secondary") do |connection|
+          connection.query_one("SELECT COUNT(*) FROM models_post_stats", as: Int64)
+        end
+        count.should eq(0)
+      ensure
+        Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+      end
+    end
+
+    it "commits queries on a named connection" do
+      Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+
+      begin
+        Lustra::SQL.transaction("secondary") do
+          Lustra::SQL.execute("secondary", "INSERT INTO models_post_stats (post_id) VALUES (1)")
+        end
+
+        count = Lustra::SQL::ConnectionPool.with_connection("secondary") do |connection|
+          connection.query_one("SELECT COUNT(*) FROM models_post_stats", as: Int64)
+        end
+        count.should eq(1)
+      ensure
+        Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+      end
+    end
+
+    it "uses a named connection for savepoints" do
+      Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+
+      begin
+        Lustra::SQL.transaction("secondary") do
+          Lustra::SQL.execute("secondary", "INSERT INTO models_post_stats (post_id) VALUES (1)")
+
+          Lustra::SQL.with_savepoint(connection_name: "secondary") do
+            Lustra::SQL.execute("secondary", "INSERT INTO models_post_stats (post_id) VALUES (2)")
+            Lustra::SQL.rollback
+          end
+        end
+
+        post_ids = Lustra::SQL::ConnectionPool.with_connection("secondary") do |connection|
+          connection.query_all("SELECT post_id FROM models_post_stats ORDER BY post_id", as: Int32)
+        end
+        post_ids.should eq([1])
+      ensure
+        Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+      end
+    end
+
+    it "rolls back nested transactions on a named connection" do
+      Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+
+      begin
+        Lustra::SQL.transaction("secondary") do
+          Lustra::SQL.execute("secondary", "INSERT INTO models_post_stats (post_id) VALUES (1)")
+
+          Lustra::SQL.transaction("secondary") do
+            Lustra::SQL.execute("secondary", "INSERT INTO models_post_stats (post_id) VALUES (2)")
+            Lustra::SQL.rollback_transaction
+          end
+        end
+
+        count = Lustra::SQL::ConnectionPool.with_connection("secondary") do |connection|
+          connection.query_one("SELECT COUNT(*) FROM models_post_stats", as: Int64)
+        end
+        count.should eq(0)
+      ensure
+        Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+      end
+    end
   end
 
   describe "Lustra::SQL::Transaction#after_commit" do

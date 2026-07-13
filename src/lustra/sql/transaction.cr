@@ -53,13 +53,13 @@ module Lustra::SQL::Transaction
         return yield(cnx) # In case we already are in transaction, we just ignore
       else
         cnx._in_transaction = true
-        execute(level.to_begin_operation)
+        execute(connection, level.to_begin_operation)
         begin
           return yield(cnx)
         rescue e
           has_rollback = true
           is_rollback_error = e.is_a?(RollbackError) || e.is_a?(CancelTransactionError)
-          execute("ROLLBACK --" + (is_rollback_error ? "normal" : "program error")) rescue nil
+          execute(connection, "ROLLBACK --" + (is_rollback_error ? "normal" : "program error")) rescue nil
           raise e unless is_rollback_error
         ensure
           cnx._in_transaction = false
@@ -67,7 +67,7 @@ module Lustra::SQL::Transaction
           callbacks = @@commit_callbacks.delete(cnx)
 
           unless has_rollback
-            execute("COMMIT")
+            execute(connection, "COMMIT")
 
             # Remove the list from the global hash and execute after commit.
             # This prevents the proc from being called twice if a new Lustra
@@ -117,7 +117,7 @@ module Lustra::SQL::Transaction
   # end
   # ```
   def with_savepoint(sp_name : Symbolic? = nil, connection_name : String = "default", &)
-    transaction do |cnx|
+    transaction(connection_name) do |cnx|
       sp_name ||= "sp_#{@@savepoint_uid += 1}"
       execute(connection_name, "SAVEPOINT #{sp_name}")
       yield

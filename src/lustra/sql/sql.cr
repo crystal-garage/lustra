@@ -141,7 +141,7 @@ module Lustra
     # end
     # ```
     def with_savepoint(connection_name = "default", &)
-      transaction do |cnx|
+      transaction(connection_name) do |cnx|
         sp_name = "sp_#{@@savepoint_uid += 1}"
         begin
           execute(connection_name, "SAVEPOINT #{sp_name}")
