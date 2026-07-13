@@ -351,6 +351,40 @@ module ModelSpec
         end
       end
 
+      it "increments and decrements the current in-memory value" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "John", posts_count: 5)
+          user.posts_count = 100
+
+          user.increment(:posts_count, 2)
+          user.posts_count.should eq(102)
+          User.find!(user.id).posts_count.should eq(5)
+
+          user.decrement(:posts_count, 3)
+          user.posts_count.should eq(99)
+          User.find!(user.id).posts_count.should eq(5)
+
+          new_user = User.new({id: 10_i64, first_name: "Jane", posts_count: 10})
+          new_user.increment(:posts_count, 2)
+          new_user.posts_count.should eq(12)
+          new_user.increment(:id, 2)
+          new_user.id.should eq(12_i64)
+          new_user.persisted?.should be_false
+        end
+      end
+
+      it "increments and decrements in-memory floating-point values" do
+        float_data = FloatData.new({price: 1.5_f32, latitude: 2.5_f64})
+
+        float_data.increment(:price, 0.5)
+        float_data.price.should eq(2.0_f32)
+
+        float_data.decrement(:latitude, 0.5)
+        float_data.latitude.should eq(2.0_f64)
+      end
+
       it "update_all" do
         temporary do
           reinit_example_models

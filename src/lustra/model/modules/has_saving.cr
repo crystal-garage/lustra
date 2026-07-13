@@ -310,9 +310,7 @@ module Lustra::Model::HasSaving
   def increment(column : Symbol | String, by : Number = 1)
     column_name = column.to_s
 
-    # Get current value from the column
-    result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.fetch_first!
-    current_value = result[column_name]
+    current_value = to_h[column_name]
 
     # Increment the value
     new_value =
