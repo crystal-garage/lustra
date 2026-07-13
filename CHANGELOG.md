@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Association append and unlink errors now explain that the operation requires a writable association collection.
 - Missing primary key errors now show the concrete declarations for defining a primary key.
 
+### Fixed
+- Transactions and savepoints now execute `BEGIN`, `COMMIT`, and `ROLLBACK` on the selected named connection.
+- Cursor fetching, bulk updates and deletes, wrapped aggregates, existence checks, counter caches, and increment reloads now preserve the model or query connection.
+- Counter updates now use escaped query expressions, support string primary keys safely, and reject nonnumeric increment and decrement amounts.
+
 ### Removed
 - Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.
 
