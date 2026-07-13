@@ -605,12 +605,26 @@ module Lustra::Model
 
     # Basically a fancy way to write `OFFSET x LIMIT 1`
     def []?(off, fetch_columns = false) : T?
-      offset(off).first(fetch_columns)
+      previous_offset = offset
+
+      begin
+        offset(off).first(fetch_columns)
+      ensure
+        offset(previous_offset)
+      end
     end
 
     # Get a range of models.
     def [](range : Range(Number, Number), fetch_columns = false) : Array(T)
-      offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
+      previous_offset = offset
+      previous_limit = limit
+
+      begin
+        offset(range.begin).limit(range.end - range.begin).to_a(fetch_columns)
+      ensure
+        offset(previous_offset)
+        limit(previous_limit)
+      end
     end
 
     # Return an empty, chainable collection (Rails-like `.none`).
@@ -627,13 +641,17 @@ module Lustra::Model
     # Returns a model using primary key equality.
     # Returns `nil` if not found.
     def find(x)
-      where { raw(T.__pkey__) == x }.first
+      with_restored_finder_state do
+        where { raw(T.__pkey__) == x }.first
+      end
     end
 
     # Find multiple models by an array of primary keys.
     # Returns an array of models (may be empty if none found).
     def find(ids : Array)
-      where { raw(T.__pkey__).in?(ids) }.to_a
+      with_restored_finder_state do
+        where { raw(T.__pkey__).in?(ids) }.to_a
+      end
     end
 
     # Returns a model using primary key equality.
@@ -656,7 +674,9 @@ module Lustra::Model
     def find_by(fetch_columns = false, &) : T?
       x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
 
-      where(x).first(fetch_columns)
+      with_restored_finder_state do
+        where(x).first(fetch_columns)
+      end
     end
 
     # Find a model by column values. Returns `nil` if not found.
@@ -666,19 +686,25 @@ module Lustra::Model
     # user = User.query.where { active == true }.find_by(role: "admin")
     # ```
     def find_by(**tuple) : T?
-      where(tuple).first
+      with_restored_finder_state do
+        where(tuple).first
+      end
     end
 
     # :ditto:
     def find_by(tuple : NamedTuple, fetch_columns = false) : T?
-      where(tuple).first(fetch_columns)
+      with_restored_finder_state do
+        where(tuple).first(fetch_columns)
+      end
     end
 
     # A convenient way to write `where { condition }.first!(fetch_columns)`
     def find_by!(fetch_columns = false, &) : T
       x = Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
 
-      where(x).first!(fetch_columns)
+      with_restored_finder_state do
+        where(x).first!(fetch_columns)
+      end
     end
 
     # Find a model by column values. Raises error if not found.
@@ -687,30 +713,38 @@ module Lustra::Model
     # user = User.query.find_by!(email: "test@example.com")
     # ```
     def find_by!(**tuple) : T
-      where(**tuple).first!
+      with_restored_finder_state do
+        where(**tuple).first!
+      end
     end
 
     # :ditto:
     def find_by!(tuple : NamedTuple, fetch_columns = false) : T
-      where(**tuple).first!(fetch_columns)
+      with_restored_finder_state do
+        where(**tuple).first!(fetch_columns)
+      end
     end
 
     # Try to fetch a row. If not found, build a new object and set the fields
     # from the condition tuple.
     def find_or_build(**tuple, & : T -> Nil) : T
-      where(tuple) unless tuple.size == 0
-      r = first
+      with_restored_finder_state do
+        where(tuple) unless tuple.size == 0
+        r = first
 
-      return r if r
+        if r
+          r
+        else
+          str_hash = @tags.dup
+          tuple.map { |k, v| str_hash[k.to_s] = v }
 
-      str_hash = @tags.dup
-      tuple.map { |k, v| str_hash[k.to_s] = v }
+          r = Lustra::Model::Factory.build(T, str_hash)
 
-      r = Lustra::Model::Factory.build(T, str_hash)
+          yield(r)
 
-      yield(r)
-
-      r
+          r
+        end
+      end
     end
 
     def find_or_build(**tuple) : T
@@ -753,6 +787,18 @@ module Lustra::Model
     # :ditto:
     def find_or_create(x : NamedTuple, &block : T -> Nil) : T
       find_or_create(**x, &block)
+    end
+
+    private def with_restored_finder_state(&)
+      previous_wheres = @wheres.dup
+      previous_tags = @tags.dup
+
+      begin
+        yield
+      ensure
+        @wheres = previous_wheres
+        @tags = previous_tags
+      end
     end
 
     # Get the first row from the collection query.

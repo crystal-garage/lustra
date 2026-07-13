@@ -678,6 +678,30 @@ module CollectionSpec
           usr.last_name.should eq("Connor")
         end
       end
+
+      it "find_or_build and find_or_create do not mutate the query" do
+        temporary do
+          reinit_example_models
+
+          User.create!(first_name: "existing")
+
+          users = User.query.order_by(id: :asc)
+          sql = users.to_sql
+
+          users.find_or_build(first_name: "existing").persisted?.should be_true
+          users.to_sql.should eq(sql)
+          users.tags.should be_empty
+
+          users.find_or_build({first_name: "built"}).persisted?.should be_false
+          users.to_sql.should eq(sql)
+          users.tags.should be_empty
+
+          users.find_or_create({first_name: "created"}).persisted?.should be_true
+          users.to_sql.should eq(sql)
+          users.tags.should be_empty
+          users.to_a.map(&.first_name).should eq(["existing", "created"])
+        end
+      end
     end
 
     it "[] / []?" do
@@ -689,14 +713,74 @@ module CollectionSpec
         end
 
         qry = User.query.order_by({first_name: :asc})
+        sql = qry.to_sql
 
         qry[1].first_name.should eq("user 1")
+        qry.to_sql.should eq(sql)
+
         qry[3..5].map(&.first_name).should eq(["user 3", "user 4"])
+        qry.to_sql.should eq(sql)
 
         qry[2].first_name.should eq("user 2")
+        qry.to_sql.should eq(sql)
+
         qry[10]?.should be_nil
+        qry.to_sql.should eq(sql)
 
         expect_raises(Lustra::SQL::RecordNotFoundError) { qry[11] }
+        qry.to_sql.should eq(sql)
+        qry.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" })
+      end
+    end
+
+    it "accessors restore the query while preserving eager-loading constraints" do
+      temporary do
+        reinit_example_models
+
+        category = Category.create!(id: 1, name: "Category")
+        users = Array.new(3) { |id| User.create!(id: id + 1, first_name: "User #{id + 1}") }
+        users.each do |user|
+          Post.create!(title: "Post #{user.id}", user_id: user.id, category_id: category.id)
+        end
+
+        eager_sql = nil
+        query = User.query.with_posts do |posts|
+          eager_sql = posts.to_sql
+          posts.with_category
+        end.order_by(id: :asc)
+        sql = query.to_sql
+
+        query[1].posts.first!.category.name.should eq("Category")
+        eager_sql.not_nil!.should contain("LIMIT 1 OFFSET 1")
+        query.to_sql.should eq(sql)
+
+        eager_sql = nil
+        query = User.query.with_posts do |posts|
+          eager_sql = posts.to_sql
+          posts.with_category
+        end.order_by(id: :asc)
+        sql = query.to_sql
+
+        query[1..3].map(&.id).should eq([users[1].id, users[2].id])
+        eager_sql.not_nil!.should contain("LIMIT 2 OFFSET 1")
+        query.to_sql.should eq(sql)
+      end
+    end
+
+    it "accessors restore the query after an eager-loading error" do
+      temporary do
+        reinit_example_models
+        User.create!(first_name: "User")
+
+        query = User.query.with_posts { raise "eager-loading error" }.offset(4).limit(5)
+        sql = query.to_sql
+        expect_raises(Exception, "eager-loading error") { query[0] }
+        query.to_sql.should eq(sql)
+
+        query = User.query.with_posts { raise "eager-loading error" }.offset(4).limit(5)
+        sql = query.to_sql
+        expect_raises(Exception, "eager-loading error") { query[0..1] }
+        query.to_sql.should eq(sql)
       end
     end
 
@@ -751,6 +835,27 @@ module CollectionSpec
           end
         end
       end
+
+      it "does not mutate the query while eager loading associations" do
+        temporary do
+          reinit_example_models
+
+          selected = User.create!(first_name: "Selected")
+          other = User.create!(first_name: "Other")
+          Post.create!(title: "Selected post", user_id: selected.id)
+          Post.create!(title: "Other post", user_id: other.id)
+
+          eager_sql = nil
+          users = User.query.with_posts { |posts| eager_sql = posts.to_sql }.order_by(id: :asc)
+          sql = users.to_sql
+
+          found = users.find!([selected.id])
+          found.size.should eq(1)
+          found.first.posts.map(&.title).should eq(["Selected post"])
+          eager_sql.not_nil!.should contain("id IN (#{selected.id})")
+          users.to_sql.should eq(sql)
+        end
+      end
     end
 
     context "find_by / find_by!" do
@@ -802,6 +907,49 @@ module CollectionSpec
           expect_raises(Lustra::SQL::RecordNotFoundError) do
             User.query.find_by!(first_name: "not_exists")
           end
+        end
+      end
+
+      it "does not mutate the query while eager loading nested associations" do
+        temporary do
+          reinit_example_models
+
+          category = Category.create!(id: 1, name: "Category")
+          selected = User.create!(first_name: "Selected")
+          other = User.create!(first_name: "Other")
+          Post.create!(title: "Selected post", user_id: selected.id, category_id: category.id)
+          Post.create!(title: "Other post", user_id: other.id, category_id: category.id)
+
+          eager_sql = nil
+          users = User.query.with_posts do |posts|
+            eager_sql = posts.to_sql
+            posts.with_category
+          end
+          sql = users.to_sql
+
+          user = users.find_by!(first_name: "Selected")
+
+          user.posts.map(&.title).should eq(["Selected post"])
+          user.posts.first!.category.name.should eq("Category")
+          eager_sql.not_nil!.should contain(%("first_name" = 'Selected'))
+          eager_sql.not_nil!.should contain("LIMIT 1")
+          users.to_sql.should eq(sql)
+          users.tags.should be_empty
+        end
+      end
+
+      it "restores the query after an eager-loading error" do
+        temporary do
+          reinit_example_models
+          User.create!(first_name: "User")
+
+          users = User.query.with_posts { raise "eager-loading error" }.where(active: true)
+          sql = users.to_sql
+          tags = users.tags.dup
+
+          expect_raises(Exception, "eager-loading error") { users.find_by(first_name: "User") }
+          users.to_sql.should eq(sql)
+          users.tags.should eq(tags)
         end
       end
     end
