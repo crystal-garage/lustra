@@ -4,6 +4,8 @@
 # Therefore, `query.where("a").where("b")` will return `a AND b`
 #
 module Lustra::SQL::Query::Where
+  include ConditionBuilder
+
   macro included
     # Return the list of where clause; each where clause are transformed into
     # Lustra::Expression::Node
@@ -76,24 +78,7 @@ module Lustra::SQL::Query::Where
   # ```
   def where(conditions : NamedTuple | Hash(String, Lustra::SQL::Any))
     conditions.each do |k, v|
-      k = Lustra::Expression::Node::Variable.new(k.to_s)
-
-      @wheres <<
-        case v
-        when Array
-          Lustra::Expression::Node::InArray.new(k, v.map { |it| Lustra::Expression[it] })
-        when SelectBuilder
-          Lustra::Expression::Node::InSelect.new(k, v)
-        when Range
-          range_begin = v.begin.nil? ? nil : Lustra::Expression[v.begin]
-          range_end = v.end.nil? ? nil : Lustra::Expression[v.end]
-          Lustra::Expression::Node::InRange.new(k, range_begin..range_end, v.exclusive?)
-        else
-          Lustra::Expression::Node::DoubleOperator.new(k,
-            Lustra::Expression::Node::Literal.new(v),
-            (v.nil? ? "IS" : "=")
-          )
-        end
+      @wheres << condition_node(k, v)
     end
 
     change!
@@ -164,26 +149,7 @@ module Lustra::SQL::Query::Where
   # Build SQL `where NOT` condition using a NamedTuple or Hash.
   def not(conditions : NamedTuple | Hash(String, Lustra::SQL::Any))
     conditions.each do |k, v|
-      k = Lustra::Expression::Node::Variable.new(k.to_s)
-
-      negated_node =
-        case v
-        when Array
-          Lustra::Expression::Node::InArray.new(k, v.map { |it| Lustra::Expression[it] })
-        when SelectBuilder
-          Lustra::Expression::Node::InSelect.new(k, v)
-        when Range
-          range_begin = v.begin.nil? ? nil : Lustra::Expression[v.begin]
-          range_end = v.end.nil? ? nil : Lustra::Expression[v.end]
-          Lustra::Expression::Node::InRange.new(k, range_begin..range_end, v.exclusive?)
-        else
-          Lustra::Expression::Node::DoubleOperator.new(k,
-            Lustra::Expression::Node::Literal.new(v),
-            (v.nil? ? "IS" : "=")
-          )
-        end
-
-      where(Lustra::Expression.new.not(negated_node))
+      where(Lustra::Expression.new.not(condition_node(k, v)))
     end
 
     self
@@ -271,24 +237,7 @@ module Lustra::SQL::Query::Where
     nodes = [] of Lustra::Expression::Node
 
     conditions.each do |k, v|
-      k = Lustra::Expression::Node::Variable.new(k.to_s)
-
-      nodes <<
-        case v
-        when Array
-          Lustra::Expression::Node::InArray.new(k, v.map { |it| Lustra::Expression[it] })
-        when SelectBuilder
-          Lustra::Expression::Node::InSelect.new(k, v)
-        when Range
-          range_begin = v.begin.nil? ? nil : Lustra::Expression[v.begin]
-          range_end = v.end.nil? ? nil : Lustra::Expression[v.end]
-          Lustra::Expression::Node::InRange.new(k, range_begin..range_end, v.exclusive?)
-        else
-          Lustra::Expression::Node::DoubleOperator.new(k,
-            Lustra::Expression::Node::Literal.new(v),
-            (v.nil? ? "IS" : "=")
-          )
-        end
+      nodes << condition_node(k, v)
     end
 
     # If multiple conditions in the tuple, combine them with AND

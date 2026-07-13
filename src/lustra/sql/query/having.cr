@@ -1,4 +1,6 @@
 module Lustra::SQL::Query::Having
+  include ConditionBuilder
+
   macro included
     getter havings : Array(Lustra::Expression::Node)
   end
@@ -69,24 +71,7 @@ module Lustra::SQL::Query::Having
   # ```
   def having(conditions : NamedTuple | Hash(String, Lustra::SQL::Any))
     conditions.each do |k, v|
-      k = Lustra::Expression::Node::Variable.new(k.to_s)
-
-      @havings <<
-        case v
-        when Array
-          Lustra::Expression::Node::InArray.new(k, v.map { |it| Lustra::Expression[it] })
-        when SelectBuilder
-          Lustra::Expression::Node::InSelect.new(k, v)
-        when Range
-          range_begin = v.begin.nil? ? nil : Lustra::Expression[v.begin]
-          range_end = v.end.nil? ? nil : Lustra::Expression[v.end]
-          Lustra::Expression::Node::InRange.new(k, range_begin..range_end, v.exclusive?)
-        else
-          Lustra::Expression::Node::DoubleOperator.new(k,
-            Lustra::Expression::Node::Literal.new(v),
-            (v.nil? ? "IS" : "=")
-          )
-        end
+      @havings << condition_node(k, v)
     end
 
     change!

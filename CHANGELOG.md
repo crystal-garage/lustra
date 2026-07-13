@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Non-persisting `increment` and `decrement` now use the model's current in-memory value without querying the database.
 - Zero-argument `Lustra::SQL.insert` now supports fluent query construction with `into`.
 
+### Maintenance
+- Deduplicated internal condition-node construction for `where`, `not`, `or`, and `having` queries without changing generated SQL.
+
 ### Removed
 - Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.
 
