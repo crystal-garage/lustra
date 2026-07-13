@@ -479,12 +479,12 @@ module Lustra::Model
 
     # :ditto:
     def create!(x : NamedTuple) : T
-      create(**x)
+      create!(**x)
     end
 
     # :ditto:
     def create!(x : NamedTuple, &block : T -> Nil) : T
-      create(**x, &block)
+      create!(**x, &block)
     end
 
     # Check whether the query returns any row.

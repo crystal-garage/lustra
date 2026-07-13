@@ -98,6 +98,28 @@ module CollectionSpec
           end
         end
 
+        it "raises for an invalid NamedTuple" do
+          temporary do
+            reinit_example_models
+
+            expect_raises(Lustra::Model::InvalidError) do
+              Post.query.create!({title: ""})
+            end
+          end
+        end
+
+        it "raises for an invalid NamedTuple with a block" do
+          temporary do
+            reinit_example_models
+
+            expect_raises(Lustra::Model::InvalidError) do
+              Post.query.create!({title: "valid"}) do |post|
+                post.title = ""
+              end
+            end
+          end
+        end
+
         it "create with block" do
           temporary do
             reinit_example_models
