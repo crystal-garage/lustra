@@ -784,12 +784,13 @@ module Lustra::Model
     # Get the last row from the collection query.
     # if not found, return `nil`
     def last(fetch_columns = false) : T?
-      order_by("#{T.__pkey__}", :asc) if T.__pkey__ || order_bys.empty?
-
-      arr = order_bys.dup # Save current order by
+      previous_order_bys = order_bys.dup
+      previous_limit = limit
 
       begin
-        new_order = arr.map do |x|
+        order_by("#{T.__pkey__}", :asc) if T.__pkey__ || order_bys.empty?
+
+        new_order = order_bys.map do |x|
           Lustra::SQL::Query::OrderBy::Record.new(x.op, (x.dir == :asc ? :desc : :asc), nil)
         end
 
@@ -801,8 +802,8 @@ module Lustra::Model
 
         nil
       ensure
-        # reset the order by in case we want to reuse the query
-        clear_order_bys.order_by(order_bys)
+        order_by(previous_order_bys)
+        limit(previous_limit)
       end
     end
 
