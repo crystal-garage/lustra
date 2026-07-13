@@ -286,7 +286,7 @@ module Lustra::Model::HasSaving
     Lustra::SQL.execute(@@connection, sql)
 
     # Update in-memory value by reloading just this column
-    result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.fetch_first!
+    result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.use_connection(@@connection).fetch_first!
     set({column_name => result[column_name]})
     clear_change_flags
 

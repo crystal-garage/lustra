@@ -220,7 +220,7 @@ module Lustra::Model::Relations::BelongsToMacro
           counter_column_name = "{{ counter_cache.id }}"
         {% end %}
 
-        Lustra::SQL.execute(<<-SQL)
+        Lustra::SQL.execute(parent.class.connection, <<-SQL)
           UPDATE #{parent.class.full_table_name}
               SET #{counter_column_name} = #{counter_column_name} #{operation}
             WHERE #{parent.class.__pkey__} = #{parent.__pkey__}

@@ -98,7 +98,7 @@ module Lustra::SQL::SelectBuilder
       )
     end
 
-    DeleteQuery.new(v.dup, @wheres.dup)
+    DeleteQuery.new(v.dup, @wheres.dup).use_connection(connection_name)
   end
 
   def to_update
@@ -116,6 +116,6 @@ module Lustra::SQL::SelectBuilder
       )
     end
 
-    UpdateQuery.new(table: v.dup, wheres: @wheres.dup)
+    UpdateQuery.new(table: v.dup, wheres: @wheres.dup).use_connection(connection_name)
   end
 end

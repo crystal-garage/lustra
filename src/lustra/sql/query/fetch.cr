@@ -24,7 +24,7 @@ module Lustra::SQL::Query::Fetch
   def fetch_with_cursor(count = 1_000, & : Hash(String, ::Lustra::SQL::Any) -> Nil)
     trigger_before_query
 
-    Lustra::SQL.transaction do |cnx|
+    Lustra::SQL.transaction(connection_name) do |cnx|
       cursor_name = "__cursor_#{Time.local.to_unix ^ (rand * 0xfffffff).to_i}__"
 
       cursor_declaration = "DECLARE #{cursor_name} CURSOR FOR #{to_sql}"

@@ -20,6 +20,30 @@ module MultipleConnectionsSpec
     column post_id : Int32
   end
 
+  class CounterParent
+    include Lustra::Model
+
+    self.connection = "secondary"
+    self.table = "secondary_counter_parents"
+
+    column id : Int32, primary: true, presence: false
+    column children_count : Int32, presence: false
+  end
+
+  class CounterChild
+    include Lustra::Model
+
+    self.connection = "secondary"
+    self.table = "secondary_counter_children"
+
+    column id : Int32, primary: true, presence: false
+
+    belongs_to owner : CounterParent,
+      foreign_key: "parent_id",
+      foreign_key_type: Int32,
+      counter_cache: :children_count
+  end
+
   class ModelSpecMigration1234
     include Lustra::Migration
 
@@ -33,6 +57,30 @@ module MultipleConnectionsSpec
   def self.reinit
     reinit_migration_manager
     ModelSpecMigration1234.new.apply
+  end
+
+  def self.clear_post_stats
+    Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
+  end
+
+  def self.create_counter_tables
+    Lustra::SQL.execute("secondary", <<-SQL)
+      CREATE TABLE secondary_counter_parents (
+        id serial PRIMARY KEY,
+        children_count integer NOT NULL DEFAULT 0
+      )
+      SQL
+    Lustra::SQL.execute("secondary", <<-SQL)
+      CREATE TABLE secondary_counter_children (
+        id serial PRIMARY KEY,
+        parent_id integer NOT NULL
+      )
+      SQL
+  end
+
+  def self.drop_counter_tables
+    Lustra::SQL.execute("secondary", "DROP TABLE IF EXISTS secondary_counter_children")
+    Lustra::SQL.execute("secondary", "DROP TABLE IF EXISTS secondary_counter_parents")
   end
 
   describe "Lustra::Model" do
@@ -82,6 +130,110 @@ module MultipleConnectionsSpec
           p = PostStat.new({post_id: 1})
           p.save
           p.delete.should be_true
+        end
+      end
+
+      it "fetches with a cursor from the secondary database" do
+        clear_post_stats
+
+        begin
+          PostStat.create!(post_id: 1)
+          PostStat.create!(post_id: 2)
+
+          post_ids = [] of Int32
+          PostStat.query.order_by(:id).each_with_cursor(batch: 1) do |post_stat|
+            post_ids << post_stat.post_id
+          end
+
+          post_ids.should eq([1, 2])
+        ensure
+          clear_post_stats
+        end
+      end
+
+      it "bulk updates and deletes on the secondary database" do
+        clear_post_stats
+
+        begin
+          PostStat.create!(post_id: 1)
+          PostStat.create!(post_id: 2)
+
+          PostStat.query.update_all(post_id: 3).should eq(2)
+          PostStat.query.where(post_id: 3).count.should eq(2)
+
+          PostStat.query.where(post_id: 3).delete_all
+          PostStat.query.count.should eq(0)
+        ensure
+          clear_post_stats
+        end
+      end
+
+      it "runs wrapped aggregates on the secondary database" do
+        clear_post_stats
+
+        begin
+          PostStat.create!(post_id: 10)
+          PostStat.create!(post_id: 20)
+
+          query = PostStat.query.order_by(:id).limit(1)
+          query.count.should eq(1)
+          query.sum("post_id").should eq(10.0)
+        ensure
+          clear_post_stats
+        end
+      end
+
+      it "checks existence on the secondary database" do
+        clear_post_stats
+
+        begin
+          PostStat.query.exists?.should be_false
+          PostStat.create!(post_id: 1)
+          PostStat.query.exists?.should be_true
+        ensure
+          clear_post_stats
+        end
+      end
+
+      it "reloads an incremented value from the secondary database" do
+        clear_post_stats
+
+        begin
+          post_stat = PostStat.create!(post_id: 1)
+          post_stat.increment!(:post_id)
+
+          post_stat.post_id.should eq(2)
+        ensure
+          clear_post_stats
+        end
+      end
+
+      it "updates counter caches on the secondary database" do
+        drop_counter_tables
+        create_counter_tables
+
+        begin
+          parent = CounterParent.create!
+          CounterChild.create!(owner: parent)
+
+          parent.reload.children_count.should eq(1)
+        ensure
+          drop_counter_tables
+        end
+      end
+
+      it "resets counter caches on the secondary database" do
+        drop_counter_tables
+        create_counter_tables
+
+        begin
+          parent = CounterParent.create!
+          Lustra::SQL.insert_into("secondary_counter_children", {parent_id: parent.id}).execute("secondary")
+
+          parent.reset_counters(CounterChild)
+          parent.children_count.should eq(1)
+        ensure
+          drop_counter_tables
         end
       end
     end

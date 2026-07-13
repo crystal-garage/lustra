@@ -16,7 +16,7 @@ module Lustra::SQL::Query::Aggregate
       # ... except if the subquery has distinct, otherwise will always returns "1"...
       subquery = is_distinct? ? self : dup.clear_order_bys.clear_select.use_connection(connection_name).select("1")
 
-      o = X.new(Lustra::SQL.select("COUNT(*)").from({query_count: subquery}).scalar(Int64))
+      o = X.new(Lustra::SQL.select("COUNT(*)").from({query_count: subquery}).use_connection(connection_name).scalar(Int64))
     else
       new_query = dup.clear_select.select("COUNT(*)")
       o = X.new(new_query.scalar(Int64))
@@ -42,7 +42,7 @@ module Lustra::SQL::Query::Aggregate
     if @offset || @limit || @group_bys
       # SELECT agg_func FROM ( $subquery ) AS subquery
       subquery = dup.clear_order_bys
-      X.cast(Lustra::SQL.select(field).from({subquery: subquery}).scalar(X))
+      X.cast(Lustra::SQL.select(field).from({subquery: subquery}).use_connection(connection_name).scalar(X))
     else
       dup.clear_select.clear_order_bys.select(field).scalar(X)
     end
@@ -73,6 +73,6 @@ module Lustra::SQL::Query::Aggregate
   # ```
   def exists? : Bool
     # Use a simple EXISTS subquery for optimal performance
-    Lustra::SQL.select("1").from({subquery: dup.limit(1)}).first != nil
+    Lustra::SQL.select("1").from({subquery: dup.limit(1)}).use_connection(connection_name).first != nil
   end
 end

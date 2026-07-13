@@ -504,6 +504,7 @@ module Lustra::Model::ClassMethods
             .select("COUNT(*)")
             .from(association_name)
             .where { raw(counter_info[:foreign_key]) == id }
+            .use_connection(@@connection)
             .scalar(Int64)
 
           # Update counter column directly (bypassing callbacks)
@@ -514,7 +515,7 @@ module Lustra::Model::ClassMethods
       private def self.update_counters(id, counters)
         # Direct SQL update, no callbacks
         set_clause = counters.map { |k, v| "#{k} = #{v}" }.join(", ")
-        Lustra::SQL.execute("UPDATE #{full_table_name} SET #{set_clause} WHERE #{__pkey__} = #{id}")
+        Lustra::SQL.execute(@@connection, "UPDATE #{full_table_name} SET #{set_clause} WHERE #{__pkey__} = #{id}")
       end
 
       # Reset counter cache columns
