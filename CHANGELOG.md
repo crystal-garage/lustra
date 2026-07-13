@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Transactions and savepoints now execute `BEGIN`, `COMMIT`, and `ROLLBACK` on the selected named connection.
 - Cursor fetching, bulk updates and deletes, wrapped aggregates, existence checks, counter caches, and increment reloads now preserve the model or query connection.
+- `Collection#first` now restores the collection's ordering and limit after fetching while preserving eager-loading constraints.
 - Counter updates now use escaped query expressions, support string primary keys safely, and reject nonnumeric increment and decrement amounts.
 - `Collection#create!` now raises `Lustra::Model::InvalidError` for invalid NamedTuple input, matching its keyword-argument overload.
 - Non-persisting `increment` and `decrement` now use the model's current in-memory value without querying the database.

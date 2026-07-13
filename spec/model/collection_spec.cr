@@ -1365,6 +1365,47 @@ module CollectionSpec
       end
     end
 
+    it "first does not mutate the query while eager loading nested associations" do
+      temporary do
+        reinit_example_models
+
+        category = Category.create!(id: 1, name: "Category")
+        first_user = User.create!(id: 1, first_name: "First")
+        last_user = User.create!(id: 2, first_name: "Last")
+        Post.create!(title: "First post", user_id: first_user.id, category_id: category.id)
+        Post.create!(title: "Last post", user_id: last_user.id, category_id: category.id)
+
+        eager_sql = nil
+        users = User.query.with_posts do |posts|
+          eager_sql = posts.to_sql
+          posts.with_category
+        end.order_by(id: :desc)
+        sql = users.to_sql
+
+        user = users.first!
+
+        user.id.should eq(last_user.id)
+        user.posts.map(&.title).should eq(["Last post"])
+        user.posts.first!.category.name.should eq("Category")
+        eager_sql.should_not be_nil
+        eager_sql.not_nil!.should contain("LIMIT 1")
+        users.to_sql.should eq(sql)
+      end
+    end
+
+    it "first restores the query after an eager-loading error" do
+      temporary do
+        reinit_example_models
+        User.create!(first_name: "User")
+
+        users = User.query.with_posts { raise "eager-loading error" }.order_by(id: :desc).limit(5)
+        sql = users.to_sql
+
+        expect_raises(Exception, "eager-loading error") { users.first }
+        users.to_sql.should eq(sql)
+      end
+    end
+
     it "last / last!" do
       temporary do
         reinit_example_models

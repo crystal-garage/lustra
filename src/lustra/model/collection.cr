@@ -758,13 +758,21 @@ module Lustra::Model
     # Get the first row from the collection query.
     # if not found, return `nil`
     def first(fetch_columns = false) : T?
-      order_by(Lustra::SQL.escape("#{T.__pkey__}"), :asc) if T.__pkey__ || order_bys.empty?
+      previous_order_bys = order_bys.dup
+      previous_limit = limit
 
-      limit(1).fetch do |hash|
-        return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+      begin
+        order_by(Lustra::SQL.escape("#{T.__pkey__}"), :asc) if T.__pkey__ || order_bys.empty?
+
+        limit(1).fetch do |hash|
+          return Lustra::Model::Factory.build(T, hash, persisted: true, cache: @cache, fetch_columns: fetch_columns)
+        end
+
+        nil
+      ensure
+        order_by(previous_order_bys)
+        limit(previous_limit)
       end
-
-      nil
     end
 
     # Get the first row from the collection query.
