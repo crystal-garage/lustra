@@ -118,24 +118,7 @@ module Lustra::SQL::Query::Having
   def or_having(node : Lustra::Expression::Node)
     return having(node) if @havings.empty?
 
-    # Optimisation: if we have a OR Array as root, we use it and append directly the element.
-    if @havings.size == 1 &&
-       (n = @havings.first) &&
-       n.is_a?(Lustra::Expression::Node::NodeArray) &&
-       n.link == "OR"
-      n.expression << node
-    else
-      # Concatenate the old clauses in a list of AND conditions
-      if @havings.size == 1
-        old_clause = @havings.first
-      else
-        old_clause = Lustra::Expression::Node::NodeArray.new(@havings, "AND")
-      end
-
-      @havings.clear
-      @havings << Lustra::Expression::Node::NodeArray.new([old_clause, node], "OR")
-    end
-
+    append_or_condition(@havings, node)
     change!
   end
 

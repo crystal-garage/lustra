@@ -192,24 +192,7 @@ module Lustra::SQL::Query::Where
   def or(node : Lustra::Expression::Node)
     return where(node) if @wheres.empty?
 
-    # Optimisation: if we have a OR Array as root, we use it and append directly the element.
-    if @wheres.size == 1 &&
-       (n = @wheres.first) &&
-       n.is_a?(Lustra::Expression::Node::NodeArray) &&
-       n.link == "OR"
-      n.expression << node
-    else
-      # Concatenate the old clauses in a list of AND conditions
-      if @wheres.size == 1
-        old_clause = @wheres.first
-      else
-        old_clause = Lustra::Expression::Node::NodeArray.new(@wheres, "AND")
-      end
-
-      @wheres.clear
-      @wheres << Lustra::Expression::Node::NodeArray.new([old_clause, node], "OR")
-    end
-
+    append_or_condition(@wheres, node)
     change!
   end
 

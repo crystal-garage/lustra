@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Maintenance
 - Deduplicated internal condition-node construction for `where`, `not`, `or`, and `having` queries without changing generated SQL.
+- Deduplicated internal OR-clause grouping for `where` and `having` queries without changing generated SQL.
 
 ### Removed
 - Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.

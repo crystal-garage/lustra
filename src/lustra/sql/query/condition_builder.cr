@@ -19,4 +19,21 @@ module Lustra::SQL::Query::ConditionBuilder
       )
     end
   end
+
+  private def append_or_condition(clauses : Array(Lustra::Expression::Node), node : Lustra::Expression::Node)
+    if clauses.size == 1 &&
+       (current = clauses.first).is_a?(Lustra::Expression::Node::NodeArray) &&
+       current.link == "OR"
+      current.expression << node
+    else
+      old_clause = if clauses.size == 1
+                     clauses.first
+                   else
+                     Lustra::Expression::Node::NodeArray.new(clauses, "AND")
+                   end
+
+      clauses.clear
+      clauses << Lustra::Expression::Node::NodeArray.new([old_clause, node], "OR")
+    end
+  end
 end
