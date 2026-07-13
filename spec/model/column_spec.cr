@@ -47,7 +47,8 @@ module ColumnSpec
           u = User.new({id: 1, first_name: "Henry"})
 
           u.last_name_column.defined?.should be_false
-          expect_raises(Exception, /reused a collection[\s\S]*first[\s\S]*find_by[\s\S]*dup/) { u.last_name }
+          error = expect_raises(Exception, /column `last_name`[\s\S]*not initialized[\s\S]*select[\s\S]*last_name=/) { u.last_name }
+          error.message.to_s.should_not contain("model-fetching helpers")
         end
       end
 
