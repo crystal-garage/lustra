@@ -889,7 +889,7 @@ module Lustra::Model
     # # WHERE ("posts"."id" IS NULL)
     # ```
     def missing(association : Lustra::SQL::Symbolic)
-      auto_join_association(association, :left, false)
+      auto_join_association(association, :left, false, "Association filters accept an association name, not a table name.")
       where("#{association_primary_key_sql(association)} IS NULL")
     end
 
@@ -902,7 +902,7 @@ module Lustra::Model
     # # WHERE ("posts"."id" IS NOT NULL)
     # ```
     def associated(association : Lustra::SQL::Symbolic)
-      auto_join_association(association, :inner, false)
+      auto_join_association(association, :inner, false, "Association filters accept an association name, not a table name.")
       where("#{association_primary_key_sql(association)} IS NOT NULL")
     end
 
@@ -922,6 +922,19 @@ module Lustra::Model
       self.select(SQL::Column.new(association_count_sql(association), count_alias))
       group_by("#{table}.#{T.__pkey__}") if !joins.empty? && group_bys.empty?
       self
+    end
+
+    private def unknown_association_message(association, advice : String)
+      available = {% begin %}
+        {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
+        {% if available_associations.empty? %}
+          "none"
+        {% else %}
+          {{ available_associations.join(", ") }}
+        {% end %}
+      {% end %}
+
+      "Unknown association '#{association}' for #{T}. Available associations: #{available}. #{advice}"
     end
 
     # Return the SQL identifier used for the association existence predicate.
@@ -957,14 +970,7 @@ module Lustra::Model
           {% end %}
         {% end %}
         else
-          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
-          {% if available_associations.empty? %}
-            available = "none"
-          {% else %}
-            available = {{ available_associations.join(", ") }}
-          {% end %}
-
-          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
+          raise unknown_association_message(association, "Association filters accept an association name, not a table name.")
         end
       {% end %}
     end
@@ -1071,20 +1077,18 @@ module Lustra::Model
           {% end %}
         {% end %}
         else
-          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
-          {% if available_associations.empty? %}
-            available = "none"
-          {% else %}
-            available = {{ available_associations.join(", ") }}
-          {% end %}
-
-          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
+          raise unknown_association_message(association, "with_count accepts an association name, not a table name.")
         end
       {% end %}
     end
 
     # Helper to auto-detect join conditions from association metadata
-    private def auto_join_association(association : Lustra::SQL::Symbolic, type, lateral)
+    private def auto_join_association(
+      association : Lustra::SQL::Symbolic,
+      type,
+      lateral,
+      unknown_association_advice = "For a table name, use join with a block.",
+    )
       {% begin %}
         case association.to_s
         {% for name, settings in T::RELATIONS %}
@@ -1209,14 +1213,7 @@ module Lustra::Model
           {% end %}
         {% end %}
         else
-          {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
-          {% if available_associations.empty? %}
-            available = "none"
-          {% else %}
-            available = {{ available_associations.join(", ") }}
-          {% end %}
-
-          raise "Unknown association '#{association}' for #{T}. Available associations: #{available}. Use join with a block for table names."
+          raise unknown_association_message(association, unknown_association_advice)
         end
       {% end %}
     end

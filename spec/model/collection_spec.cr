@@ -1275,6 +1275,16 @@ module CollectionSpec
         end
       end
 
+      it "with_count raises operation-specific error for unknown association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Unknown association 'unknown_association' for User.*Available associations: categories, comments, dependencies, dependents, info, posts, relationships.*with_count accepts an association name, not a table name/) do
+            User.query.with_count(:unknown_association)
+          end
+        end
+      end
+
       it "with_count with polymorphic has_many association" do
         temporary do
           reinit_example_models
@@ -1485,8 +1495,18 @@ module CollectionSpec
         temporary do
           reinit_example_models
 
-          expect_raises(Exception, /Unknown association 'unknown_association' for User.*Available associations: categories, comments, dependencies, dependents, info, posts, relationships.*Use join with a block/) do
+          expect_raises(Exception, /Unknown association 'unknown_association' for User.*Available associations: categories, comments, dependencies, dependents, info, posts, relationships.*For a table name, use join with a block/) do
             User.query.join(:unknown_association).to_a
+          end
+        end
+      end
+
+      it "association filter raises operation-specific error for unknown association" do
+        temporary do
+          reinit_example_models
+
+          expect_raises(Exception, /Unknown association 'unknown_association' for User.*Available associations: categories, comments, dependencies, dependents, info, posts, relationships.*Association filters accept an association name, not a table name/) do
+            User.query.where.missing(:unknown_association)
           end
         end
       end

@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added concrete `belongs_to ..., polymorphic_type:` aliases for joining and eager loading one polymorphic target type through a shared foreign key.
 
 ### Changed
-- Unknown association errors now include available association names.
+- Unknown association errors now include available association names and operation-specific correction guidance.
 - Read-only model save errors now explain that read-only models commonly map database views or system catalogs.
 - Association append and unlink errors now explain that the operation requires a writable association collection.
 - Missing primary key errors now show the concrete declarations for defining a primary key.
