@@ -337,6 +337,15 @@ module Lustra::Model
       self
     end
 
+    private def build_fetched_model(hash : Hash(String, Lustra::SQL::Any), fetch_columns : Bool) : T
+      if @polymorphic
+        type = hash[@polymorphic_key].as(String)
+        Lustra::Model::Factory.build(type, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache).as(T)
+      else
+        Lustra::Model::Factory.build(T, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache)
+      end
+    end
+
     # Build the SQL, send the query, then iterate through each model gathered by
     # the request.
     def each(fetch_columns = false, & : T ->) : Nil
@@ -345,15 +354,8 @@ module Lustra::Model
       unless result
         result = [] of T
 
-        if @polymorphic
-          fetch(fetch_all: false) do |hash|
-            type = hash[@polymorphic_key].as(String)
-            result << Lustra::Model::Factory.build(type, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache).as(T)
-          end
-        else
-          fetch(fetch_all: false) do |hash|
-            result << Lustra::Model::Factory.build(T, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache)
-          end
+        fetch(fetch_all: false) do |hash|
+          result << build_fetched_model(hash, fetch_columns)
         end
       end
 
@@ -381,15 +383,8 @@ module Lustra::Model
       if cr
         cr.each(&block)
       else
-        if @polymorphic
-          fetch_with_cursor(count: batch) do |hash|
-            type = hash[@polymorphic_key].as(String)
-            yield(Lustra::Model::Factory.build(type, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache).as(T))
-          end
-        else
-          fetch_with_cursor(count: batch) do |hash|
-            yield(Lustra::Model::Factory.build(T, hash, persisted: true, fetch_columns: fetch_columns, cache: @cache))
-          end
+        fetch_with_cursor(count: batch) do |hash|
+          yield build_fetched_model(hash, fetch_columns)
         end
       end
     end
