@@ -514,8 +514,12 @@ module Lustra::Model::ClassMethods
 
       private def self.update_counters(id, counters)
         # Direct SQL update, no callbacks
-        set_clause = counters.map { |k, v| "#{k} = #{v}" }.join(", ")
-        Lustra::SQL.execute(@@connection, "UPDATE #{full_table_name} SET #{set_clause} WHERE #{__pkey__} = #{id}")
+        updates = {} of String => Lustra::SQL::UpdateQuery::Updatable
+        counters.each { |column, value| updates[column.to_s] = value }
+        Lustra::SQL.update(full_table_name)
+          .set(updates)
+          .where { raw(__pkey__) == id }
+          .execute(@@connection)
       end
 
       # Reset counter cache columns

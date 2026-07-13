@@ -220,11 +220,13 @@ module Lustra::Model::Relations::BelongsToMacro
           counter_column_name = "{{ counter_cache.id }}"
         {% end %}
 
-        Lustra::SQL.execute(parent.class.connection, <<-SQL)
-          UPDATE #{parent.class.full_table_name}
-              SET #{counter_column_name} = #{counter_column_name} #{operation}
-            WHERE #{parent.class.__pkey__} = #{parent.__pkey__}
-          SQL
+        escaped_column = Lustra::SQL.escape(counter_column_name)
+        updates = {} of String => Lustra::SQL::UpdateQuery::Updatable
+        updates[counter_column_name] = Lustra::SQL.unsafe("#{escaped_column} #{operation}")
+        Lustra::SQL.update(parent.class.full_table_name)
+          .set(updates)
+          .where { raw(parent.class.__pkey__) == parent.__pkey__ }
+          .execute(parent.class.connection)
       end
 
       # Register counter cache information with the parent class at runtime.

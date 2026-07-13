@@ -276,14 +276,19 @@ module Lustra::Model::HasSaving
   # ```
   #
   # Returns `self` for chaining.
-  def increment!(column : Symbol | String, by = 1)
+  def increment!(column : Symbol | String, by : Number = 1)
     raise "Model must be persisted before incrementing" unless persisted?
 
     column_name = column.to_s
 
     # Update database atomically
-    sql = "UPDATE #{self.class.full_table_name} SET #{Lustra::SQL.escape(column_name)} = #{Lustra::SQL.escape(column_name)} + #{by} WHERE #{self.class.__pkey__} = #{__pkey__}"
-    Lustra::SQL.execute(@@connection, sql)
+    escaped_column = Lustra::SQL.escape(column_name)
+    updates = {} of String => Lustra::SQL::UpdateQuery::Updatable
+    updates[column_name] = Lustra::SQL.unsafe("#{escaped_column} + #{Lustra::Expression[by]}")
+    Lustra::SQL.update(self.class.full_table_name)
+      .set(updates)
+      .where { raw(self.class.__pkey__) == __pkey__ }
+      .execute(@@connection)
 
     # Update in-memory value by reloading just this column
     result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.use_connection(@@connection).fetch_first!
@@ -302,7 +307,7 @@ module Lustra::Model::HasSaving
   # ```
   #
   # Returns `self` for chaining.
-  def increment(column : Symbol | String, by = 1)
+  def increment(column : Symbol | String, by : Number = 1)
     column_name = column.to_s
 
     # Get current value from the column
@@ -333,7 +338,7 @@ module Lustra::Model::HasSaving
   # ```
   #
   # Returns `self` for chaining.
-  def decrement!(column : Symbol | String, by = 1)
+  def decrement!(column : Symbol | String, by : Number = 1)
     increment!(column, -by)
   end
 
@@ -346,7 +351,7 @@ module Lustra::Model::HasSaving
   # ```
   #
   # Returns `self` for chaining.
-  def decrement(column : Symbol | String, by = 1)
+  def decrement(column : Symbol | String, by : Number = 1)
     increment(column, -by)
   end
 
