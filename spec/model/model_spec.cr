@@ -11,7 +11,7 @@ module ModelSpec
   describe "Lustra::Model" do
     context "fields management" do
       it "raises helpful error when primary key is missing" do
-        expect_raises(Exception, /ModelWithoutPrimaryKey[\s\S]*primary key[\s\S]*primary_key[\s\S]*primary: true/) do
+        expect_raises(Exception, /ModelWithoutPrimaryKey` does not define a primary key\.\s+Add\s+`primary_key`, or mark a column with `primary: true`\./) do
           ModelWithoutPrimaryKey.new.__pkey__
         end
       end

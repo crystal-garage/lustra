@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unknown association errors now include available association names and operation-specific correction guidance.
 - Read-only model save errors now explain that read-only models commonly map database views or system catalogs.
 - Association append and unlink errors now explain that the operation requires a writable association collection.
-- Missing primary key errors now show the concrete declarations for defining a primary key.
+- Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
 - Transactions and savepoints now execute `BEGIN`, `COMMIT`, and `ROLLBACK` on the selected named connection.
