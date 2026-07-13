@@ -80,6 +80,31 @@ module ModelSpec
         end
       end
 
+      it "low-level fetch_first restores its limit while running hooks on the constrained query" do
+        temporary do
+          reinit_example_models
+          User.create!(id: 1, first_name: "John")
+
+          query = Lustra::SQL.select.from("users").limit(5)
+          sql = query.to_sql
+          hook_sql = nil
+          query.before_query { hook_sql = query.to_sql }
+
+          query.fetch_first.should_not be_nil
+          hook_sql.not_nil!.should contain("LIMIT 1")
+          query.to_sql.should eq(sql)
+        end
+      end
+
+      it "low-level fetch_first restores its limit after a hook error" do
+        query = Lustra::SQL.select.from("users").limit(5)
+        sql = query.to_sql
+        query.before_query { raise "query hook error" }
+
+        expect_raises(Exception, "query hook error") { query.fetch_first }
+        query.to_sql.should eq(sql)
+      end
+
       it "exists?" do
         temporary do
           reinit_example_models

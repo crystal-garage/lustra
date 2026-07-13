@@ -5,6 +5,38 @@ module AggregateSpec
   extend self
 
   describe "Lustra::SQL::Query::Aggregate" do
+    it "does not run or consume eager-loading hooks for count" do
+      temporary do
+        reinit_example_models
+        User.create!(first_name: "User")
+
+        hook_called = false
+        users = User.query.with_posts { hook_called = true }
+
+        users.count.should eq(1)
+        hook_called.should be_false
+
+        users.each { }
+        hook_called.should be_true
+      end
+    end
+
+    it "does not run or consume eager-loading hooks for aggregates" do
+      temporary do
+        reinit_example_models
+        User.create!(first_name: "User", posts_count: 2)
+
+        hook_called = false
+        users = User.query.with_posts { hook_called = true }
+
+        users.sum("posts_count").should eq(2.0)
+        hook_called.should be_false
+
+        users.each { }
+        hook_called.should be_true
+      end
+    end
+
     describe "#sum" do
       it "returns sum of integer field" do
         temporary do
