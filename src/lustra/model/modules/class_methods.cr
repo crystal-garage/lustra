@@ -1,4 +1,6 @@
 module Lustra::Model::ClassMethods
+  alias OnDuplicate = Symbol | Lustra::Expression::UnsafeSql
+
   macro included # When included into Model
     macro included # When included into final Model
       # :nodoc:
@@ -318,13 +320,17 @@ module Lustra::Model::ClassMethods
       #
       # This bypasses validations and callbacks, like Rails' `upsert`.
       # Use `save` with an `on_conflict` block when lifecycle hooks are needed.
-      def self.upsert(row : NamedTuple, unique_by : Symbol | String = __pkey__, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : self?
-        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only).first?
+      #
+      # Pass `Lustra::SQL.unsafe` to `on_duplicate` for a custom `SET` clause.
+      # Custom conflict updates cannot be combined with `update_only`.
+      # Set `returning` to `false` to skip `RETURNING *` and model construction.
+      def self.upsert(row : NamedTuple, unique_by : Symbol | String = __pkey__, on_duplicate : Lustra::Model::ClassMethods::OnDuplicate = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil, returning : Bool = true) : self?
+        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only, returning: returning).first?
       end
 
       # Insert or update a single row by array conflict target.
-      def self.upsert(row : NamedTuple, unique_by : Array(Lustra::SQL::Symbolic), on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : self?
-        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only).first?
+      def self.upsert(row : NamedTuple, unique_by : Array(Lustra::SQL::Symbolic), on_duplicate : Lustra::Model::ClassMethods::OnDuplicate = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil, returning : Bool = true) : self?
+        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only, returning: returning).first?
       end
 
       # Insert or update a single row by composite conflict target.
@@ -332,43 +338,43 @@ module Lustra::Model::ClassMethods
       # ```
       # Model.upsert({tenant_id: 1, slug: "intro", title: "Intro"}, unique_by: {:tenant_id, :slug})
       # ```
-      def self.upsert(row : NamedTuple, unique_by : Tuple, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : self?
-        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only).first?
+      def self.upsert(row : NamedTuple, unique_by : Tuple, on_duplicate : Lustra::Model::ClassMethods::OnDuplicate = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil, returning : Bool = true) : self?
+        upsert_all([row], unique_by: unique_by, on_duplicate: on_duplicate, update_only: update_only, returning: returning).first?
       end
 
       # Insert or update many rows by conflict target.
       #
-      # Returns the rows saved by PostgreSQL's `RETURNING *`.
-      def self.upsert_all(rows : Array(NamedTuple), unique_by : Symbol | String = __pkey__, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : Array(self)
+      # Returns the rows saved by PostgreSQL's `RETURNING *`, or an empty array
+      # when `returning` is `false`.
+      def self.upsert_all(rows : Array(NamedTuple), unique_by : Symbol | String = __pkey__, on_duplicate : Lustra::Model::ClassMethods::OnDuplicate = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil, returning : Bool = true) : Array(self)
         return [] of self if rows.empty?
 
-        upsert_all(rows, unique_by: {unique_by}, on_duplicate: on_duplicate, update_only: update_only)
+        upsert_all(rows, unique_by: {unique_by}, on_duplicate: on_duplicate, update_only: update_only, returning: returning)
       end
 
       # Insert or update many rows by array conflict target.
       #
       # Returns the rows saved by PostgreSQL's `RETURNING *`.
-      def self.upsert_all(rows : Array(NamedTuple), unique_by : Array(Lustra::SQL::Symbolic), on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : Array(self)
+      def self.upsert_all(rows : Array(NamedTuple), unique_by : Array(Lustra::SQL::Symbolic), on_duplicate : Lustra::Model::ClassMethods::OnDuplicate = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil, returning : Bool = true) : Array(self)
         return [] of self if rows.empty?
 
-        __upsert_all(rows, unique_by, on_duplicate, update_only)
+        __upsert_all(rows, unique_by, on_duplicate, update_only, returning)
       end
 
       # Insert or update many rows by composite conflict target.
       #
       # Returns the rows saved by PostgreSQL's `RETURNING *`.
-      def self.upsert_all(rows : Array(NamedTuple), unique_by : Tuple, on_duplicate : Symbol = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil) : Array(self)
+      def self.upsert_all(rows : Array(NamedTuple), unique_by : Tuple, on_duplicate : Lustra::Model::ClassMethods::OnDuplicate = :update, update_only : Enumerable(Lustra::SQL::Symbolic)? = nil, returning : Bool = true) : Array(self)
         return [] of self if rows.empty?
 
-        __upsert_all(rows, unique_by, on_duplicate, update_only)
+        __upsert_all(rows, unique_by, on_duplicate, update_only, returning)
       end
 
-      private def self.__upsert_all(rows : Array(NamedTuple), unique_by, on_duplicate : Symbol, update_only) : Array(self)
+      private def self.__upsert_all(rows : Array(NamedTuple), unique_by, on_duplicate : Lustra::Model::ClassMethods::OnDuplicate, update_only, returning : Bool) : Array(self)
         conflict_columns = __upsert_column_names(unique_by)
         update_columns = __upsert_update_columns(rows.first.keys, conflict_columns, update_only)
 
         query = Lustra::SQL.insert_into(self.full_table_name, rows.map { |row| build(row).to_h })
-          .returning("*")
           .on_conflict(__upsert_conflict_target(conflict_columns))
 
         case on_duplicate
@@ -385,12 +391,23 @@ module Lustra::Model::ClassMethods
               end)
             end
           end
+        when Lustra::Expression::UnsafeSql
+          raise ArgumentError.new("on_duplicate and update_only are mutually exclusive.") if update_only
+
+          query.do_update do |update|
+            update.set(on_duplicate.to_sql)
+          end
         else
-          raise ArgumentError.new("Unsupported on_duplicate value: #{on_duplicate}. Use :update or :skip.")
+          raise ArgumentError.new("Unsupported on_duplicate value: #{on_duplicate}. Use :update, :skip, or Lustra::SQL.unsafe.")
+        end
+
+        unless returning
+          query.execute(@@connection)
+          return [] of self
         end
 
         saved = [] of self
-        query.fetch(@@connection) do |hash|
+        query.returning("*").fetch(@@connection) do |hash|
           saved << Lustra::Model::Factory.build(self.name, hash, persisted: true,
             fetch_columns: false, cache: nil).as(self)
         end
