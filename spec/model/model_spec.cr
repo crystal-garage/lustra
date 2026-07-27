@@ -813,6 +813,35 @@ module ModelSpec
         end
       end
 
+      it "upserts with a custom conflict update" do
+        temporary do
+          reinit_example_models
+
+          User.upsert({id: 1, first_name: "John", posts_count: 2})
+
+          result = User.upsert(
+            {id: 1, first_name: "Ignored", posts_count: 3},
+            on_duplicate: Lustra::SQL.unsafe(%("posts_count" = "users"."posts_count" + excluded."posts_count")),
+            returning: false
+          )
+
+          result.should be_nil
+          user = User.query.find!(1)
+          user.first_name.should eq "John"
+          user.posts_count.should eq 5
+        end
+      end
+
+      it "rejects update_only with a custom conflict update" do
+        expect_raises(ArgumentError, /mutually exclusive/) do
+          User.upsert(
+            {id: 1, first_name: "John"},
+            on_duplicate: Lustra::SQL.unsafe(%("first_name" = excluded."first_name")),
+            update_only: [:first_name]
+          )
+        end
+      end
+
       it "save with conflict resolution" do
         temporary do
           reinit_example_models
