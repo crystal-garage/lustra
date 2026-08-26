@@ -1646,7 +1646,7 @@ module CollectionSpec
         end
 
         User.query.count.should eq(10)
-        User.query.where { id <= 5 }.delete_all
+        User.query.where { id <= 5 }.delete_all.should eq(5)
         User.query.count.should eq(5)
       end
     end

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `Model.insert` and `Model.insert_all` for PostgreSQL inserts with duplicate skipping and configurable `RETURNING`.
 - Added `Model.upsert` and `Model.upsert_all` for PostgreSQL `ON CONFLICT` inserts, with `on_duplicate: :update` and `on_duplicate: :skip`.
 - Added custom `Model.upsert` and `Model.upsert_all` conflict updates with `Lustra::SQL.unsafe`, plus `returning: false` to skip returned model construction.
+- Added PostgreSQL `RETURNING` support to bulk updates and deletes, including typed results from `Collection#update_all` and `Collection#delete_all`.
 - Added `where.associated(:association)` and `where.missing(:association)` relation filters for querying records with or without associated rows.
 - Added `with_count(:association)` for selecting related record counts without loading the associated records.
 - Added polymorphic `has_many ..., as:` associations backed by `<name>_id` and `<name>_type` columns.
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added concrete `belongs_to ..., polymorphic_type:` aliases for joining and eager loading one polymorphic target type through a shared foreign key.
 
 ### Changed
+- `Collection#delete_all` now returns the number of affected rows instead of the collection.
 - Unknown association errors now include available association names and operation-specific correction guidance.
 - Read-only model save errors now explain that read-only models commonly map database views or system catalogs.
 - Association append and unlink errors now explain that the operation requires a writable association collection.

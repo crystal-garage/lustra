@@ -29,6 +29,7 @@ class Lustra::SQL::UpdateQuery
   include Query::Change
   include Query::Where
   include Query::Execute
+  include Query::Returning
 
   def initialize(@table, @wheres = [] of Lustra::Expression::Node)
   end
@@ -92,6 +93,6 @@ class Lustra::SQL::UpdateQuery
     # raise Lustra::ErrorMessages.query_building_error("Update Query must have a table clause.") if @table.nil?
     table = @table.is_a?(Symbol) ? SQL.escape(@table.to_s) : @table
 
-    [print_ctes, "UPDATE", table, "SET", print_values, print_wheres].compact.join(" ")
+    append_returning([print_ctes, "UPDATE", table, "SET", print_values, print_wheres]).compact.join(" ")
   end
 end
