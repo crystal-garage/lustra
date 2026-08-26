@@ -464,6 +464,58 @@ module ModelSpec
         end
       end
 
+      it "returns typed columns from update_all" do
+        temporary do
+          reinit_example_models
+
+          User.create!(id: 1, first_name: "John", active: true)
+          User.create!(id: 2, first_name: "Jane", active: false)
+          User.create!(id: 3, first_name: "Bob", active: false)
+
+          updated = User.query.where { active == false }.update_all(
+            {active: true},
+            returning: {id: Int64, first_name: String}
+          )
+
+          updated.sort_by(&.[0]).should eq([
+            {2, "Jane"},
+            {3, "Bob"},
+          ])
+
+          User.query.where { active == false }.update_all(
+            {active: true},
+            returning: {id: Int64, first_name: String}
+          ).should be_empty
+
+          fields = {} of String => Lustra::SQL::Any
+          fields["active"] = false
+          User.query.where { id == 1 }.update_all(
+            fields,
+            returning: {id: Int64}
+          ).should eq([{1_i64}])
+        end
+      end
+
+      it "fetches rows from a low-level update returning clause" do
+        temporary do
+          reinit_example_models
+
+          User.create!(id: 1, first_name: "John", active: false)
+
+          returned = [] of Hash(String, Lustra::SQL::Any)
+          User.query.where { id == 1 }
+            .to_update
+            .set(active: true)
+            .returning("id, first_name")
+            .fetch { |row| returned << row.dup }
+
+          returned.should eq([{
+            "id"         => 1_i64,
+            "first_name" => "John",
+          }])
+        end
+      end
+
       it "counter cache functionality" do
         temporary do
           reinit_example_models
@@ -1247,12 +1299,54 @@ module ModelSpec
             end
 
             # delete_all should NOT trigger callbacks
-            User.query.where(last_name: "Doe").delete_all
+            User.query.where(last_name: "Doe").delete_all.should eq(2)
             callback_count.should eq(0)
 
             # Only Bob should remain
             User.query.count.should eq(1)
             User.query.first!.first_name.should eq("Bob")
+          end
+        end
+
+        it "returns typed columns from delete_all" do
+          temporary do
+            reinit_example_models
+
+            User.create!(id: 1, first_name: "John", last_name: "Doe")
+            User.create!(id: 2, first_name: "Jane", last_name: "Doe")
+            User.create!(id: 3, first_name: "Bob", last_name: "Smith")
+
+            deleted = User.query.where(last_name: "Doe").delete_all(
+              returning: {id: Int64, first_name: String}
+            )
+
+            deleted.sort_by(&.[0]).should eq([
+              {1_i64, "John"},
+              {2_i64, "Jane"},
+            ])
+
+            User.query.where(last_name: "Doe").delete_all(
+              returning: {id: Int64, first_name: String}
+            ).should be_empty
+          end
+        end
+
+        it "fetches rows from a low-level delete returning clause" do
+          temporary do
+            reinit_example_models
+
+            User.create!(id: 1, first_name: "John")
+
+            returned = [] of Hash(String, Lustra::SQL::Any)
+            User.query.where { id == 1 }
+              .to_delete
+              .returning("id, first_name")
+              .fetch { |row| returned << row.dup }
+
+            returned.should eq([{
+              "id"         => 1_i64,
+              "first_name" => "John",
+            }])
           end
         end
 

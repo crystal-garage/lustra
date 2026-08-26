@@ -32,9 +32,26 @@ module SelectSpec
         r.to_delete.to_sql.should eq "DELETE FROM \"users\" WHERE (users.id > 1000)"
       end
 
+      it "adds a returning clause to a delete" do
+        r = Lustra::SQL.select("*").from(:users).where { var("users", "id") > 1000 }
+
+        r.to_delete
+          .returning("id, email")
+          .to_sql.should eq "DELETE FROM \"users\" WHERE (\"users\".\"id\" > 1000) RETURNING id, email"
+      end
+
       it "transfert to update method" do
         r = Lustra::SQL.select("*").from(:users).where { var("users", "id") > 1000 }
         r.to_update.set(x: 1).to_sql.should eq "UPDATE \"users\" SET \"x\" = 1 WHERE (\"users\".\"id\" > 1000)"
+      end
+
+      it "adds a returning clause to an update" do
+        r = Lustra::SQL.select("*").from(:users).where { var("users", "id") > 1000 }
+
+        r.to_update
+          .set(x: 1)
+          .returning("id, email")
+          .to_sql.should eq "UPDATE \"users\" SET \"x\" = 1 WHERE (\"users\".\"id\" > 1000) RETURNING id, email"
       end
 
       describe "cte" do

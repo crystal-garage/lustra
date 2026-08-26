@@ -161,7 +161,7 @@ module MultipleConnectionsSpec
           PostStat.query.update_all(post_id: 3).should eq(2)
           PostStat.query.where(post_id: 3).count.should eq(2)
 
-          PostStat.query.where(post_id: 3).delete_all
+          PostStat.query.where(post_id: 3).delete_all.should eq(2)
           PostStat.query.count.should eq(0)
         ensure
           clear_post_stats
