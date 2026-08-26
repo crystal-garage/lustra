@@ -719,6 +719,11 @@ module ModelSpec
           affected = Tag.insert({name: "existing"}, unique_by: :name)
 
           affected.should eq 0
+          Tag.insert(
+            {name: "existing"},
+            unique_by: :name,
+            returning: {id: Int32, name: String}
+          ).should be_nil
           Tag.query.count.should eq 1
         end
       end
@@ -828,6 +833,11 @@ module ModelSpec
           User.create!({id: 1, first_name: "John"})
 
           User.upsert({id: 1, first_name: "Louis"}, on_duplicate: :skip).should eq 0
+          User.upsert(
+            {id: 1, first_name: "Louis"},
+            on_duplicate: :skip,
+            returning: {id: Int64, first_name: String}
+          ).should be_nil
 
           users = User.upsert_all([
             {id: 1, first_name: "Ignored"},
