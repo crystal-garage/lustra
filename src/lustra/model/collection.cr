@@ -1215,16 +1215,32 @@ module Lustra::Model
 
     # Delete all the rows which would have been returned by this collection WITHOUT callbacks.
     # This is a bulk operation that doesn't load models into memory.
-    # Is equivalent to `collection.to_delete.execute`
+    # Is equivalent to `collection.to_delete.execute_and_count`.
     #
     # ```
     # User.query.where { active == false }.delete_all
     # ```
     #
-    # Returns `self` for chaining.
-    def delete_all : self
-      to_delete.execute
+    # Returns the number of rows affected.
+    def delete_all : Int64
+      affected = to_delete.execute_and_count
       change! # because we want to clear the caches in case we do something with the collection later
+      affected
+    end
+
+    # Delete all matching rows and return selected columns as typed tuples.
+    # Tuple values follow the declared column order. PostgreSQL does not
+    # guarantee the order of the returned rows.
+    #
+    # ```
+    # users = User.query.where(active: false).delete_all(
+    #   returning: {id: Int64, email: String}
+    # )
+    # ```
+    def delete_all(returning : T) forall T
+      deleted = to_delete.execute_returning(returning)
+      change!
+      deleted
     end
 
     # Destroy all the rows which would have been returned by this collection WITH callbacks.
@@ -1278,6 +1294,28 @@ module Lustra::Model
     # :ditto:
     def update_all(fields : Hash(String, Lustra::SQL::Any)) : Int64
       to_update.set(fields).execute_and_count
+    end
+
+    # Update all matching rows and return selected columns as typed tuples.
+    # The update fields are positional so `returning` cannot be confused with
+    # a column passed to the keyword-argument overload.
+    #
+    # ```
+    # users = User.query.where(active: false).update_all(
+    #   {active: true},
+    #   returning: {id: Int64, email: String}
+    # )
+    # ```
+    #
+    # Tuple values follow the declared column order. PostgreSQL does not
+    # guarantee the order of the returned rows.
+    def update_all(fields : NamedTuple, returning : T) forall T
+      to_update.set(fields).execute_returning(returning)
+    end
+
+    # :ditto:
+    def update_all(fields : Hash(String, Lustra::SQL::Any), returning : T) forall T
+      to_update.set(fields).execute_returning(returning)
     end
 
     # Convenient shortcut to get an array of primary key values.

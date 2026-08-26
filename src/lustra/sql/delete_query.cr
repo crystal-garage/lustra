@@ -18,6 +18,7 @@ class Lustra::SQL::DeleteQuery
   include Query::Where
   include Query::Execute
   include Query::Change
+  include Query::Returning
 
   def initialize(@table = nil, @wheres = [] of Lustra::Expression::Node)
   end
@@ -32,6 +33,6 @@ class Lustra::SQL::DeleteQuery
 
     table = table.is_a?(Symbol) ? SQL.escape(table.to_s) : table
 
-    ["DELETE FROM", table, print_wheres].compact.join(" ")
+    append_returning(["DELETE FROM", table, print_wheres]).compact.join(" ")
   end
 end
