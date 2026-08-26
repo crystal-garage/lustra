@@ -20,12 +20,12 @@ class Lustra::SQL::InsertQuery
   include Query::Change
   include Query::Connection
   include Query::OnConflict
+  include Query::Returning
 
   alias Inserable = ::Lustra::SQL::Any | BigInt | BigFloat | Time
   getter keys : Array(Symbolic) = [] of Symbolic
   getter values : SelectBuilder | Array(Array(Inserable)) = [] of Array(Inserable)
   getter! table : Symbol | String
-  getter returning : String?
 
   def initialize
   end
@@ -41,37 +41,6 @@ class Lustra::SQL::InsertQuery
     change!
   end
 
-  def fetch(connection_name : String = "default", & : Hash(String, ::Lustra::SQL::Any) -> Nil)
-    h = {} of String => ::Lustra::SQL::Any
-
-    Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
-      sql = to_sql
-      rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
-
-      fetch_result_set(h, rs) { |x| yield(x) }
-    ensure
-      rs.try &.close
-    end
-  end
-
-  protected def fetch_result_set(h : Hash(String, ::Lustra::SQL::Any), rs, &) : Bool
-    return false unless rs.move_next
-
-    loop do
-      rs.each_column do |col|
-        h[col] = rs.read.as(Lustra::SQL::Any)
-      end
-
-      yield(h)
-
-      break unless rs.move_next
-    end
-
-    true
-  ensure
-    rs.close
-  end
-
   def execute(connection_name : String = "default") : Hash(String, ::Lustra::SQL::Any)
     o = {} of String => ::Lustra::SQL::Any
 
@@ -83,6 +52,14 @@ class Lustra::SQL::InsertQuery
     end
 
     o
+  end
+
+  # Run the insert and return the number of rows affected.
+  def execute_and_count(connection_name : String = "default") : Int64
+    sql = to_sql
+    Lustra::SQL.log_query(sql) do
+      Lustra::SQL::ConnectionPool.with_connection(connection_name, &.exec(sql).rows_affected)
+    end
   end
 
   def clear_values
@@ -156,12 +133,6 @@ class Lustra::SQL::InsertQuery
     change!
   end
 
-  def returning(str : String)
-    @returning = str
-
-    change!
-  end
-
   # Number of rows in this insertion request.
   def size : Int32
     v = @values
@@ -203,11 +174,6 @@ class Lustra::SQL::InsertQuery
 
     print_on_conflict(o)
 
-    if @returning
-      o << "RETURNING"
-      o << @returning
-    end
-
-    o.compact.join(" ")
+    append_returning(o).compact.join(" ")
   end
 end

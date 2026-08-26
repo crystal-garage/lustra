@@ -8,9 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added `Model.insert` and `Model.insert_all` for PostgreSQL inserts with duplicate skipping and configurable `RETURNING`.
-- Added `Model.upsert` and `Model.upsert_all` for PostgreSQL `ON CONFLICT` inserts, with `on_duplicate: :update` and `on_duplicate: :skip`.
-- Added custom `Model.upsert` and `Model.upsert_all` conflict updates with `Lustra::SQL.unsafe`, plus `returning: false` to skip returned model construction.
+- Added `Model.insert` and `Model.insert_all` for PostgreSQL inserts with duplicate skipping, affected-row counts, and typed `RETURNING` results.
+- Added `Model.upsert` and `Model.upsert_all` for PostgreSQL `ON CONFLICT` inserts, with affected-row counts, typed `RETURNING` results, and `on_duplicate: :update` or `:skip`.
+- Added custom `Model.upsert` and `Model.upsert_all` conflict updates with `Lustra::SQL.unsafe`.
 - Added PostgreSQL `RETURNING` support to bulk updates and deletes, including typed results from `Collection#update_all` and `Collection#delete_all`.
 - Added `where.associated(:association)` and `where.missing(:association)` relation filters for querying records with or without associated rows.
 - Added `with_count(:association)` for selecting related record counts without loading the associated records.

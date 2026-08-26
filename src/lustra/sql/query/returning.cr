@@ -1,4 +1,12 @@
 module Lustra::SQL::Query::Returning
+  def self.empty_result(_columns : T) forall T
+    {% raise "returning expects a NamedTuple of column names and types" unless T < NamedTuple %}
+
+    {% begin %}
+      [] of Tuple({% for name, type in T %}{{ type.instance }},{% end %})
+    {% end %}
+  end
+
   macro included
     @returning : String? = nil
     getter returning

@@ -702,24 +702,37 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          result = Tag.insert({name: "crystal"}).not_nil!
+          affected = Tag.insert({name: "crystal"})
 
-          result.has_key?("id").should be_true
+          affected.should eq 1
           Tag.query.count.should eq 1
           Tag.query.where(name: "crystal").count.should eq 1
         end
       end
 
-      it "returns nil when insert skips a duplicate" do
+      it "returns zero when insert skips a duplicate" do
         temporary do
           reinit_example_models
 
           Tag.create!({name: "existing"})
 
-          result = Tag.insert({name: "existing"}, unique_by: :name)
+          affected = Tag.insert({name: "existing"}, unique_by: :name)
 
-          result.should be_nil
+          affected.should eq 0
           Tag.query.count.should eq 1
+        end
+      end
+
+      it "returns typed columns from insert" do
+        temporary do
+          reinit_example_models
+
+          inserted = Tag.insert(
+            {name: "crystal"},
+            returning: {id: Int32, name: String}
+          )
+
+          inserted.should eq({1, "crystal"})
         end
       end
 
@@ -727,13 +740,12 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          result = Tag.insert_all([
+          affected = Tag.insert_all([
             {name: "crystal"},
             {name: "orm"},
           ])
 
-          result.size.should eq 2
-          result.first.has_key?("id").should be_true
+          affected.should eq 2
           Tag.query.count.should eq 2
           Tag.query.where(name: "crystal").count.should eq 1
           Tag.query.where(name: "orm").count.should eq 1
@@ -746,61 +758,63 @@ module ModelSpec
 
           Tag.create!({name: "existing"})
 
-          result = Tag.insert_all([
+          inserted = Tag.insert_all([
             {name: "existing"},
             {name: "imported"},
-          ], unique_by: :name, returning: [:id, :name])
+          ], unique_by: :name, returning: {id: Int32, name: String})
 
-          result.size.should eq 1
-          result.first["name"].should eq "imported"
+          inserted.size.should eq 1
+          inserted.first[1].should eq "imported"
           Tag.query.count.should eq 2
           Tag.query.where(name: "existing").count.should eq 1
           Tag.query.where(name: "imported").count.should eq 1
         end
       end
 
-      it "can omit returning rows during insert_all" do
+      it "handles empty insert batches" do
         temporary do
           reinit_example_models
 
-          result = Tag.insert_all([
-            {name: "crystal"},
-          ], returning: false)
+          rows = [] of NamedTuple(name: String)
 
-          result.should be_empty
-          Tag.query.count.should eq 1
+          Tag.insert_all(rows).should eq 0
+          Tag.insert_all(
+            rows,
+            returning: {id: Int32, name: String}
+          ).should be_empty
         end
       end
 
-      it "upserts a model by primary key" do
+      it "upserts a row by primary key" do
         temporary do
           reinit_example_models
 
-          inserted = User.upsert({id: 1, first_name: "John"}).not_nil!
-          inserted.persisted?.should be_true
-          inserted.first_name.should eq "John"
+          User.upsert({id: 1, first_name: "John"}).should eq 1
 
-          updated = User.upsert({id: 1, first_name: "Louis"}, unique_by: [:id]).not_nil!
-          updated.persisted?.should be_true
-          updated.first_name.should eq "Louis"
+          updated = User.upsert(
+            {id: 1, first_name: "Louis"},
+            unique_by: [:id],
+            returning: {id: Int64, first_name: String}
+          )
+          updated.should eq({1_i64, "Louis"})
 
           User.query.count.should eq 1
           User.query.find!(1).first_name.should eq "Louis"
         end
       end
 
-      it "upserts many models by primary key" do
+      it "upserts many rows by primary key" do
         temporary do
           reinit_example_models
 
           User.create!({id: 1, first_name: "John"})
 
-          users = User.upsert_all([
+          affected = User.upsert_all([
             {id: 1, first_name: "Louis"},
             {id: 2, first_name: "Jane"},
           ])
 
-          users.size.should eq 2
+          affected.should eq 2
           User.query.count.should eq 2
           User.query.find!(1).first_name.should eq "Louis"
           User.query.find!(2).first_name.should eq "Jane"
@@ -813,16 +827,14 @@ module ModelSpec
 
           User.create!({id: 1, first_name: "John"})
 
-          skipped = User.upsert({id: 1, first_name: "Louis"}, on_duplicate: :skip)
-          skipped.should be_nil
+          User.upsert({id: 1, first_name: "Louis"}, on_duplicate: :skip).should eq 0
 
           users = User.upsert_all([
             {id: 1, first_name: "Ignored"},
             {id: 2, first_name: "Jane"},
-          ], on_duplicate: :skip)
+          ], on_duplicate: :skip, returning: {id: Int64, first_name: String})
 
-          users.size.should eq 1
-          users.first.id.should eq 2
+          users.should eq([{2_i64, "Jane"}])
           User.query.count.should eq 2
           User.query.find!(1).first_name.should eq "John"
           User.query.find!(2).first_name.should eq "Jane"
@@ -838,10 +850,10 @@ module ModelSpec
           tags = Tag.upsert_all([
             {name: "existing"},
             {name: "imported"},
-          ], unique_by: :name, on_duplicate: :skip)
+          ], unique_by: :name, on_duplicate: :skip, returning: {id: Int32, name: String})
 
           tags.size.should eq 1
-          tags.first.name.should eq "imported"
+          tags.first[1].should eq "imported"
           Tag.query.count.should eq 2
           Tag.query.where(name: "existing").count.should eq 1
           Tag.query.where(name: "imported").count.should eq 1
@@ -869,19 +881,28 @@ module ModelSpec
         temporary do
           reinit_example_models
 
-          User.upsert({id: 1, first_name: "John", posts_count: 2})
+          User.upsert({id: 1, first_name: "John", posts_count: 2}).should eq 1
 
-          result = User.upsert(
+          affected = User.upsert(
             {id: 1, first_name: "Ignored", posts_count: 3},
-            on_duplicate: Lustra::SQL.unsafe(%("posts_count" = "users"."posts_count" + excluded."posts_count")),
-            returning: false
+            on_duplicate: Lustra::SQL.unsafe(%("posts_count" = "users"."posts_count" + excluded."posts_count"))
           )
 
-          result.should be_nil
+          affected.should eq 1
           user = User.query.find!(1)
           user.first_name.should eq "John"
           user.posts_count.should eq 5
         end
+      end
+
+      it "handles empty upsert batches" do
+        rows = [] of NamedTuple(id: Int64, first_name: String)
+
+        User.upsert_all(rows).should eq 0
+        User.upsert_all(
+          rows,
+          returning: {id: Int64, first_name: String}
+        ).should be_empty
       end
 
       it "rejects update_only with a custom conflict update" do
