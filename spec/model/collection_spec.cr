@@ -1275,6 +1275,110 @@ module CollectionSpec
         end
       end
 
+      it "eager loads associations when ordering by a with_count alias" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create! first_name: "user1", active: true
+          user2 = User.create! first_name: "user2", active: true
+          user3 = User.create! first_name: "user3", active: false
+
+          Post.create! title: "Post 1", user_id: user1.id
+          Post.create! title: "Post 2", user_id: user1.id
+          Post.create! title: "Post 3", user_id: user2.id
+          Post.create! title: "Post 4", user_id: user3.id
+
+          users = User.query
+            .with_count(:posts, alias_name: "computed_posts_count")
+            .with_posts
+            .where(active: true)
+            .order_by("computed_posts_count", :desc)
+            .limit(1)
+            .offset(1)
+            .to_a
+
+          users.map(&.id).should eq([user2.id])
+          users.first.posts.size.should eq(1)
+        end
+      end
+
+      it "eager loads has_many through associations when ordering by a with_count alias" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create! first_name: "user1"
+          user2 = User.create! first_name: "user2"
+          category1 = Category.create! name: "category1"
+          category2 = Category.create! name: "category2"
+
+          Post.create! title: "Post 1", user_id: user1.id, category_id: category1.id
+          Post.create! title: "Post 2", user_id: user1.id, category_id: category2.id
+          Post.create! title: "Post 3", user_id: user2.id, category_id: category1.id
+
+          users = User.query
+            .with_count(:posts, alias_name: "computed_posts_count")
+            .with_categories
+            .order_by("computed_posts_count", :desc)
+            .limit(1)
+            .to_a
+
+          users.map(&.id).should eq([user1.id])
+          users.first.categories.map(&.id).sort!.should eq([category1.id, category2.id].sort)
+        end
+      end
+
+      it "eager loads has_one associations when ordering by a with_count alias" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create! first_name: "user1"
+          user2 = User.create! first_name: "user2"
+          info1 = UserInfo.create! user_id: user1.id, registration_number: 1
+          UserInfo.create! user_id: user2.id, registration_number: 2
+
+          Post.create! title: "Post 1", user_id: user1.id
+          Post.create! title: "Post 2", user_id: user1.id
+          Post.create! title: "Post 3", user_id: user2.id
+
+          users = User.query
+            .with_count(:posts, alias_name: "computed_posts_count")
+            .with_info
+            .order_by("computed_posts_count", :desc)
+            .limit(1)
+            .to_a
+
+          users.map(&.id).should eq([user1.id])
+          users.first.info!.id.should eq(info1.id)
+        end
+      end
+
+      it "eager loads belongs_to associations when ordering by a with_count alias" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create! first_name: "user1"
+          user2 = User.create! first_name: "user2"
+          post1 = Post.create! title: "Post 1", user_id: user1.id
+          post2 = Post.create! title: "Post 2", user_id: user2.id
+          tag1 = Tag.create! name: "tag1"
+          tag2 = Tag.create! name: "tag2"
+
+          PostTag.create! post_id: post1.id, tag_id: tag1.id
+          PostTag.create! post_id: post1.id, tag_id: tag2.id
+          PostTag.create! post_id: post2.id, tag_id: tag1.id
+
+          posts = Post.query
+            .with_count(:post_tags, alias_name: "computed_tags_count")
+            .with_user
+            .order_by("computed_tags_count", :desc)
+            .limit(1)
+            .to_a
+
+          posts.map(&.id).should eq([post1.id])
+          posts.first.user.id.should eq(user1.id)
+        end
+      end
+
       it "with_count raises operation-specific error for unknown association" do
         temporary do
           reinit_example_models
