@@ -157,22 +157,19 @@ module GeometricSpec
         closest_locations = Location.query
           .order_by("coordinates <-> point(#{target_point.x},#{target_point.y})")
           .limit(2)
-          .to_a
 
         closest_locations.size.should eq(2)
-        closest_locations.first.name.should eq("Downtown") # Should be closest
+        closest_locations.first!.name.should eq("Downtown") # Should be closest
 
         # Test distance_from in where clause
         nearby_locations = Location.query
           .where { coordinates.distance_from(target_point) <= 0.02 } # Small distance for coordinate system
-          .to_a
 
         nearby_locations.any? { |loc| loc.name == "Downtown" }.should be_true
 
         # Test within_distance? method
         within_range = Location.query
           .where { coordinates.within_distance?(target_point, 0.02) }
-          .to_a
 
         within_range.size.should eq(nearby_locations.size)
 
@@ -181,7 +178,6 @@ module GeometricSpec
 
         covering_locations = Location.query
           .where { coverage_area.contains?(test_point) }
-          .to_a
 
         # Should find locations whose coverage area contains the test point
         covering_locations.present?.should be_true
@@ -191,7 +187,6 @@ module GeometricSpec
 
         locations_containing_point = Location.query
           .where { bounding_box.contains?(point_in_box) }
-          .to_a
 
         locations_containing_point.any? { |loc| loc.name == "Downtown" }.should be_true
 
@@ -200,7 +195,6 @@ module GeometricSpec
 
         overlapping_locations = Location.query
           .where { coverage_area.overlaps?(test_circle) }
-          .to_a
 
         overlapping_locations.present?.should be_true
 
@@ -210,12 +204,10 @@ module GeometricSpec
         # Find locations to the left (west) of reference point
         west_locations = Location.query
           .where { coordinates.left_of?(reference_point) }
-          .to_a
 
         # Find locations below (south) of reference point
         south_locations = Location.query
           .where { coordinates.below?(reference_point) }
-          .to_a
 
         # Test combined geometric operations
         center_point = PG::Geo::Point.new(-74.0000, 40.7100)
@@ -275,7 +267,6 @@ module GeometricSpec
         # Test direct geometric queries on Store model
         nearby_stores = Store.query
           .where { location.within_distance?(customer_location, 0.02) }
-          .to_a
 
         nearby_stores.empty?.should be_false
 
@@ -284,25 +275,22 @@ module GeometricSpec
 
         brooklyn_delivery_stores = Store.query
           .where { delivery_area.contains?(point_in_brooklyn) }
-          .to_a
 
         brooklyn_delivery_stores.any? { |store| store.name == "Brooklyn Store" }.should be_true
 
         # Test ordering by distance
         ordered_stores = Store.query
           .order_by("location <-> point(#{customer_location.x},#{customer_location.y})")
-          .to_a
 
         ordered_stores.size.should eq(2)
         # Manhattan store should be closer to Manhattan customer
-        ordered_stores.first.name.should eq("Manhattan Store")
+        ordered_stores.first!.name.should eq("Manhattan Store")
 
         # Test overlap operations with pickup radius
         large_area = PG::Geo::Circle.new(-74.0000, 40.7000, 2000.0) # Large circle covering both stores
 
         stores_with_overlapping_pickup = Store.query
           .where { pickup_radius.overlaps?(large_area) }
-          .to_a
 
         stores_with_overlapping_pickup.size.should eq(2) # Both stores should overlap with large area
 
@@ -316,7 +304,6 @@ module GeometricSpec
 
         overlapping_delivery_areas = Store.query
           .where { delivery_area.overlaps?(test_area) }
-          .to_a
 
         overlapping_delivery_areas.any? { |store| store.name == "Manhattan Store" }.should be_true
       end
@@ -338,14 +325,12 @@ module GeometricSpec
         # This should not crash even though coverage_area is nil for some records
         results = Location.query
           .where { coordinates.distance_from(test_point) <= 0.01 }
-          .to_a
 
         results.any? { |loc| loc.name == "Simple Location" }.should be_true
 
         # Test that we can query for non-null geometric columns
         locations_with_coverage = Location.query
           .where("coverage_area IS NOT NULL")
-          .to_a
 
         # Should not include our simple_location
         locations_with_coverage.any? { |loc| loc.name == "Simple Location" }.should be_false
