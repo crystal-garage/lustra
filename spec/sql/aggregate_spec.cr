@@ -60,6 +60,29 @@ module AggregateSpec
         end
       end
 
+      it "returns the requested type" do
+        temporary do
+          reinit_example_models
+
+          User.create({first_name: "John", posts_count: 10})
+          User.create({first_name: "Jane", posts_count: 20})
+
+          sum = User.query.sum("posts_count", Int64)
+          sum.should be_a(Int64)
+          sum.should eq 30_i64
+        end
+      end
+
+      it "returns a typed zero for an empty result set" do
+        temporary do
+          reinit_example_models
+
+          sum = User.query.sum("posts_count", Int64)
+          sum.should be_a(Int64)
+          sum.should eq 0_i64
+        end
+      end
+
       it "works with WHERE clause" do
         temporary do
           reinit_example_models

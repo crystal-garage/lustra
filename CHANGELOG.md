@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added a typed `Collection#sum` overload for returning PostgreSQL aggregate results in an explicitly requested Crystal type.
 - Added `Model.insert` and `Model.insert_all` for PostgreSQL inserts with duplicate skipping, affected-row counts, and typed `RETURNING` results.
 - Added `Model.upsert` and `Model.upsert_all` for PostgreSQL `ON CONFLICT` inserts, with affected-row counts, typed `RETURNING` results, and `on_duplicate: :update` or `:skip`.
 - Added custom `Model.upsert` and `Model.upsert_all` conflict updates with `Lustra::SQL.unsafe`.

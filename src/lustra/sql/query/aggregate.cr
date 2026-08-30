@@ -49,9 +49,15 @@ module Lustra::SQL::Query::Aggregate
   end
 
   # SUM through a field and return a Float64
-  # Note: This function is not safe injection-wise, so beware !.
+  # The field argument is treated as a raw SQL expression; do not pass untrusted input.
   def sum(field) : Float64
     agg("SUM(#{field})", Union(Int64 | PG::Numeric?)).try(&.to_f) || 0.0
+  end
+
+  # SUM through a field and return the requested PostgreSQL result type.
+  # The field argument is treated as a raw SQL expression; do not pass untrusted input.
+  def sum(field, x : X.class) : X forall X
+    agg("COALESCE(SUM(#{field}), 0)", x)
   end
 
   {% for x in %w[min max avg] %}
