@@ -304,7 +304,7 @@ module Lustra::Model::Relations::BelongsToMacro
               source_query = base_query
                 .dup
                 .where { raw({{ type_key.stringify }}) == {{ target_type_name }} }
-              sub_query = eager_load_key_subquery("{{ foreign_key.id }}", source_query)
+              sub_query = key_subquery("{{ foreign_key.id }}", source_query)
 
               {{ target_type }}.query
                 .where { raw("#{{{ target_type }}.table}.#{{{ target_type }}.__pkey__}").in?(sub_query) }
@@ -325,7 +325,7 @@ module Lustra::Model::Relations::BelongsToMacro
             {% if polymorphic_type %}
               source_query.where { raw({{ fixed_type_key }}) == {{ polymorphic_type }} }
             {% end %}
-            sub_query = eager_load_key_subquery("{{ foreign_key.id }}", source_query)
+            sub_query = key_subquery("{{ foreign_key.id }}", source_query)
 
             cached_qry = {{ relation_type }}.query.where { raw("#{{{ relation_type }}.table}.#{{{ relation_type }}.__pkey__}").in?(sub_query) }
 

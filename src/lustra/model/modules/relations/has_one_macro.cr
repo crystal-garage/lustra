@@ -53,7 +53,7 @@ module Lustra::Model::Relations::HasOneMacro
           %foreign_key = {% if foreign_key %} "{{ foreign_key }}" {% else %} ({{ self_type }}.table.to_s.singularize + "_id") {% end %}
 
           # SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM parents )
-          sub_query = eager_load_key_subquery(%primary_key)
+          sub_query = key_subquery(%primary_key)
 
           qry = {{ relation_type }}.query.where { raw(%foreign_key).in?(sub_query) }
           block.call(qry)

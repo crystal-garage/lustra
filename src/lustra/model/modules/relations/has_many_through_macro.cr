@@ -118,7 +118,7 @@ module Lustra::Model::Relations::HasManyThroughMacro
 
           @cache.active "{{ method_name }}"
 
-          sub_query = eager_load_key_subquery(self_type.__pkey__)
+          sub_query = key_subquery(self_type.__pkey__)
 
           qry = {{ relation_type }}.query.join(%through_table) {
             var(%through_table, %through_key) == var(%final_table, %final_pkey)

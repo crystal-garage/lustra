@@ -110,7 +110,7 @@ module Lustra::Model::Relations::HasManyMacro
           %type_value = {{ self_type }}.name
 
           #SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM users )
-          sub_query = eager_load_key_subquery(%primary_key)
+          sub_query = key_subquery(%primary_key)
 
           qry = {{ relation_type }}.query.where { raw(%foreign_key).in?(sub_query) }
           qry.where { raw(%type_key) == %type_value } if %type_key

@@ -1293,7 +1293,7 @@ module CollectionSpec
             .limit(1)
             .offset(1)
 
-          users.map(&.id).should eq([user2.id])
+          users.ids.should eq([user2.id])
           users.first!.posts.size.should eq(1)
         end
       end

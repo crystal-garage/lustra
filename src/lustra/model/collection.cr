@@ -919,11 +919,11 @@ module Lustra::Model
       self
     end
 
-    # Build the single-column subquery used to eager load an association while
-    # preserving selected expressions required by ordering and pagination.
-    private def eager_load_key_subquery(column : String, source : CollectionBase(T) = dup)
-      key_alias = "__lustra_eager_key"
-      source_alias = "__lustra_eager_source"
+    # Build a single-column key query while preserving selected expressions
+    # required by ordering and pagination in the inner query.
+    private def key_subquery(column : String, source : CollectionBase(T) = dup)
+      key_alias = "__lustra_query_key"
+      source_alias = "__lustra_query_source"
 
       source.select(SQL::Column.new(
         "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(column)}",
@@ -932,7 +932,7 @@ module Lustra::Model
 
       Lustra::SQL
         .select("#{source_alias}.#{key_alias}")
-        .from({__lustra_eager_source: source})
+        .from({__lustra_query_source: source})
         .use_connection(connection_name)
     end
 
@@ -1335,8 +1335,8 @@ module Lustra::Model
       to_update.set(fields).execute_returning(returning)
     end
 
-    # Convenient shortcut to get an array of primary key values.
-    # Equivalent to `pluck_col(T.__pkey__)` but more readable.
+    # Return primary key values while preserving selected expressions required
+    # by the query's ordering and pagination.
     #
     # ```
     # User.query.where { active == true }.ids
@@ -1348,7 +1348,7 @@ module Lustra::Model
     #
     # Returns an array of primary key values (typically `Array(Int64)` or `Array(Int32)`).
     def ids : Array(Lustra::SQL::Any)
-      pluck_col(T.__pkey__)
+      key_subquery(T.__pkey__).pluck_col("__lustra_query_key")
     end
   end
 end
