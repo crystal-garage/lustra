@@ -699,7 +699,7 @@ module CollectionSpec
           users.find_or_create({first_name: "created"}).persisted?.should be_true
           users.to_sql.should eq(sql)
           users.tags.should be_empty
-          users.to_a.map(&.first_name).should eq(["existing", "created"])
+          users.map(&.first_name).should eq(["existing", "created"])
         end
       end
     end
@@ -729,7 +729,7 @@ module CollectionSpec
 
         expect_raises(Lustra::SQL::RecordNotFoundError) { qry[11] }
         qry.to_sql.should eq(sql)
-        qry.to_a.map(&.first_name).should eq((0..9).map { |x| "user #{x}" })
+        qry.map(&.first_name).should eq((0..9).map { |x| "user #{x}" })
       end
     end
 
@@ -989,10 +989,8 @@ module CollectionSpec
             "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE (\"posts\".\"title\" = 'title 2')"
           )
 
-          results = query.to_a
-
-          results.size.should eq(1)
-          results.first.id.should eq(user.id)
+          query.size.should eq(1)
+          query.first!.id.should eq(user.id)
         end
       end
 
@@ -1031,9 +1029,8 @@ module CollectionSpec
             "SELECT \"pictures\".* FROM \"pictures\" INNER JOIN \"employees\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE (\"employees\".\"name\" = 'employee')"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.name.should eq("Employee picture")
+          query.size.should eq(1)
+          query.first!.name.should eq("Employee picture")
         end
       end
 
@@ -1042,7 +1039,7 @@ module CollectionSpec
           reinit_example_models
 
           expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
-            Picture.query.join(:imageable).to_a
+            Picture.query.join(:imageable)
           end
         end
       end
@@ -1295,10 +1292,9 @@ module CollectionSpec
             .order_by("computed_posts_count", :desc)
             .limit(1)
             .offset(1)
-            .to_a
 
           users.map(&.id).should eq([user2.id])
-          users.first.posts.size.should eq(1)
+          users.first!.posts.size.should eq(1)
         end
       end
 
@@ -1320,10 +1316,9 @@ module CollectionSpec
             .with_categories
             .order_by("computed_posts_count", :desc)
             .limit(1)
-            .to_a
 
           users.map(&.id).should eq([user1.id])
-          users.first.categories.map(&.id).sort!.should eq([category1.id, category2.id].sort)
+          users.first!.categories.map(&.id).sort!.should eq([category1.id, category2.id].sort)
         end
       end
 
@@ -1345,10 +1340,9 @@ module CollectionSpec
             .with_info
             .order_by("computed_posts_count", :desc)
             .limit(1)
-            .to_a
 
           users.map(&.id).should eq([user1.id])
-          users.first.info!.id.should eq(info1.id)
+          users.first!.info!.id.should eq(info1.id)
         end
       end
 
@@ -1372,10 +1366,9 @@ module CollectionSpec
             .with_user
             .order_by("computed_tags_count", :desc)
             .limit(1)
-            .to_a
 
           posts.map(&.id).should eq([post1.id])
-          posts.first.user.id.should eq(user1.id)
+          posts.first!.user.id.should eq(user1.id)
         end
       end
 
@@ -1414,7 +1407,7 @@ module CollectionSpec
           reinit_example_models
 
           expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used with with_count.*multiple tables/) do
-            Picture.query.with_count(:imageable).to_a
+            Picture.query.with_count(:imageable)
           end
         end
       end
