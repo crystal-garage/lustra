@@ -289,7 +289,7 @@ module Lustra::Model::Relations::BelongsToMacro
         # declared target type, then stores parents in the association cache.
         def with_{{ method_name }}(fetch_columns = false) : self
           before_query do
-            base_query = self.dup.clear_select
+            base_query = self.dup
 
             @cache.active "{{ method_name }}"
 
@@ -301,10 +301,10 @@ module Lustra::Model::Relations::BelongsToMacro
                   target_type_name = "#{self_type.stringify.split("::")[0...-1].join("::")}::#{target_type_name}"
                 end
               %}
-              sub_query = base_query
+              source_query = base_query
                 .dup
                 .where { raw({{ type_key.stringify }}) == {{ target_type_name }} }
-                .select("#{{{ self_type }}.table}.{{ foreign_key.id }}")
+              sub_query = eager_load_key_subquery("{{ foreign_key.id }}", source_query)
 
               {{ target_type }}.query
                 .where { raw("#{{{ target_type }}.table}.#{{{ target_type }}.__pkey__}").in?(sub_query) }
@@ -321,10 +321,11 @@ module Lustra::Model::Relations::BelongsToMacro
       class Collection
         def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
           before_query do
-            sub_query = self.dup.clear_select.select("#{{{ self_type }}.table}.{{ foreign_key.id }}")
+            source_query = dup
             {% if polymorphic_type %}
-              sub_query.where { raw({{ fixed_type_key }}) == {{ polymorphic_type }} }
+              source_query.where { raw({{ fixed_type_key }}) == {{ polymorphic_type }} }
             {% end %}
+            sub_query = eager_load_key_subquery("{{ foreign_key.id }}", source_query)
 
             cached_qry = {{ relation_type }}.query.where { raw("#{{{ relation_type }}.table}.#{{{ relation_type }}.__pkey__}").in?(sub_query) }
 

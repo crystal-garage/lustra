@@ -919,6 +919,23 @@ module Lustra::Model
       self
     end
 
+    # Build the single-column subquery used to eager load an association while
+    # preserving selected expressions required by ordering and pagination.
+    private def eager_load_key_subquery(column : String, source : CollectionBase(T) = dup)
+      key_alias = "__lustra_eager_key"
+      source_alias = "__lustra_eager_source"
+
+      source.select(SQL::Column.new(
+        "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(column)}",
+        key_alias
+      ))
+
+      Lustra::SQL
+        .select("#{source_alias}.#{key_alias}")
+        .from({__lustra_eager_source: source})
+        .use_connection(connection_name)
+    end
+
     private def unknown_association_message(association, advice : String)
       available = {% begin %}
         {% available_associations = T::RELATIONS.keys.map(&.stringify).sort %}
