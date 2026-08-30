@@ -1057,8 +1057,7 @@ module CollectionSpec
             "SELECT \"users\".* FROM \"users\" LEFT JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") GROUP BY users.id"
           )
 
-          results = query.to_a
-          results.size.should eq(2)
+          query.size.should eq(2)
         end
       end
 
@@ -1075,9 +1074,8 @@ module CollectionSpec
             "SELECT \"users\".* FROM \"users\" LEFT JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE \"posts\".\"id\" IS NULL"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(user_without_posts.id)
+          query.size.should eq(1)
+          query.first!.id.should eq(user_without_posts.id)
         end
       end
 
@@ -1094,9 +1092,8 @@ module CollectionSpec
             "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") WHERE \"posts\".\"id\" IS NOT NULL"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(user_with_posts.id)
+          query.size.should eq(1)
+          query.first!.id.should eq(user_with_posts.id)
         end
       end
 
@@ -1136,9 +1133,8 @@ module CollectionSpec
             "SELECT \"employees\".* FROM \"employees\" LEFT JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"pictures\".\"id\" IS NULL"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(employee_without_pictures.id)
+          query.size.should eq(1)
+          query.first!.id.should eq(employee_without_pictures.id)
         end
       end
 
@@ -1159,9 +1155,8 @@ module CollectionSpec
             "SELECT \"employees\".* FROM \"employees\" INNER JOIN \"pictures\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"pictures\".\"id\" IS NOT NULL"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(employee_with_pictures.id)
+          query.size.should eq(1)
+          query.first!.id.should eq(employee_with_pictures.id)
         end
       end
 
@@ -1201,9 +1196,8 @@ module CollectionSpec
             "SELECT \"pictures\".* FROM \"pictures\" INNER JOIN \"employees\" ON (\"pictures\".\"imageable_id\" = \"employees\".\"id\" AND \"pictures\".\"imageable_type\" = 'Employee') WHERE \"employees\".\"id\" IS NOT NULL"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.name.should eq("Employee picture")
+          query.size.should eq(1)
+          query.first!.name.should eq("Employee picture")
         end
       end
 
@@ -1222,9 +1216,8 @@ module CollectionSpec
             "SELECT \"tags\".* FROM \"tags\" LEFT JOIN \"post_tags\" ON (\"post_tags\".\"tag_id\" = \"tags\".\"id\") WHERE \"post_tags\".\"id\" IS NULL"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(tag_without_post.id)
+          query.size.should eq(1)
+          query.first!.id.should eq(tag_without_post.id)
         end
       end
 
@@ -1243,9 +1236,8 @@ module CollectionSpec
             "SELECT \"tags\".* FROM \"tags\" INNER JOIN \"post_tags\" ON (\"post_tags\".\"tag_id\" = \"tags\".\"id\") WHERE \"post_tags\".\"id\" IS NOT NULL"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(tag_with_post.id)
+          query.size.should eq(1)
+          query.first!.id.should eq(tag_with_post.id)
         end
       end
 
@@ -1530,8 +1522,7 @@ module CollectionSpec
             "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\")"
           )
 
-          results = query.to_a
-          results.size.should eq(1)
+          query.size.should eq(1)
         end
       end
 
@@ -1552,9 +1543,8 @@ module CollectionSpec
             "SELECT \"users\".* FROM \"users\" INNER JOIN \"user_infos\" ON (\"user_infos\".\"user_id\" = \"users\".\"id\")"
           )
 
-          results = query1.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(user.id)
+          query1.size.should eq(1)
+          query1.first!.id.should eq(user.id)
         end
       end
 
@@ -1582,9 +1572,8 @@ module CollectionSpec
             "SELECT \"users\".* FROM \"users\" INNER JOIN \"posts\" ON (\"posts\".\"user_id\" = \"users\".\"id\") INNER JOIN \"categories\" ON (\"categories\".\"id\" = \"posts\".\"category_id\")"
           )
 
-          results = query1.to_a
-          results.size.should eq(1)
-          results.first.id.should eq(user.id)
+          query1.size.should eq(1)
+          query1.first!.id.should eq(user.id)
         end
       end
 
