@@ -79,7 +79,7 @@ module NestedQuerySpec
     temporary do
       reinit
 
-      Release.query.with_video(&.with_topics).to_a
+      Release.query.with_video(&.with_topics)
     end
   end
 end
