@@ -164,7 +164,6 @@ module JoinSpec
         results = Post.query
           .inner_join(:users) { users.id == posts.user_id }
           .where { users.active == true }
-          .to_a
 
         results.size.should eq(2) # post1 and post3 (both by user1)
         results.map(&.title).should contain("John's Post")
@@ -187,7 +186,6 @@ module JoinSpec
         # Test LEFT JOIN - should return all users, even those without posts
         results = User.query
           .left_join(:posts) { posts.user_id == users.id }
-          .to_a
 
         results.size.should eq(2) # Both users should be returned
         results.map(&.first_name).should contain("John")
@@ -211,7 +209,6 @@ module JoinSpec
         # RIGHT JOIN from users to posts returns all users that have posts
         results = User.query
           .right_join(:posts) { posts.user_id == users.id }
-          .to_a
 
         # Should return all users that have posts (John appears twice for his 2 posts)
         results.size.should eq(2) # John appears twice (once per post)
@@ -258,7 +255,6 @@ module JoinSpec
         # Test CROSS JOIN - should return cartesian product
         results = User.query
           .cross_join(:categories)
-          .to_a
 
         # Should return all combinations of users and categories
         results.size.should eq(4) # 2 users × 2 categories = 4 combinations
@@ -286,7 +282,6 @@ module JoinSpec
               .group_by("user_id"),
             lateral: true
           )
-          .to_a
 
         results.size.should eq(2)
         # Verify the lateral join worked by checking post counts
@@ -312,7 +307,6 @@ module JoinSpec
         results = Post.query
           .inner_join(:users) { users.id == posts.user_id }
           .inner_join(:categories) { categories.id == posts.category_id }
-          .to_a
 
         results.size.should eq(1)
         results[0].title.should eq("Tech Post")
@@ -335,7 +329,6 @@ module JoinSpec
         results = Post.query
           .inner_join(:users) { users.id == posts.user_id }
           .where { (users.active == true) & (posts.published == true) }
-          .to_a
 
         results.size.should eq(1) # Only post1 matches both conditions
         results[0].title.should eq("Published Post")
@@ -357,7 +350,6 @@ module JoinSpec
         results = Post.query
           .inner_join(:users) { users.id == posts.user_id }
           .where { users.last_name.null? }
-          .to_a
 
         results.size.should eq(1) # Only post2 (Jane's post)
         results[0].title.should eq("Jane's Post")
@@ -379,7 +371,6 @@ module JoinSpec
         # Find posts by active users using direct user ID
         results = Post.query
           .where { user_id == user1.id }
-          .to_a
 
         results.size.should eq(1) # Only post1 (from active user)
         results[0].title.should eq("Active User Post")
@@ -401,7 +392,6 @@ module JoinSpec
         results = Post.query
           .inner_join(:users) { users.id == posts.user_id }
           .where { users.posts_count > 2 }
-          .to_a
 
         results.size.should eq(2) # Both of John's posts
         results.map(&.title).should contain("John's Post 1")

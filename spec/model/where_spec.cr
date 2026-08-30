@@ -672,19 +672,17 @@ module WhereSpec
             .where { id > 1 }
             .not { active == false }
             .not(id: [4])
-            .to_a
 
           users.size.should eq(1)
-          users.first.first_name.should eq("Bob")
+          users.first!.first_name.should eq("Bob")
 
           # Test another chaining combination
           users = User.query
             .not(id: [1, 2])
             .not { active == nil }
-            .to_a
 
           users.size.should eq(1)
-          users.first.first_name.should eq("Bob")
+          users.first!.first_name.should eq("Bob")
         end
       end
     end
@@ -734,7 +732,7 @@ module WhereSpec
             .where { id == 1 }
             .or { id == 2 }
             .or { id == 3 }
-            .to_a
+
           users.size.should eq(3)
           users.map(&.first_name).sort!.should eq(["Bob", "Jane", "John"])
         end
@@ -754,7 +752,7 @@ module WhereSpec
             .where { active == true }
             .or { first_name == "Jane" }
             .where { id > 1 }
-            .to_a
+
           users.size.should eq(3) # Bob, Jane, Charlie (active OR Jane, and id > 1)
           users.map(&.first_name).sort!.should eq(["Bob", "Charlie", "Jane"])
         end
@@ -773,9 +771,9 @@ module WhereSpec
             .where { id == 1 }
             .or { id == 2 }
             .where.not(active: false)
-            .to_a
+
           users.size.should eq(1) # Only John (id=1 OR id=2, but NOT active=false)
-          users.first.first_name.should eq("John")
+          users.first!.first_name.should eq("John")
         end
       end
 
@@ -791,7 +789,7 @@ module WhereSpec
           users = User.query
             .where { id == 1 }
             .or(active: true, last_name: "Johnson")
-            .to_a
+
           users.size.should eq(2) # John (id=1) OR Bob (active=true AND last_name=Johnson)
           users.map(&.first_name).sort!.should eq(["Bob", "John"])
         end
@@ -821,7 +819,7 @@ module WhereSpec
           users = User.query
             .where { id == 1 }
             .or("first_name = ?", "Bob")
-            .to_a
+
           users.size.should eq(2)
           users.map(&.first_name).sort!.should eq(["Bob", "John"])
 
@@ -829,7 +827,7 @@ module WhereSpec
           users = User.query
             .where { active == true }
             .or("first_name = :name", name: "Jane")
-            .to_a
+
           users.size.should eq(3)
           users.map(&.first_name).sort!.should eq(["Bob", "Jane", "John"])
         end
@@ -847,7 +845,7 @@ module WhereSpec
           users = User.query
             .where { (active == true) & (last_name == "Admin") }
             .or { (active == false) & (first_name == "Jane") }
-            .to_a
+
           users.size.should eq(2) # John (active AND Admin) OR Jane (NOT active AND Jane)
           users.map(&.first_name).sort!.should eq(["Jane", "John"])
         end
