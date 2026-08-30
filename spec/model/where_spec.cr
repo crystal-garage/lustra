@@ -630,32 +630,32 @@ module WhereSpec
           User.create!(id: 3, first_name: "Bob", active: true)
 
           # Test with expression engine
-          users = User.query.where.not { active == false }.to_a
-          users.size.should eq(2)
-          users.map(&.first_name).should contain("John")
-          users.map(&.first_name).should contain("Bob")
-          users.map(&.first_name).should_not contain("Jane")
+          names = User.query.where.not { active == false }.map(&.first_name)
+          names.size.should eq(2)
+          names.should contain("John")
+          names.should contain("Bob")
+          names.should_not contain("Jane")
 
           # Test with NamedTuple
-          users = User.query.where.not(active: false).to_a
-          users.size.should eq(2)
-          users.map(&.first_name).should contain("John")
-          users.map(&.first_name).should contain("Bob")
-          users.map(&.first_name).should_not contain("Jane")
+          names = User.query.where.not(active: false).map(&.first_name)
+          names.size.should eq(2)
+          names.should contain("John")
+          names.should contain("Bob")
+          names.should_not contain("Jane")
 
           # Test with array (NOT IN)
-          users = User.query.where.not(id: [1, 2]).to_a
+          users = User.query.where.not(id: [1, 2])
           users.size.should eq(1)
-          users.first.first_name.should eq("Bob")
+          users.first!.first_name.should eq("Bob")
 
           # Test with nil (NOT NULL)
           User.create!(id: 4, first_name: "Alice", active: nil)
-          users = User.query.where.not(active: nil).to_a
-          users.size.should eq(3)
-          users.map(&.first_name).should contain("John")
-          users.map(&.first_name).should contain("Jane")
-          users.map(&.first_name).should contain("Bob")
-          users.map(&.first_name).should_not contain("Alice")
+          names = User.query.where.not(active: nil).map(&.first_name)
+          names.size.should eq(3)
+          names.should contain("John")
+          names.should contain("Jane")
+          names.should contain("Bob")
+          names.should_not contain("Alice")
         end
       end
 
@@ -697,24 +697,24 @@ module WhereSpec
           User.create!(id: 4, first_name: "Alice", active: nil)
 
           # Test basic where.or with expression engine
-          users = User.query.where { id == 1 }.or { id == 3 }.to_a
-          users.size.should eq(2)
-          users.map(&.first_name).sort!.should eq(["Bob", "John"])
+          names = User.query.where { id == 1 }.or { id == 3 }.map(&.first_name)
+          names.size.should eq(2)
+          names.sort!.should eq(["Bob", "John"])
 
           # Test where.or with named tuple
-          users = User.query.where { id == 1 }.or(first_name: "Jane").to_a
-          users.size.should eq(2)
-          users.map(&.first_name).sort!.should eq(["Jane", "John"])
+          names = User.query.where { id == 1 }.or(first_name: "Jane").map(&.first_name)
+          names.size.should eq(2)
+          names.sort!.should eq(["Jane", "John"])
 
           # Test where.or with array conditions (IN)
-          users = User.query.where { active == true }.or({id: [2, 4]}).to_a
-          users.size.should eq(4) # John, Bob (active=true), Jane (id=2), Alice (id=4)
-          users.map(&.first_name).sort!.should eq(["Alice", "Bob", "Jane", "John"])
+          names = User.query.where { active == true }.or({id: [2, 4]}).map(&.first_name)
+          names.size.should eq(4) # John, Bob (active=true), Jane (id=2), Alice (id=4)
+          names.sort!.should eq(["Alice", "Bob", "Jane", "John"])
 
           # Test where.or with nil
-          users = User.query.where { id == 1 }.or(active: nil).to_a
-          users.size.should eq(2)
-          users.map(&.first_name).sort!.should eq(["Alice", "John"])
+          names = User.query.where { id == 1 }.or(active: nil).map(&.first_name)
+          names.size.should eq(2)
+          names.sort!.should eq(["Alice", "John"])
         end
       end
 
@@ -802,9 +802,9 @@ module WhereSpec
           User.create!(id: 2, first_name: "Jane")
 
           # Start with empty where, then or
-          users = User.query.where.or { id == 1 }.to_a
+          users = User.query.where.or { id == 1 }
           users.size.should eq(1)
-          users.first.first_name.should eq("John")
+          users.first!.first_name.should eq("John")
         end
       end
 

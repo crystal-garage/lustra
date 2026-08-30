@@ -1165,7 +1165,7 @@ module CollectionSpec
           reinit_example_models
 
           expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
-            Picture.query.where.missing(:imageable).to_a
+            Picture.query.where.missing(:imageable)
           end
         end
       end
@@ -1175,7 +1175,7 @@ module CollectionSpec
           reinit_example_models
 
           expect_raises(Exception, /Polymorphic association 'imageable' for Picture cannot be used for SQL joins.*multiple tables/) do
-            Picture.query.where.associated(:imageable).to_a
+            Picture.query.where.associated(:imageable)
           end
         end
       end
@@ -1582,7 +1582,7 @@ module CollectionSpec
           reinit_example_models
 
           expect_raises(Exception, /Unknown association 'unknown_association' for User.*Available associations: categories, comments, dependencies, dependents, info, posts, relationships.*For a table name, use join with a block/) do
-            User.query.join(:unknown_association).to_a
+            User.query.join(:unknown_association)
           end
         end
       end

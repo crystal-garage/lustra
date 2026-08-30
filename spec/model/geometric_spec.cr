@@ -96,14 +96,12 @@ module GeometricSpec
         distance_query = Location.query.where { coordinates.distance_from(target_point) <= max_distance }
         distance_query.to_sql.should contain("<-> point(40.713,-74.006)")
         distance_query.to_sql.should contain("<= 1000.0")
-        distance_results = distance_query.to_a
-        distance_results.size.should eq(1)
+        distance_query.size.should eq(1)
 
         # Test: Containment operations work
         containment_query = Location.query.where { coverage_area.contains?(user_location) }
         containment_query.to_sql.should contain("@> point(40.72,-74.01)")
-        containment_results = containment_query.to_a
-        containment_results.size.should eq(1)
+        containment_query.size.should eq(1)
 
         # Test: Complex combined query
         # Note: Using points that are actually within the geometric shapes
@@ -121,9 +119,8 @@ module GeometricSpec
         sql.should contain("@> point(40.72,-74.01)")
         sql.should contain("@> point(40.75,-74.05)")
         sql.should contain("AND") # Verify the query executes successfully
-        combined_results = combined_query.to_a
-        combined_results.size.should eq(1)
-        combined_results.first.name.should eq("NYC Store")
+        combined_query.size.should eq(1)
+        combined_query.first!.name.should eq("NYC Store")
       end
     end
 

@@ -97,7 +97,7 @@ module ScopeSpec
 
           # Default scope should filter out deleted records
           DefaultScopeModel.query.count.should eq(2)
-          DefaultScopeModel.query.to_a.map(&.value).should eq([1, 2])
+          DefaultScopeModel.query.map(&.value).should eq([1, 2])
         end
       end
 
@@ -123,7 +123,7 @@ module ScopeSpec
 
           # query.unscoped should return all records
           DefaultScopeModel.query.unscoped.count.should eq(2)
-          DefaultScopeModel.query.unscoped.to_a.map(&.value).should eq([1, 2])
+          DefaultScopeModel.query.unscoped.map(&.value).should eq([1, 2])
         end
       end
 
@@ -138,7 +138,7 @@ module ScopeSpec
 
           # default_scope + valued scope
           DefaultScopeModel.valued.count.should eq(2)
-          DefaultScopeModel.valued.to_a.map(&.value).should eq([1, 2])
+          DefaultScopeModel.valued.map(&.value).should eq([1, 2])
         end
       end
 
@@ -151,10 +151,11 @@ module ScopeSpec
           DefaultScopeModel.create!({value: 1, deleted_at: Time.utc})
 
           # default_scope + where
-          result = DefaultScopeModel.query.where(value: 1).to_a
+          result = DefaultScopeModel.query.where(value: 1)
           result.size.should eq(1)
-          result.first.value.should eq(1)
-          result.first.deleted_at.should be_nil
+          record = result.first!
+          record.value.should eq(1)
+          record.deleted_at.should be_nil
         end
       end
 
