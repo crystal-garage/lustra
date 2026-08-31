@@ -283,7 +283,7 @@ module BelongsToSpec
           imageable_type: "Product"
         )
 
-        pictures = Picture.query.with_imageable.order_by(:name).to_a
+        pictures = Picture.query.with_imageable.order_by(:name)
 
         pictures[0].imageable.as(Employee).id.should eq(employee.id)
         pictures[1].imageable.as(Product).id.should eq(product.id)
@@ -310,7 +310,7 @@ module BelongsToSpec
           imageable_type: "Product"
         )
 
-        pictures = Picture.query.with_employee.order_by(:name).to_a
+        pictures = Picture.query.with_employee.order_by(:name)
 
         pictures[0].employee.id.should eq(employee.id)
 
@@ -361,7 +361,7 @@ module BelongsToSpec
         employee.pictures.first!.imageable.as(PolymorphicSpec::Employee).id.should eq(employee.id)
         product_picture.imageable.as(PolymorphicSpec::Product).id.should eq(product.id)
 
-        pictures = PolymorphicSpec::Picture.query.with_imageable.order_by(:name).to_a
+        pictures = PolymorphicSpec::Picture.query.with_imageable.order_by(:name)
 
         pictures[0].imageable.as(PolymorphicSpec::Employee).id.should eq(employee.id)
         pictures[1].imageable.as(PolymorphicSpec::Product).id.should eq(product.id)
