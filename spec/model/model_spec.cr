@@ -608,6 +608,21 @@ module ModelSpec
         end
       end
 
+      it "detect whether a model requires persistence" do
+        new_user = User.new({id: 1, first_name: "John"})
+        new_user.changed?.should be_false
+        new_user.modified?.should be_true
+
+        persisted_user = User.new({id: 1, first_name: "John"}, persisted: true)
+        persisted_user.modified?.should be_false
+
+        persisted_user.first_name = "Jane"
+        persisted_user.modified?.should be_true
+
+        persisted_user.first_name = "John"
+        persisted_user.modified?.should be_false
+      end
+
       it "deal with boolean nullable" do # Specific bug with converter already fixed
         temporary do
           reinit_example_models

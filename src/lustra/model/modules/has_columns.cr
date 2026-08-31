@@ -485,5 +485,11 @@ module Lustra::Model::HasColumns
 
       return false
     end
+
+    # Return `true` when the model is new or has changed columns and therefore
+    # requires an insert or update to persist its current state.
+    def modified?
+      !persisted? || changed?
+    end
   end
 end
