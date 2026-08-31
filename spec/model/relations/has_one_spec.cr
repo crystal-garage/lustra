@@ -54,7 +54,7 @@ describe "Lustra::Model::Relations::HasOne" do
           UserInfo.create!({bio: "Bio1", registration_number: 101, user_id: users[0].id})
           UserInfo.create!({bio: "Bio2", registration_number: 102, user_id: users[1].id})
 
-          loaded_users = User.query.with_info.to_a
+          loaded_users = User.query.with_info
 
           loaded_users.size.should eq(2)
 
