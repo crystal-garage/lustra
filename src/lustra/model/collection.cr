@@ -766,9 +766,10 @@ module Lustra::Model
         yield(mdl)
       end
 
-      r.save! if built
-
-      handle_append_operation(r)
+      if built
+        r.save!
+        handle_append_operation(r)
+      end
 
       r
     end

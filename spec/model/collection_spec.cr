@@ -464,6 +464,27 @@ module CollectionSpec
           end
         end
 
+        it "does not append a record found through a has_many relation" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+            user.posts.create!(title: "existing")
+
+            save_calls = 0
+            callback = ->(_model : Lustra::Model) { save_calls += 1 }
+            callback_key = {Post.to_s, :before, :save}
+            Lustra::Model::EventManager.attach(Post, :before, :save, callback)
+
+            begin
+              user.posts.find_or_create(title: "existing")
+              save_calls.should eq(0)
+            ensure
+              Lustra::Model::EventManager::EVENT_CALLBACKS[callback_key].delete(callback)
+            end
+          end
+        end
+
         it "from has_many through relation" do
           temporary do
             reinit_example_models
