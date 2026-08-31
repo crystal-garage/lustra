@@ -200,7 +200,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post.tags << tag2
           post.tags << tag3
 
-          all_tags = post.tags.to_a
+          all_tags = post.tags
           all_names = all_tags.map(&.name)
 
           all_names.should contain("Ruby")
@@ -591,7 +591,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           Post.create!({title: "Post 2", user_id: users[0].id, category_id: categories[1].id})
           Post.create!({title: "Post 3", user_id: users[1].id, category_id: categories[0].id})
 
-          loaded_users = User.query.with_categories.to_a
+          loaded_users = User.query.with_categories
 
           loaded_users.size.should eq(3)
 
@@ -628,10 +628,10 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           # Load user with only Technology category
           loaded_users = User.query.with_categories do |categories_query|
             categories_query.where({name: "Technology"})
-          end.to_a
+          end
 
           loaded_users.size.should eq(1)
-          loaded_user = loaded_users.first
+          loaded_user = loaded_users.first!
 
           # Should only have Technology category loaded
           loaded_user.categories.count.should eq(1)
