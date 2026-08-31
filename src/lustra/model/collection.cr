@@ -760,9 +760,13 @@ module Lustra::Model
     # from the condition tuple.
     # Just after building, save the object.
     def find_or_create(**tuple, & : T -> Nil) : T
-      r = find_or_build(**tuple) { |mdl| yield(mdl) }
+      built = false
+      r = find_or_build(**tuple) do |mdl|
+        built = true
+        yield(mdl)
+      end
 
-      r.save!
+      r.save! if built
 
       handle_append_operation(r)
 

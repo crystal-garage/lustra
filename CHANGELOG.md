@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- `Collection#find_or_create` no longer saves an unchanged existing record or opens an empty transaction after finding it.
 - `Collection#ids` now preserves computed selections required by ordering and pagination.
 - Eager loading now preserves computed aliases, filters, ordering, limits, and offsets while keeping association key subqueries single-column.
 - Transactions and savepoints now execute `BEGIN`, `COMMIT`, and `ROLLBACK` on the selected named connection.

@@ -653,6 +653,25 @@ module CollectionSpec
         end
       end
 
+      it "does not save a record found by find_or_create" do
+        temporary do
+          reinit_example_models
+          User.create!(first_name: "existing")
+
+          save_calls = 0
+          callback = ->(_model : Lustra::Model) { save_calls += 1 }
+          callback_key = {User.to_s, :before, :save}
+          Lustra::Model::EventManager.attach(User, :before, :save, callback)
+
+          begin
+            User.query.find_or_create(first_name: "existing")
+            save_calls.should eq(0)
+          ensure
+            Lustra::Model::EventManager::EVENT_CALLBACKS[callback_key].delete(callback)
+          end
+        end
+      end
+
       it "with find_or_build" do
         # Same test as find_or_create, with the persistence check changed.
         temporary do
