@@ -635,7 +635,7 @@ module Lustra::Model
 
     # Returns a model using primary key equality.
     # Returns `nil` if not found.
-    def find(x)
+    def find(x) : T?
       with_restored_finder_state do
         where { raw(T.__pkey__) == x }.first
       end
@@ -643,7 +643,7 @@ module Lustra::Model
 
     # Find multiple models by an array of primary keys.
     # Returns an array of models (may be empty if none found).
-    def find(ids : Array)
+    def find(ids : Array) : Array(T)
       with_restored_finder_state do
         where { raw(T.__pkey__).in?(ids) }.to_a
       end
@@ -651,13 +651,13 @@ module Lustra::Model
 
     # Returns a model using primary key equality.
     # Raises an error if the model is not found.
-    def find!(x)
+    def find!(x) : T
       find(x) || raise Lustra::SQL::RecordNotFoundError.new
     end
 
     # Find multiple models by an array of primary keys.
     # Raises an error if ANY of the IDs are not found.
-    def find!(ids : Array)
+    def find!(ids : Array) : Array(T)
       results = find(ids)
       if results.size != ids.size
         raise Lustra::SQL::RecordNotFoundError.new("Couldn't find all records with IDs: #{ids.inspect}")
