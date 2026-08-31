@@ -205,7 +205,7 @@ describe "Lustra::Model::Relations::HasMany" do
           Post.create!({title: "User1 Post", user_id: user1.id})
           Post.create!({title: "User2 Post", user_id: user2.id})
 
-          all_posts = Post.query.to_a
+          all_posts = Post.query
           all_posts.size.should eq(2)
           all_posts.map(&.title).should contain("User1 Post")
           all_posts.map(&.title).should contain("User2 Post")
@@ -593,7 +593,7 @@ describe "Lustra::Model::Relations::HasMany" do
           Post.create!({title: "User1 Post 2", user_id: users[0].id})
           Post.create!({title: "User2 Post", user_id: users[1].id})
 
-          loaded_users = User.query.with_posts.to_a
+          loaded_users = User.query.with_posts
 
           loaded_users.size.should eq(3)
 
@@ -625,7 +625,7 @@ describe "Lustra::Model::Relations::HasMany" do
           Comment.create!({content: "User1 Comment 2", user_id: users[0].id})
           Comment.create!({content: "User2 Comment", user_id: users[1].id})
 
-          loaded_users = User.query.with_comments.to_a
+          loaded_users = User.query.with_comments
 
           loaded_users.size.should eq(2)
 
@@ -649,13 +649,13 @@ describe "Lustra::Model::Relations::HasMany" do
           Post.create!({title: "Cached Post", user_id: user.id})
 
           # First query
-          posts1 = user.posts.to_a
+          posts1 = user.posts
           posts1.size.should eq(1)
 
           # Second query should use cache
-          posts2 = user.posts.to_a
+          posts2 = user.posts
           posts2.size.should eq(1)
-          posts2.first.title.should eq("Cached Post")
+          posts2.first!.title.should eq("Cached Post")
         end
       end
 
@@ -672,10 +672,10 @@ describe "Lustra::Model::Relations::HasMany" do
           # Load user with only published posts
           loaded_users = User.query.with_posts do |posts_query|
             posts_query.where({published: true})
-          end.to_a
+          end
 
           loaded_users.size.should eq(1)
-          loaded_user = loaded_users.first
+          loaded_user = loaded_users.first!
 
           # Should only have published posts loaded
           loaded_user.posts.count.should eq(1)
