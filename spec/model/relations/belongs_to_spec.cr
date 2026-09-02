@@ -210,6 +210,34 @@ module BelongsToSpec
       end
     end
 
+    it "creates a record with a polymorphic parent" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        picture = Picture.create!(name: "employee picture", imageable: employee)
+
+        persisted_picture = Picture.find!(picture.id)
+        persisted_picture.imageable_id.should eq(employee.id)
+        persisted_picture.imageable_type.should eq("Employee")
+        persisted_picture.imageable.as(Employee).id.should eq(employee.id)
+      end
+    end
+
+    it "creates a record with a concrete polymorphic alias" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        picture = Picture.create!(name: "employee picture", employee: employee)
+
+        persisted_picture = Picture.find!(picture.id)
+        persisted_picture.imageable_id.should eq(employee.id)
+        persisted_picture.imageable_type.should eq("Employee")
+        persisted_picture.employee.id.should eq(employee.id)
+      end
+    end
+
     it "resolves the parent using the stored type" do
       temporary do
         reinit_example_models
