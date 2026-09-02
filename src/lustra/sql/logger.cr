@@ -71,8 +71,10 @@ module Lustra::SQL::Logger
 
     o
   rescue e
+    error = [e.class.name, e.message].compact.join(": ")
+
     raise Lustra::SQL::Error.new(
-      message: [e.message, "Error caught, last query was:", Lustra::SQL::Logger.colorize_query(sql)].compact.join("\n"),
+      message: [error, "Error caught, last query was:", Lustra::SQL::Logger.colorize_query(sql)].join("\n"),
       cause: e
     )
   end

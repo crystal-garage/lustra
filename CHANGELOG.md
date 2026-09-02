@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added concrete `belongs_to ..., polymorphic_type:` aliases for joining and eager loading one polymorphic target type through a shared foreign key.
 
 ### Changed
+- SQL query errors now include the original exception type in their message, including when the original exception has no message.
 - `Collection#delete_all` now returns the number of affected rows instead of the collection.
 - Unknown association errors now include available association names and operation-specific correction guidance.
 - Read-only model save errors now explain that read-only models commonly map database views or system catalogs.
