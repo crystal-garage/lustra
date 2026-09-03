@@ -35,5 +35,6 @@ Benchmark.ips(warmup: 2.seconds, calculation: 5.seconds) do |x|
   x.report("With Model: With cursor") { a = [] of BenchmarkModel; BenchmarkModel.query.limit(100_000).each_with_cursor { |o| a << o } }
   x.report("With Model: With attributes") { BenchmarkModel.query.limit(100_000).to_a(fetch_columns: true) }
   x.report("With Model: With attributes and cursor") { a = [] of BenchmarkModel; BenchmarkModel.query.limit(100_000).each_with_cursor(fetch_columns: true) { |h| a << h } }
+  x.report("Using: Pluck") { BenchmarkModel.query.limit(100_000).pluck("y") }
   x.report("Hash from SQL only") { a = [] of Hash(String, ::Lustra::SQL::Any); BenchmarkModel.query.limit(100_000).fetch { |h| a << h.dup } }
 end
