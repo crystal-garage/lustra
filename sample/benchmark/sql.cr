@@ -11,6 +11,6 @@ def complex_query
     .offset(50)
 end
 
-Benchmark.ips(warmup: 2, calculation: 3) do |x|
+Benchmark.ips(warmup: 2.seconds, calculation: 3.seconds) do |x|
   x.report("complex query building") { complex_query.to_sql }
 end

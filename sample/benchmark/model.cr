@@ -28,9 +28,9 @@ class BenchmarkModel
   column y : Int32
 end
 
-puts "Starting benchmarking, total to fetch =" +
-     " #{BenchmarkModel.query.count} records"
-Benchmark.ips(warmup: 2, calculation: 5) do |x|
+puts "Starting benchmarking, total to fetch = #{BenchmarkModel.query.count} records"
+
+Benchmark.ips(warmup: 2.seconds, calculation: 5.seconds) do |x|
   x.report("With Model: Simple load 100k") { BenchmarkModel.query.limit(100_000).to_a }
   x.report("With Model: With cursor") { a = [] of BenchmarkModel; BenchmarkModel.query.limit(100_000).each_with_cursor { |o| a << o } }
   x.report("With Model: With attributes") { BenchmarkModel.query.limit(100_000).to_a(fetch_columns: true) }
