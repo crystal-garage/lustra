@@ -57,16 +57,14 @@ Benchmark.ips(warmup: 2.seconds, calculation: 5.seconds) do |x|
   end
 
   x.report("Raw SQL typed streaming") do
-    results = [] of Hash(String, ::Lustra::SQL::Any)
+    a = [] of Hash(String, ::Lustra::SQL::Any)
 
     Lustra::SQL::ConnectionPool.with_connection("default") do |cnx|
       cnx.query("SELECT id, y FROM benchmark LIMIT #{LIMIT}") do |rs|
         rs.each do
-          results << {"id" => rs.read(Int32), "y" => rs.read(Int32)} of String => Lustra::SQL::Any
+          a << {"id" => rs.read(Int32), "y" => rs.read(Int32)} of String => Lustra::SQL::Any
         end
       end
     end
-
-    results
   end
 end
