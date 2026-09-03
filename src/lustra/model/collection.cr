@@ -346,20 +346,24 @@ module Lustra::Model
       end
     end
 
+    private def fetch_models(fetch_columns : Bool) : Array(T)
+      if result = @cached_result
+        return result
+      end
+
+      result = [] of T
+
+      fetch(fetch_all: false) do |hash|
+        result << build_fetched_model(hash, fetch_columns)
+      end
+
+      result
+    end
+
     # Build the SQL, send the query, then iterate through each model gathered by
     # the request.
     def each(fetch_columns = false, & : T ->) : Nil
-      result = @cached_result
-
-      unless result
-        result = [] of T
-
-        fetch(fetch_all: false) do |hash|
-          result << build_fetched_model(hash, fetch_columns)
-        end
-      end
-
-      result.each do |value|
+      fetch_models(fetch_columns).each do |value|
         yield value
       end
     end
@@ -583,14 +587,7 @@ module Lustra::Model
 
     # Create an array from the query.
     def to_a(fetch_columns = false) : Array(T)
-      cr = @cached_result
-
-      return cr if cr
-
-      o = [] of T
-      each(fetch_columns: fetch_columns) { |m| o << m }
-
-      o
+      fetch_models(fetch_columns)
     end
 
     # Basically a fancy way to write `OFFSET x LIMIT 1`
