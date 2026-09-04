@@ -209,6 +209,7 @@ module Lustra::Model::Relations::BelongsToMacro
       def _bt_update_parent_counter_cache_{{ method_name }}(operation : String, touch_parent = false)
         {% if nilable %}
           parent = {{ method_name }}
+
           return if parent.nil?
         {% else %}
           parent = {{ method_name }}
@@ -224,7 +225,9 @@ module Lustra::Model::Relations::BelongsToMacro
         updates = {} of String => Lustra::SQL::UpdateQuery::Updatable
         updates[counter_column_name] = Lustra::SQL.unsafe("#{escaped_column} #{operation}")
         updates["updated_at"] = Time.local if touch_parent
-        Lustra::SQL.update(parent.class.full_table_name)
+
+        Lustra::SQL
+          .update(parent.class.full_table_name)
           .set(updates)
           .where { raw(parent.class.__pkey__) == parent.__pkey__ }
           .execute(parent.class.connection)
