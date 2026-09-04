@@ -63,15 +63,14 @@ module Lustra::Model::Relations::HasManyMacro
         {% if polymorphic_as %}
           if x.persisted?
             x.set(query.tags)
-            x.save!
           else
             x.reset(query.tags)
-            x.save!
           end
         {% else %}
           x.reset(query.tags)
-          x.save!
         {% end %}
+
+        x.save! if x.modified?
 
         x
       }

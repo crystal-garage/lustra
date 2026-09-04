@@ -389,6 +389,25 @@ module CollectionSpec
           end
         end
 
+        it "saves once when creating through a has_many relation" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+            save_calls = 0
+            callback = ->(_model : Lustra::Model) { save_calls += 1 }
+            callback_key = {Post.to_s, :before, :save}
+            Lustra::Model::EventManager.attach(Post, :before, :save, callback)
+
+            begin
+              user.posts.create!(title: "title")
+              save_calls.should eq(1)
+            ensure
+              Lustra::Model::EventManager::EVENT_CALLBACKS[callback_key].delete(callback)
+            end
+          end
+        end
+
         it "create! from has_many relation with block" do
           temporary do
             reinit_example_models
