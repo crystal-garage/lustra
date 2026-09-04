@@ -9,10 +9,12 @@ module Lustra::Model::Factory
     def initialize(@type_field, @self_class)
     end
 
-    def build(h : Hash(String, ::Lustra::SQL::Any),
-              cache : Lustra::Model::QueryCache? = nil,
-              persisted : Bool = false,
-              fetch_columns : Bool = false) : Lustra::Model
+    def build(
+      h : Hash(String, ::Lustra::SQL::Any),
+      cache : Lustra::Model::QueryCache? = nil,
+      persisted : Bool = false,
+      fetch_columns : Bool = false,
+    ) : Lustra::Model
       v = h[@type_field]
 
       case v
