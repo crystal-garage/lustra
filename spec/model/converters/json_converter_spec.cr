@@ -112,6 +112,19 @@ module JSONConverterSpec
       converter.to_column(JSON_DATA_SAMPLE).should eq(json_any)
     end
 
+    it "converts JSON-serializable Crystal collections" do
+      converter = Lustra::Model::Converter::JSON::AnyConverter
+
+      hash = {"tags" => ["crystal", "orm"]}
+      converter.to_column(hash).should eq(JSON.parse(hash.to_json))
+
+      array = [1, 2, 3]
+      converter.to_column(array).should eq(JSON.parse(array.to_json))
+
+      tuple = {enabled: true, count: 2}
+      converter.to_column(tuple).should eq(JSON.parse(tuple.to_json))
+    end
+
     it "converts using json_serializable_converter" do
       temporary do
         reinit_migration_manager

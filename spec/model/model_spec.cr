@@ -657,6 +657,17 @@ module ModelSpec
         end
       end
 
+      it "converts a hash assigned to a JSON::Any column" do
+        temporary do
+          reinit_example_models
+          preferences = {"topics" => ["crystal", "postgresql"]}
+
+          user = User.create!(first_name: "x", notification_preferences: preferences)
+
+          User.find!(user.id).notification_preferences.should eq(JSON.parse(preferences.to_json))
+        end
+      end
+
       it "update the model" do
         temporary do
           reinit_example_models

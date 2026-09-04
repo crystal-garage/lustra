@@ -9,8 +9,10 @@ module Lustra::Model::Converter::JSON::AnyConverter
       x
     when ::JSON::PullParser
       ::JSON::Any.new(x)
+    when String
+      ::JSON.parse(x)
     else
-      ::JSON.parse(x.to_s)
+      ::JSON.parse(x.to_json)
     end
   end
 
