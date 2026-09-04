@@ -254,20 +254,6 @@ module Lustra::Model::Relations::BelongsToMacro
         )
       {% end %}
 
-      # :nodoc:
-      # increment counter cache on the parent model
-      def _bt_increment_counter_{{ method_name }}
-        _bt_update_parent_counter_cache_{{ method_name }}(
-          1,
-          touch_parent: {{ touch == true }}
-        )
-      end
-
-      # :nodoc:
-      # decrement counter cache on the parent model
-      def _bt_decrement_counter_{{ method_name }}
-        _bt_update_parent_counter_cache_{{ method_name }}(-1)
-      end
     {% end %}
 
     __on_init__ do
@@ -288,10 +274,13 @@ module Lustra::Model::Relations::BelongsToMacro
 
       {% if counter_cache %}
         {{ self_type }}.after(:create) do |mdl|
-          mdl.as(self)._bt_increment_counter_{{ method_name }}
+          mdl.as(self)._bt_update_parent_counter_cache_{{ method_name }}(
+            1,
+            touch_parent: {{ touch == true }}
+          )
         end
         {{ self_type }}.after(:destroy) do |mdl|
-          mdl.as(self)._bt_decrement_counter_{{ method_name }}
+          mdl.as(self)._bt_update_parent_counter_cache_{{ method_name }}(-1)
         end
       {% end %}
     end
