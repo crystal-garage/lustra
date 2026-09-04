@@ -1,5 +1,6 @@
 require "../../spec_helper"
 require "../../data/example_models"
+require "log/memory_backend"
 
 module BelongsToSpec
   describe("belongs_to relation (not nilable)") do
@@ -99,6 +100,38 @@ module BelongsToSpec
         # Reload user to get updated timestamp
         user = User.find!(user.id)
         user.updated_at.should_not eq(original_updated_at)
+      end
+    end
+
+    it "combines counter cache and touch updates when creating a child" do
+      temporary do
+        reinit_example_models
+
+        parent = TouchCounterParent.create!
+        original_updated_at = parent.updated_at
+        sleep 10.milliseconds
+        backend = Log::MemoryBackend.new
+        Log.setup("lustra", :debug, backend)
+
+        begin
+          TouchCounterChild.create!(owner: parent)
+
+          updates = backend.entries.select do |entry|
+            entry.message.includes?(%(UPDATE "touch_counter_parents" SET))
+          end
+
+          updates.size.should eq(1)
+          updates.first.message.should contain(%("children_count" = "children_count" + 1))
+          updates.first.message.should contain(%("updated_at" =))
+          parent.children_count.should eq(1)
+          parent.updated_at.should_not eq(original_updated_at)
+        ensure
+          {% if flag?(:quiet) %}
+            Log.setup(:error)
+          {% else %}
+            Log.setup(:debug)
+          {% end %}
+        end
       end
     end
 

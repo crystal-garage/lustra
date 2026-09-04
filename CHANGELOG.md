@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- `belongs_to` associations using both `counter_cache` and `touch: true` now combine their parent counter and timestamp changes into one atomic `UPDATE` when a child is created.
 - Appending a persisted record to a direct `has_many` association now persists the changed foreign key.
 - Creating a record through a direct `has_many` association no longer performs a redundant second save or opens an empty transaction.
 - Collection-based `build`, `create`, and `create!` now pass non-SQL attribute values through model converters, including Crystal collections assigned to `JSON::Any` columns.

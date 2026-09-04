@@ -206,7 +206,7 @@ module Lustra::Model::Relations::BelongsToMacro
     {% if counter_cache %}
       # :nodoc:
       # Execute atomic counter cache update
-      def _bt_update_counter_{{ method_name }}(operation : String)
+      def _bt_update_parent_counter_cache_{{ method_name }}(operation : String, touch_parent = false)
         {% if nilable %}
           parent = {{ method_name }}
           return if parent.nil?
@@ -223,10 +223,13 @@ module Lustra::Model::Relations::BelongsToMacro
         escaped_column = Lustra::SQL.escape(counter_column_name)
         updates = {} of String => Lustra::SQL::UpdateQuery::Updatable
         updates[counter_column_name] = Lustra::SQL.unsafe("#{escaped_column} #{operation}")
+        updates["updated_at"] = Time.local if touch_parent
         Lustra::SQL.update(parent.class.full_table_name)
           .set(updates)
           .where { raw(parent.class.__pkey__) == parent.__pkey__ }
           .execute(parent.class.connection)
+
+        parent.reload if touch_parent
       end
 
       # Register counter cache information with the parent class at runtime.
@@ -249,13 +252,16 @@ module Lustra::Model::Relations::BelongsToMacro
       # :nodoc:
       # increment counter cache on the parent model
       def _bt_increment_counter_{{ method_name }}
-        _bt_update_counter_{{ method_name }}("+ 1")
+        _bt_update_parent_counter_cache_{{ method_name }}(
+          "+ 1",
+          touch_parent: {{ touch == true }}
+        )
       end
 
       # :nodoc:
       # decrement counter cache on the parent model
       def _bt_decrement_counter_{{ method_name }}
-        _bt_update_counter_{{ method_name }}("- 1")
+        _bt_update_parent_counter_cache_{{ method_name }}("- 1")
       end
     {% end %}
 
@@ -265,9 +271,11 @@ module Lustra::Model::Relations::BelongsToMacro
       end
 
       {% if touch %}
-        {{ self_type }}.after(:create) do |mdl|
-          mdl.as(self)._bt_touch_{{ method_name }}
-        end
+        {% unless touch == true && counter_cache %}
+          {{ self_type }}.after(:create) do |mdl|
+            mdl.as(self)._bt_touch_{{ method_name }}
+          end
+        {% end %}
         {{ self_type }}.after(:update) do |mdl|
           mdl.as(self)._bt_touch_{{ method_name }}
         end

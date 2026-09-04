@@ -113,6 +113,24 @@ class PostWithTouch
   timestamps
 end
 
+class TouchCounterParent
+  include Lustra::Model
+
+  primary_key
+
+  column children_count : Int32, presence: false
+
+  timestamps
+end
+
+class TouchCounterChild
+  include Lustra::Model
+
+  primary_key
+
+  belongs_to owner : TouchCounterParent, counter_cache: :children_count, touch: true
+end
+
 class PostWithOptionalUser
   include Lustra::Model
 
@@ -403,6 +421,16 @@ class ModelSpecMigration123
       t.references to: "users", name: "user_id", on_delete: "cascade"
 
       t.timestamps
+    end
+
+    create_table "touch_counter_parents" do |t|
+      t.column "children_count", "int", null: false, default: "0"
+
+      t.timestamps
+    end
+
+    create_table "touch_counter_children" do |t|
+      t.references to: "touch_counter_parents", name: "owner_id", on_delete: "cascade"
     end
 
     create_table "posts_with_optional_user" do |t|
