@@ -46,16 +46,24 @@ module Lustra::Model::Relations::HasManyMacro
           arr = cache.hit("{{ method_name }}", self.__pkey_column__.to_sql_value, {{ relation_type }})
 
           # This relation will trigger the cache if it exists
-          qry = {{ relation_type }}.query
-            .tags(%tags)
-            .where { raw(%foreign_key) == %primary_key }
+          qry =
+            {{ relation_type }}
+              .query
+              .tags(%tags)
+              .where { raw(%foreign_key) == %primary_key }
+
           qry.where { raw(%type_key) == self.class.name } if %type_key
+
           qry.with_cached_result(arr)
         else
-          qry = {{ relation_type }}.query
-            .tags(%tags)
-            .where { raw(%foreign_key) == %primary_key }
+          qry =
+            {{ relation_type }}
+              .query
+              .tags(%tags)
+              .where { raw(%foreign_key) == %primary_key }
+
           qry.where { raw(%type_key) == self.class.name } if %type_key
+
           qry
         end
 
@@ -92,6 +100,7 @@ module Lustra::Model::Relations::HasManyMacro
       def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
         before_query do
           %primary_key = {{ (primary_key || "#{relation_type}.__pkey__").id }}
+
           %foreign_key =
             {% if foreign_key %}
               "{{ foreign_key }}"
@@ -100,12 +109,14 @@ module Lustra::Model::Relations::HasManyMacro
             {% else %}
               ({{ self_type }}.table.to_s.singularize + "_id")
             {% end %}
+
           %type_key =
             {% if polymorphic_as %}
               "{{ polymorphic_as }}_type"
             {% else %}
               nil
             {% end %}
+
           %type_value = {{ self_type }}.name
 
           #SELECT * FROM foreign WHERE foreign_key IN ( SELECT primary_key FROM users )
