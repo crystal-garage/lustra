@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Collection-based `build`, `create`, and `create!` now pass non-SQL attribute values through model converters, including Crystal collections assigned to `JSON::Any` columns.
 - `Collection#find_or_create` no longer saves or re-appends an unchanged existing record after finding it, avoiding empty transactions and redundant association queries.
 - `Collection#ids` now preserves computed selections required by ordering and pagination.
 - Eager loading now preserves computed aliases, filters, ordering, limits, and offsets while keeping association key subqueries single-column.

@@ -401,9 +401,18 @@ module Lustra::Model
     # `my_model.associations.build({a_column: "value"}) `
     def build(**tuple, & : T -> Nil) : T
       str_hash = @tags.dup
-      tuple.map { |k, v| str_hash[k.to_s] = v }
+      reset_tuple = false
+
+      tuple.each do |key, value|
+        if value.is_a?(Lustra::SQL::Any)
+          str_hash[key.to_s] = value
+        else
+          reset_tuple = true
+        end
+      end
 
       r = Lustra::Model::Factory.build(T, str_hash, persisted: false)
+      r.reset(tuple) if reset_tuple
 
       yield(r)
 

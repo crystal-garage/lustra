@@ -98,6 +98,21 @@ module CollectionSpec
           end
         end
 
+        it "creates with a JSON-serializable value" do
+          temporary do
+            reinit_example_models
+            preferences = {"topics" => ["crystal", "postgresql"]}
+
+            user = User.query
+              .where(first_name: "John")
+              .create!(notification_preferences: preferences)
+
+            persisted_user = User.find!(user.id)
+            persisted_user.first_name.should eq("John")
+            persisted_user.notification_preferences.should eq(JSON.parse(preferences.to_json))
+          end
+        end
+
         it "raises for an invalid NamedTuple" do
           temporary do
             reinit_example_models
