@@ -206,7 +206,7 @@ module Lustra::Model::Relations::BelongsToMacro
     {% if counter_cache %}
       # :nodoc:
       # Execute atomic counter cache update
-      def _bt_update_parent_counter_cache_{{ method_name }}(operation : String, touch_parent = false)
+      def _bt_update_parent_counter_cache_{{ method_name }}(delta : Int32, touch_parent = false)
         {% if nilable %}
           parent = {{ method_name }}
 
@@ -222,8 +222,10 @@ module Lustra::Model::Relations::BelongsToMacro
         {% end %}
 
         escaped_column = Lustra::SQL.escape(counter_column_name)
+        operator = delta < 0 ? "-" : "+"
+        amount = delta.abs
         updates = {} of String => Lustra::SQL::UpdateQuery::Updatable
-        updates[counter_column_name] = Lustra::SQL.unsafe("#{escaped_column} #{operation}")
+        updates[counter_column_name] = Lustra::SQL.unsafe("#{escaped_column} #{operator} #{amount}")
         updates["updated_at"] = Time.local if touch_parent
 
         Lustra::SQL
@@ -256,7 +258,7 @@ module Lustra::Model::Relations::BelongsToMacro
       # increment counter cache on the parent model
       def _bt_increment_counter_{{ method_name }}
         _bt_update_parent_counter_cache_{{ method_name }}(
-          "+ 1",
+          1,
           touch_parent: {{ touch == true }}
         )
       end
@@ -264,7 +266,7 @@ module Lustra::Model::Relations::BelongsToMacro
       # :nodoc:
       # decrement counter cache on the parent model
       def _bt_decrement_counter_{{ method_name }}
-        _bt_update_parent_counter_cache_{{ method_name }}("- 1")
+        _bt_update_parent_counter_cache_{{ method_name }}(-1)
       end
     {% end %}
 
