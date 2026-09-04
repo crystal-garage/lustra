@@ -207,6 +207,8 @@ module Lustra::Model
     # :nodoc:
     property append_operation : Proc(T, T)?
     # :nodoc:
+    property? run_append_operation_after_create : Bool = true
+    # :nodoc:
     property unlink_operation : Proc(T, T)?
 
     # Parent model context for autosave functionality.
@@ -547,7 +549,7 @@ module Lustra::Model
 
     private def handle_append_operation(item : T)
       if append_operation = self.append_operation
-        append_operation.call(item)
+        append_operation.call(item) if run_append_operation_after_create?
         @cached_result.try &.<<(item)
       end
     end

@@ -408,6 +408,38 @@ module CollectionSpec
           end
         end
 
+        it "saves once with non-bang create through a has_many relation" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+            save_calls = 0
+            callback = ->(_model : Lustra::Model) { save_calls += 1 }
+            callback_key = {Post.to_s, :before, :save}
+            Lustra::Model::EventManager.attach(Post, :before, :save, callback)
+
+            begin
+              user.posts.create(title: "title").persisted?.should be_true
+              save_calls.should eq(1)
+            ensure
+              Lustra::Model::EventManager::EVENT_CALLBACKS[callback_key].delete(callback)
+            end
+          end
+        end
+
+        it "adds the created model to a cached has_many collection" do
+          temporary do
+            reinit_example_models
+
+            user = User.create!(first_name: "name")
+            posts = user.posts.with_cached_result([] of Post)
+
+            post = posts.create!(title: "title")
+
+            posts.to_a.should eq([post])
+          end
+        end
+
         it "create! from has_many relation with block" do
           temporary do
             reinit_example_models
@@ -548,6 +580,22 @@ module CollectionSpec
             post.persisted?.should be_true
             post.user_id.should eq(user.id)
             user.posts.count.should eq(1)
+          end
+        end
+
+        it "moves a persisted model to a has_many association" do
+          temporary do
+            reinit_example_models
+
+            first_user = User.create!(first_name: "John")
+            second_user = User.create!(first_name: "Jane")
+            post = Post.create!(title: "Test Post", user: first_user)
+
+            second_user.posts << post
+
+            post.reload.user_id.should eq(second_user.id)
+            first_user.posts.count.should eq(0)
+            second_user.posts.count.should eq(1)
           end
         end
 

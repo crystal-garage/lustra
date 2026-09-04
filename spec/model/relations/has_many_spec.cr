@@ -375,6 +375,25 @@ describe "Lustra::Model::Relations::HasMany" do
         end
       end
 
+      it "saves once when creating through a polymorphic has_many association" do
+        temporary do
+          reinit_example_models
+
+          employee = Employee.create!({name: "Alice"})
+          save_calls = 0
+          callback = ->(_model : Lustra::Model) { save_calls += 1 }
+          callback_key = {Picture.to_s, :before, :save}
+          Lustra::Model::EventManager.attach(Picture, :before, :save, callback)
+
+          begin
+            employee.pictures.create!({name: "Profile picture"})
+            save_calls.should eq(1)
+          ensure
+            Lustra::Model::EventManager::EVENT_CALLBACKS[callback_key].delete(callback)
+          end
+        end
+      end
+
       it "raises a clear error when the parent is not persisted" do
         temporary do
           reinit_example_models

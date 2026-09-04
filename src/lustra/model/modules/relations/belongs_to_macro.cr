@@ -34,7 +34,7 @@ module Lustra::Model::Relations::BelongsToMacro
     {% end %}
     getter _cached_{{ method_name }} : {{ relation_type }}?
 
-    protected def invalidate_caching
+    def invalidate_caching
       previous_def
 
       @_cached_{{ method_name }} = nil

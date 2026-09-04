@@ -68,20 +68,18 @@ module Lustra::Model::Relations::HasManyMacro
         end
 
       query.append_operation = -> (x : {{ relation_type }}) {
-        {% if polymorphic_as %}
-          if x.persisted?
-            x.set(query.tags)
-          else
-            x.reset(query.tags)
-          end
-        {% else %}
+        if x.persisted?
+          x.invalidate_caching
+          x.set(query.tags)
+        else
           x.reset(query.tags)
-        {% end %}
+        end
 
         x.save! if x.modified?
 
         x
       }
+      query.run_append_operation_after_create = false
 
       # Set parent model context for autosave functionality
       {% if autosave %}
