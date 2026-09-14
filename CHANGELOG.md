@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Corrected `Migration::Manager#max_version` to return `Int64?`, matching the migration UID it computes.
 - Reinitializing a connection name now closes its previous idle pool and rejects replacement while connections are active or being acquired. Failure to open a replacement preserves the existing pool.
 - Failed transaction setup now clears transaction state. Connection-pool retries are limited to checkout; connection loss after checkout propagates without replaying queries, transaction bodies, or application side effects.
 - Association joins, `where.associated`, `where.missing`, and `with_count` now honor related models' schemas, including through tables, instead of resolving same-named tables through the search path.
@@ -72,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deduplicated the internal direct column-update workflow without changing public overloads or persistence behavior.
 
 ### Removed
+- Removed the unfinished `QueryCache#fetch` method and the unused `CLI::Generator` registry (`Record`, `generators`, `add`, `[]`, and `[]?`). Built-in generators continue to use Admiral subcommand registration.
 - Removed the unused internal `Lustra::Expression::Node::NotBetween` node; negate `between?` expressions with `not(...)`.
 - Removed deprecated condition-based `Collection#find` and `Collection#find!` overloads; use `find_by` and `find_by!` instead.
 

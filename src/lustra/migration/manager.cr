@@ -51,7 +51,7 @@ class Lustra::Migration::Manager
     @migrations_up.max
   end
 
-  def max_version : Lustra::Migration?
+  def max_version : Int64?
     if @migrations.size > 0
       @migrations.max_of(&.uid)
     end

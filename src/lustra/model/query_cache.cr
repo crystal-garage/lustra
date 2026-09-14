@@ -21,10 +21,6 @@ class Lustra::Model::QueryCache
   # References the current cached relations.
   @cache_activation : Set(String) = Set(String).new
 
-  def fetch
-    query
-  end
-
   # Mark this cache as active for a specific relation name.
   # Returns `self`.
   def active(relation_name)
