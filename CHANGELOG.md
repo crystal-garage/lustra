@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated expression `between(a, b)` in favor of the predicate-style `between?(a, b)`.
 
 ### Changed
+- Lustra connection pools now default to `prepared_statements_cache=false` to avoid retaining a statement for every distinct SQL string containing literal values. Explicit URL settings are preserved; use `prepared_statements_cache=true` to opt in to caching.
 - `Collection#to_a` now avoids allocating and copying an intermediate model array.
 - SQL query errors now include the original exception type in their message, including when the original exception has no message.
 - `Collection#delete_all` now returns the number of affected rows instead of the collection.

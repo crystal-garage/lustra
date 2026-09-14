@@ -7,7 +7,14 @@ class Lustra::SQL::ConnectionPool
   def self.init(uri, name)
     name = name.to_s
     ensure_idle(name)
-    replacement = DB.open(uri)
+    connection_uri = URI.parse(uri.to_s)
+    params = HTTP::Params.parse(connection_uri.query || "")
+    # Literal SQL values produce distinct cache keys on long-lived connections.
+    unless params.has_key?("prepared_statements_cache")
+      params["prepared_statements_cache"] = "false"
+      connection_uri.query = params.to_s
+    end
+    replacement = DB.open(connection_uri)
     begin
       # Opening the replacement can yield to a fiber using the existing pool.
       ensure_idle(name)

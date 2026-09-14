@@ -109,12 +109,15 @@ module Lustra
 
     # Initialize the default pool, closing any previous idle pool.
     # Raises SQL::Error if the pool has active or pending connection checkouts.
+    # Statement caching defaults to off because queries contain literal values.
+    # Set `prepared_statements_cache=true` in the URL to opt in.
     def init(url : String)
       Lustra::SQL::ConnectionPool.init(url, "default")
     end
 
     # Initialize a named pool, closing any previous idle pool.
     # Raises SQL::Error if the pool has active or pending connection checkouts.
+    # Statement caching defaults to off; an explicit URL setting takes precedence.
     def init(name : String, url : String)
       Lustra::SQL::ConnectionPool.init(url, name)
     end
