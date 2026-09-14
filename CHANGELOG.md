@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Model inserts skipped by conflict handling now return `false` from `save` and `save_with_associations`, or raise `Model::InvalidError` from `save!`. Skipped models retain their pending state, remain unpersisted, and do not run successful-create or successful-save callbacks.
 - Persisted `increment!` and `decrement!` now use `UPDATE ... RETURNING` to refresh the counter in one query, preserving unrelated pending edits and returning the value from that update.
 - Corrected `Migration::Manager#max_version` to return `Int64?`, matching the migration UID it computes.
 - Reinitializing a connection name now closes its previous idle pool and rejects replacement while connections are active or being acquired. Failure to open a replacement preserves the existing pool.

@@ -68,7 +68,7 @@ module Lustra::Model::HasSaving
   # Optionally, you can pass a `Proc` to refine the `INSERT` with on conflict
   # resolution functions.
   #
-  # Return `false` if the model cannot be saved due to validation issues.
+  # Return `false` if validation fails or conflict handling returns no row.
   # Return `true` if the model has been saved correctly.
   #
   # Example:
@@ -89,8 +89,7 @@ module Lustra::Model::HasSaving
   #
   # ```
   # u = User.new id: 123, email: "email@example.com"
-  # u.save(-> (qry) { qry.on_conflict.do_update { |u| u.set(email: "email@example.com") } #update
-  # # IMPORTANT NOTICE: user may not be saved, but will still be detected as persisted!
+  # u.save(-> (qry) { qry.on_conflict.do_update { |u| u.set(email: "email@example.com") } # update
   # ```
   #
   # You may want to use a block for the optional `on_conflict` parameter:
@@ -98,9 +97,13 @@ module Lustra::Model::HasSaving
   # ```
   # u = User.new id: 123, email: "email@example.com"
   # u.save do |qry|
-  #    qry.on_conflict.do_update { |u| u.set(email: "email@example.com")
+  #   qry.on_conflict.do_update { |u| u.set(email: "email@example.com")
   # end
   # ```
+  #
+  # If conflict handling skips the insert (for example, `DO NOTHING`), returns
+  # `false` and leaves the model unpersisted with its pending attributes.
+  # Successful-create and successful-save callbacks are not run.
   #
   def save(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
     return false if self.class.read_only?
@@ -116,7 +119,7 @@ module Lustra::Model::HasSaving
           end
         else
           with_triggers(:create) do
-            save_main_model(on_conflict)
+            return false unless save_main_model(on_conflict)
           end
         end
 
@@ -133,7 +136,8 @@ module Lustra::Model::HasSaving
     save(on_conflict: block)
   end
 
-  # Performs `save` call, but instead of returning `false` if validation failed,
+  # Performs `save` call, but instead of returning `false` if validation failed
+  # or conflict handling skipped the insert,
   # raise `Lustra::Model::InvalidError` exception
   # Automatically handles built associations
   def save!(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
@@ -170,7 +174,7 @@ module Lustra::Model::HasSaving
           end
         else
           with_triggers(:create) do
-            save_main_model(on_conflict)
+            return false unless save_main_model(on_conflict)
           end
         end
 
@@ -433,10 +437,13 @@ module Lustra::Model::HasSaving
       query = Lustra::SQL.insert_into(self.class.full_table_name, to_h).returning("*")
       on_conflict.call(query) if on_conflict
       hash = query.execute(@@connection)
+      return false if hash.empty?
 
       reset(hash)
       @persisted = true
     end
+
+    true
   end
 
   private def handle_through_associations
