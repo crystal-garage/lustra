@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Persisted `increment!` and `decrement!` now use `UPDATE ... RETURNING` to refresh the counter in one query, preserving unrelated pending edits and returning the value from that update.
 - Corrected `Migration::Manager#max_version` to return `Int64?`, matching the migration UID it computes.
 - Reinitializing a connection name now closes its previous idle pool and rejects replacement while connections are active or being acquired. Failure to open a replacement preserves the existing pool.
 - Failed transaction setup now clears transaction state. Connection-pool retries are limited to checkout; connection loss after checkout propagates without replaying queries, transaction bodies, or application side effects.

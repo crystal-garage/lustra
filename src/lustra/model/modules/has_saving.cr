@@ -285,14 +285,15 @@ module Lustra::Model::HasSaving
     escaped_column = Lustra::SQL.escape(column_name)
     updates = {} of String => Lustra::SQL::UpdateQuery::Updatable
     updates[column_name] = Lustra::SQL.unsafe("#{escaped_column} + #{Lustra::Expression[by]}")
+    result = nil.as(Hash(String, Lustra::SQL::Any)?)
     Lustra::SQL.update(self.class.full_table_name)
       .set(updates)
       .where { raw(self.class.__pkey__) == __pkey__ }
-      .execute(@@connection)
+      .returning(escaped_column)
+      .fetch(@@connection) { |row| result = row }
 
-    # Update in-memory value by reloading just this column
-    result = Lustra::SQL.select(column_name).from(self.class.full_table_name).where { raw(self.class.__pkey__) == __pkey__ }.use_connection(@@connection).fetch_first!
-    reset({column_name => result[column_name]})
+    # Use this update's value and clear dirty state only for the counter.
+    reset(result || raise Lustra::SQL::RecordNotFoundError.new)
 
     self
   end
