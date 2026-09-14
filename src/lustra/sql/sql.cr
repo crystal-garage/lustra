@@ -107,10 +107,14 @@ module Lustra
       Lustra::Expression::UnsafeSql.new(x)
     end
 
+    # Initialize the default pool, closing any previous idle pool.
+    # Raises SQL::Error if the pool has active or pending connection checkouts.
     def init(url : String)
       Lustra::SQL::ConnectionPool.init(url, "default")
     end
 
+    # Initialize a named pool, closing any previous idle pool.
+    # Raises SQL::Error if the pool has active or pending connection checkouts.
     def init(name : String, url : String)
       Lustra::SQL::ConnectionPool.init(url, name)
     end

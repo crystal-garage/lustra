@@ -2,9 +2,29 @@ class Lustra::SQL::ConnectionPool
   @@databases = {} of String => DB::Database
 
   @@connections = {} of {String, Fiber} => DB::Connection
+  @@checkouts = Hash(String, Int32).new(0)
 
   def self.init(uri, name)
-    @@databases[name] = DB.open(uri)
+    name = name.to_s
+    ensure_idle(name)
+    replacement = DB.open(uri)
+    begin
+      # Opening the replacement can yield to a fiber using the existing pool.
+      ensure_idle(name)
+    rescue e
+      replacement.close
+      raise e
+    end
+    previous = @@databases[name]?
+    @@databases[name] = replacement
+    previous.try(&.close)
+    replacement
+  end
+
+  private def self.ensure_idle(name : String)
+    if @@checkouts[name] > 0
+      raise Lustra::SQL::Error.new("Cannot replace connection pool '#{name}' while connections are in use")
+    end
   end
 
   # Retrieve a connection from the connection pool, or wait for it.
@@ -21,13 +41,19 @@ class Lustra::SQL::ConnectionPool
 
     # Retry acquisition only. Replaying the caller's block could repeat writes
     # or application side effects, including an entire transaction body.
-    connection = database.retry { database.checkout }
+    @@checkouts[target] += 1
     begin
-      @@connections[fiber_target] = connection
-      yield connection
+      connection = database.retry { database.checkout }
+      begin
+        @@connections[fiber_target] = connection
+        yield connection
+      ensure
+        @@connections.delete(fiber_target)
+        connection.release
+      end
     ensure
-      @@connections.delete(fiber_target)
-      connection.release
+      @@checkouts[target] -= 1
+      @@checkouts.delete(target) if @@checkouts[target] == 0
     end
   end
 end

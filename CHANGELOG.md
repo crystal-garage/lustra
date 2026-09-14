@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Reinitializing a connection name now closes its previous idle pool and rejects replacement while connections are active or being acquired. Failure to open a replacement preserves the existing pool.
 - Failed transaction setup now clears transaction state. Connection-pool retries are limited to checkout; connection loss after checkout propagates without replaying queries, transaction bodies, or application side effects.
 - Association joins, `where.associated`, `where.missing`, and `with_count` now honor related models' schemas, including through tables, instead of resolving same-named tables through the search path.
 - View recreation now drops dependents before their dependencies, detects dependency cycles, and uses schema-qualified names when dropping views. Materialized views now use valid creation and deletion SQL.
