@@ -10,23 +10,26 @@ module Lustra::SQL::Query::WithPagination
   # This is helpful to manage paginated table.
   # Pagination will handle the page progression automatically and update
   # `offset` and `limit` parameters by his own.
+  # Page sizes must be positive; page numbers below one use the first page.
   #
   # ```
   # page = query.paginate(2, 50)
   # ```
   def paginate(page : Int32 = DEFAULT_PAGE, per_page : Int32 = DEFAULT_LIMIT)
+    raise ArgumentError.new("Page size must be positive") unless per_page > 0
+
     clear_limit.clear_offset
     @total_entries = count
 
     page = {1, page}.max
     @limit = per_page.to_i64
-    @offset = (per_page * (page - 1)).to_i64
+    @offset = per_page.to_i64 * (page - 1)
     change!
   end
 
   # Return the number of items maximum per page.
   def per_page : Int32 | Int64
-    limit.try(&.to_i) || DEFAULT_LIMIT
+    limit || DEFAULT_LIMIT
   end
 
   # Return the current page
@@ -34,7 +37,7 @@ module Lustra::SQL::Query::WithPagination
     if offset.nil? || limit.nil?
       DEFAULT_PAGE
     else
-      ((offset.as(Int64) / limit.as(Int64)) + 1).to_i
+      offset.as(Int64) // limit.as(Int64) + 1
     end
   end
 
@@ -43,7 +46,8 @@ module Lustra::SQL::Query::WithPagination
     if limit.nil? || total_entries.nil?
       1
     else
-      (total_entries.as(Int64) / limit.as(Int64).to_f).ceil.to_i
+      pages, remainder = total_entries.as(Int64).divmod(limit.as(Int64))
+      pages + (remainder > 0 ? 1 : 0)
     end
   end
 
