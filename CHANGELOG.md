@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Association joins, `where.associated`, `where.missing`, and `with_count` now honor related models' schemas, including through tables, instead of resolving same-named tables through the search path.
 - View recreation now drops dependents before their dependencies, detects dependency cycles, and uses schema-qualified names when dropping views. Materialized views now use valid creation and deletion SQL.
 - Rolling back a savepoint now discards its `after_commit` callbacks, including callbacks from released nested savepoints, while preserving callbacks for committed work.
 - Duplicated queries now have independent hook lists; eager loading uses each copy's filters and association cache. Duplicated association collections preserve foreign-key defaults, autosave, append, and unlink behavior.

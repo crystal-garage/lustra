@@ -1024,6 +1024,7 @@ module Lustra::Model
                 {% end %}
 
               %relation_table = {{ settings[:type] }}.table
+              %relation_table_source = {{ settings[:type] }}.full_table_name
 
               %primary_key =
                 {% if settings[:primary_key] %}
@@ -1039,7 +1040,7 @@ module Lustra::Model
                 count_condition += " AND #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[T.name]}"
               {% end %}
 
-              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{count_condition})"
+              "(SELECT COUNT(*) FROM #{%relation_table_source} WHERE #{count_condition})"
             {% elsif settings[:relation_type] == :has_one %}
               %foreign_key =
                 {% if settings[:foreign_key] %}
@@ -1049,6 +1050,7 @@ module Lustra::Model
                 {% end %}
 
               %relation_table = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.table
+              %relation_table_source = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.full_table_name
 
               %primary_key =
                 {% if settings[:primary_key] %}
@@ -1057,7 +1059,7 @@ module Lustra::Model
                   T.__pkey__
                 {% end %}
 
-              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
+              "(SELECT COUNT(*) FROM #{%relation_table_source} WHERE #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)})"
             {% elsif settings[:relation_type] == :belongs_to %}
               {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
                 # A polymorphic belongs_to can point at multiple tables, so a
@@ -1072,6 +1074,7 @@ module Lustra::Model
                   {% end %}
 
                 %relation_table = {{ settings[:type] }}.table
+                %relation_table_source = {{ settings[:type] }}.full_table_name
                 %primary_key = {{ settings[:type] }}.__pkey__
 
                 count_condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)}"
@@ -1080,10 +1083,11 @@ module Lustra::Model
                   count_condition += " AND #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[{{ settings[:polymorphic_type] }}]}"
                 {% end %}
 
-                "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%relation_table)} WHERE #{count_condition})"
+                "(SELECT COUNT(*) FROM #{%relation_table_source} WHERE #{count_condition})"
               {% end %}
             {% elsif settings[:relation_type] == :has_many_through %}
               %through_table = {{ settings[:through] }}.table
+              %through_table_source = {{ settings[:through] }}.full_table_name
 
               %own_key =
                 {% if settings[:own_key] %}
@@ -1092,11 +1096,12 @@ module Lustra::Model
                   T.table.to_s.singularize + "_id"
                 {% end %}
 
-              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%through_table)} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
+              "(SELECT COUNT(*) FROM #{%through_table_source} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
             {% end %}
           {% if settings[:relation_type] == :has_many_through %}
             when {{ settings[:through] }}.table
               %through_table = {{ settings[:through] }}.table
+              %through_table_source = {{ settings[:through] }}.full_table_name
 
               %own_key =
                 {% if settings[:own_key] %}
@@ -1105,7 +1110,7 @@ module Lustra::Model
                   T.table.to_s.singularize + "_id"
                 {% end %}
 
-              "(SELECT COUNT(*) FROM #{Lustra::SQL.escape(%through_table)} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
+              "(SELECT COUNT(*) FROM #{%through_table_source} WHERE #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)})"
           {% end %}
         {% end %}
         else
@@ -1137,6 +1142,7 @@ module Lustra::Model
                 {% end %}
 
               %relation_table = {{ settings[:type] }}.table
+              %relation_table_source = {{ settings[:type] }}.full_table_name
 
               %primary_key =
                 {% if settings[:primary_key] %}
@@ -1150,7 +1156,7 @@ module Lustra::Model
                 %type_key = "{{ settings[:as] }}_type"
                 condition += " AND #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[T.name]}"
               {% end %}
-              join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+              join(%relation_table_source, type, condition, lateral)
             {% elsif settings[:relation_type] == :has_one %}
                 # has_one :info => user_infos.user_id = users.id
                 %foreign_key =
@@ -1162,6 +1168,7 @@ module Lustra::Model
 
                 # Get the table name from the type (handling nilable like UserInfo?)
                 %relation_table = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.table
+                %relation_table_source = {{ settings[:type].stringify.gsub(/\s*\|\s*Nil/, "").gsub(/\s*\|\s*::Nil/, "").id }}.full_table_name
 
                 %primary_key =
                   {% if settings[:primary_key] %}
@@ -1171,7 +1178,7 @@ module Lustra::Model
                   {% end %}
 
                 condition = "#{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%primary_key)}"
-                join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+                join(%relation_table_source, type, condition, lateral)
             {% elsif settings[:relation_type] == :belongs_to %}
               {% if settings[:polymorphic] && !settings[:polymorphic_type] %}
                 # A polymorphic belongs_to can point at multiple tables, so
@@ -1187,6 +1194,7 @@ module Lustra::Model
                   {% end %}
 
                 %relation_table = {{ settings[:type] }}.table
+                %relation_table_source = {{ settings[:type] }}.full_table_name
                 %primary_key = {{ settings[:type] }}.__pkey__
 
                 condition = "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%foreign_key)} = #{Lustra::SQL.escape(%relation_table)}.#{Lustra::SQL.escape(%primary_key)}"
@@ -1194,7 +1202,7 @@ module Lustra::Model
                   %type_key = %foreign_key.gsub(/_id$/, "_type")
                   condition += " AND #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(%type_key)} = #{Lustra::Expression[{{ settings[:polymorphic_type] }}]}"
                 {% end %}
-                join(Lustra::SQL.escape(%relation_table), type, condition, lateral)
+                join(%relation_table_source, type, condition, lateral)
               {% end %}
             {% elsif settings[:relation_type] == :has_many_through %}
               # has_many through requires two joins
@@ -1203,6 +1211,7 @@ module Lustra::Model
               # 2. JOIN categories ON posts.category_id = categories.id
 
               %through_table = {{ settings[:through] }}.table
+              %through_table_source = {{ settings[:through] }}.full_table_name
 
               %own_key =
                 {% if settings[:own_key] %}
@@ -1219,19 +1228,21 @@ module Lustra::Model
                 {% end %}
 
               %final_table = {{ settings[:type] }}.table
+              %final_table_source = {{ settings[:type] }}.full_table_name
               %final_pkey = {{ settings[:type] }}.__pkey__
 
               # First join: through table
               through_condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
-              join(Lustra::SQL.escape(%through_table), type, through_condition, lateral)
+              join(%through_table_source, type, through_condition, lateral)
 
               # Second join: final table
               final_condition = "#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)} = #{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%through_key)}"
-              join(Lustra::SQL.escape(%final_table), type, final_condition, lateral)
+              join(%final_table_source, type, final_condition, lateral)
             {% end %}
           {% if settings[:relation_type] == :has_many_through %}
             when {{ settings[:through] }}.table
               %through_table = {{ settings[:through] }}.table
+              %through_table_source = {{ settings[:through] }}.full_table_name
 
               %own_key =
                 {% if settings[:own_key] %}
@@ -1241,7 +1252,7 @@ module Lustra::Model
                 {% end %}
 
               condition = "#{Lustra::SQL.escape(%through_table)}.#{Lustra::SQL.escape(%own_key)} = #{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(T.__pkey__)}"
-              join(Lustra::SQL.escape(%through_table), type, condition, lateral)
+              join(%through_table_source, type, condition, lateral)
           {% end %}
         {% end %}
         else
