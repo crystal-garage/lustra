@@ -33,10 +33,10 @@ module TransactionSpec
       end
     end
 
-    it "uses the declared Serializable default when no level is supplied" do
-      with_session_isolation("read committed") do
+    it "uses ReadCommitted by default regardless of the session default" do
+      with_session_isolation("serializable") do
         Lustra::SQL.transaction do |connection|
-          connection.query_one("SHOW transaction_isolation", as: String).should eq("serializable")
+          connection.query_one("SHOW transaction_isolation", as: String).should eq("read committed")
         end
       end
     end
