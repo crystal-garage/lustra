@@ -34,7 +34,7 @@ module Lustra::SQL::Transaction
   # Defaults to ReadCommitted, independently of the PostgreSQL session default.
   # Pass Level::Serializable or Level::RepeatableRead explicitly when needed.
   # Serialization failures require retrying the entire transaction; Lustra does
-  # not automatically retry them.
+  # not automatically retry them or replay the block after connection loss.
   # Nested calls reuse the outer transaction and its isolation level.
   #
   # Example:
@@ -58,8 +58,8 @@ module Lustra::SQL::Transaction
         return yield(cnx) # In case we already are in transaction, we just ignore
       else
         cnx._in_transaction = true
-        execute(connection, level.to_begin_operation)
         begin
+          execute(connection, level.to_begin_operation)
           return yield(cnx)
         rescue e
           has_rollback = true

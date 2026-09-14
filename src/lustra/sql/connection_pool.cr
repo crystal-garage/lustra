@@ -15,28 +15,19 @@ class Lustra::SQL::ConnectionPool
 
     database = @@databases.fetch(target) { raise Lustra::ErrorMessages.uninitialized_db_connection(target) }
 
-    database.retry do
-      connection = @@connections[fiber_target]?
+    if connection = @@connections[fiber_target]?
+      return yield connection
+    end
 
-      if connection
-        begin
-          yield connection
-        rescue ex : DB::ConnectionLost
-          # Remove the cached (lost) connection so the retry can obtain a fresh one
-          @@connections.delete(fiber_target)
-
-          # Re-raise the original exception
-          raise ex
-        end
-      else
-        database.using_connection do |new_connection|
-          @@connections[fiber_target] = new_connection
-
-          yield new_connection
-        ensure
-          @@connections.delete(fiber_target)
-        end
-      end
+    # Retry acquisition only. Replaying the caller's block could repeat writes
+    # or application side effects, including an entire transaction body.
+    connection = database.retry { database.checkout }
+    begin
+      @@connections[fiber_target] = connection
+      yield connection
+    ensure
+      @@connections.delete(fiber_target)
+      connection.release
     end
   end
 end
