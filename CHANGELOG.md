@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Cursor iteration now closes its cursor on completion, early exit, or callback failure, including inside an outer transaction. Nonpositive batch sizes are rejected before query execution, and cleanup preserves the original iteration error.
 - Model inserts skipped by conflict handling now return `false` from `save` and `save_with_associations`, or raise `Model::InvalidError` from `save!`. Skipped models retain their pending state, remain unpersisted, and do not run successful-create or successful-save callbacks.
 - Persisted `increment!` and `decrement!` now use `UPDATE ... RETURNING` to refresh the counter in one query, preserving unrelated pending edits and returning the value from that update.
 - Corrected `Migration::Manager#max_version` to return `Int64?`, matching the migration UID it computes.

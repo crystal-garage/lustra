@@ -21,7 +21,11 @@ module Lustra::SQL::Query::Fetch
   # Fetch the data using CURSOR.
   # This will prevent Lustra to load all the data from the database into memory.
   # This is useful if you need to retrieve and update a large dataset.
+  # Batch size must be positive. The cursor is closed when iteration ends,
+  # including early exits inside an outer transaction.
   def fetch_with_cursor(count = 1_000, & : Hash(String, ::Lustra::SQL::Any) -> Nil)
+    raise ArgumentError.new("Cursor batch size must be positive") unless count > 0
+
     trigger_before_query
 
     Lustra::SQL.transaction(connection_name) do |cnx|
@@ -31,20 +35,36 @@ module Lustra::SQL::Query::Fetch
 
       Lustra::SQL.log_query(cursor_declaration) { cnx.exec(cursor_declaration) }
 
-      h = {} of String => ::Lustra::SQL::Any
+      failed = false
+      begin
+        h = {} of String => ::Lustra::SQL::Any
 
-      we_loop = true
+        has_more_rows = true
 
-      while we_loop
-        fetch_query = "FETCH #{count} FROM #{cursor_name}"
+        while has_more_rows
+          fetch_query = "FETCH #{count} FROM #{cursor_name}"
 
-        rs = Lustra::SQL.log_query(fetch_query) { cnx.query(fetch_query) }
+          rs = Lustra::SQL.log_query(fetch_query) { cnx.query(fetch_query) }
 
-        o = Array(Hash(String, ::Lustra::SQL::Any)).new(initial_capacity: count)
+          o = Array(Hash(String, ::Lustra::SQL::Any)).new(initial_capacity: count)
 
-        we_loop = fetch_result_set(h, rs) { |x| o << x.dup }
+          has_more_rows = fetch_result_set(h, rs) { |x| o << x.dup }
 
-        o.each { |hash| yield(hash) }
+          o.each { |hash| yield(hash) }
+        end
+      rescue e
+        failed = true
+        raise e
+      ensure
+        unless cnx.closed?
+          begin
+            close_query = "CLOSE #{cursor_name}"
+            Lustra::SQL.log_query(close_query) { cnx.exec(close_query) }
+          rescue e
+            # Cleanup must not replace the original fetch or callback error.
+            raise e unless failed
+          end
+        end
       end
     end
   end
