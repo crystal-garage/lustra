@@ -1,5 +1,5 @@
 module Lustra::SQL::Query::Fetch
-  # :no_doc:
+  # :nodoc:
   protected def fetch_result_set(h : Hash(String, ::Lustra::SQL::Any), rs, &) : Bool
     return false unless rs.move_next
 

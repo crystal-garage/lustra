@@ -3,7 +3,7 @@ module Lustra::Expression::JSONB::Node
     Lustra::Expression::Node::DoubleOperator.new(self, Lustra::Expression::Node::Literal.new(key), "?")
   end
 
-  # :no_doc:
+  # :nodoc:
   private def _jsonb_keys_exists(keys : Array(T), op) forall T
     Lustra::Expression::Node::DoubleOperator.new(self,
       Lustra::Expression::Node::PGArray(T).new(keys),
