@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="220" viewBox="0 0 840 220">
+  <style>@keyframes aw-spin{to{transform:rotate(360deg)}}@keyframes aw-breathe{50%{transform:scale(1.05)}}.aw-rays{animation:aw-spin 90s linear infinite;transform-origin:32px 32px}.aw-sun-core{animation:aw-breathe 4s ease-in-out infinite;transform-origin:32px 32px}@keyframes aw-twinkle{50%{opacity:1}}.aw-star{opacity:.25;animation:aw-twinkle 2.8s ease-in-out infinite}.aw-t2{animation-delay:.9s}.aw-t3{animation-delay:1.7s}@keyframes aw-drift-far{50%{transform:translateX(14px)}}@keyframes aw-drift-near{50%{transform:translateX(-11px)}}.aw-layer-far{animation:aw-drift-far 34s ease-in-out infinite}.aw-layer-near{animation:aw-drift-near 22s ease-in-out infinite}@media (prefers-reduced-motion:reduce){*{animation:none !important}}.aw-ink{fill:#ffffff}.aw-sub{fill:rgba(255,255,255,0.78)}.aw-faint{fill:rgba(255,255,255,0.28)}.aw-stroke{stroke:rgba(255,255,255,0.28)}.aw-s0{stop-color:#3D8FD6}.aw-s1{stop-color:#7EC3F0}.aw-c0{stop-color:#ffffff}.aw-c1{stop-color:#d7dee8}.aw-bg{fill:transparent}@media (prefers-color-scheme:dark){.aw-ink{fill:#ffffff}.aw-sub{fill:rgba(255,255,255,0.78)}.aw-faint{fill:rgba(255,255,255,0.28)}.aw-stroke{stroke:rgba(255,255,255,0.28)}.aw-s0{stop-color:#12295C}.aw-s1{stop-color:#3A5FA0}.aw-c0{stop-color:#b8c4d4}.aw-c1{stop-color:#8494ac}.aw-bg{fill:transparent}}</style>
+  <defs>
+    <linearGradient id="aw-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" class="aw-s0"/>
+      <stop offset="1" class="aw-s1"/>
+    </linearGradient>
+    <linearGradient id="awg-cloud" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" class="aw-c0"/>
+      <stop offset="1" class="aw-c1"/>
+    </linearGradient>
+    <radialGradient id="awg-sun" cx="0.4" cy="0.35" r="0.85">
+      <stop offset="0" stop-color="#FFE29A"/>
+      <stop offset="1" stop-color="#FFB020"/>
+    </radialGradient>
+    <linearGradient id="awg-storm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7A8699"/>
+      <stop offset="1" stop-color="#56637A"/>
+    </linearGradient>
+    <symbol id="aw-i-sunny" viewBox="0 0 64 64">
+      <g class="aw-rays" stroke="#FFC53D" stroke-width="4.5" stroke-linecap="round">
+        <line x1="53" y1="32" x2="61" y2="32"/>
+        <line x1="46.85" y1="46.85" x2="52.51" y2="52.51"/>
+        <line x1="32" y1="53" x2="32" y2="61"/>
+        <line x1="17.15" y1="46.85" x2="11.49" y2="52.51"/>
+        <line x1="11" y1="32" x2="3" y2="32"/>
+        <line x1="17.15" y1="17.15" x2="11.49" y2="11.49"/>
+        <line x1="32" y1="11" x2="32" y2="3"/>
+        <line x1="46.85" y1="17.15" x2="52.51" y2="11.49"/>
+      </g>
+      <circle class="aw-sun-core" cx="32" cy="32" r="15" fill="url(#awg-sun)"/>
+    </symbol>
+    <clipPath id="aw-banner"><rect x="1" y="1" width="838" height="218" rx="16"/></clipPath>
+  </defs>
+  <rect x="0.5" y="0.5" width="839" height="219" rx="16" fill="url(#aw-sky)" class="aw-stroke"/>
+  <g clip-path="url(#aw-banner)">
+    <circle cx="700" cy="64" r="52" fill="#FFE29A" opacity="0.18"/>
+    <g class="aw-rays" style="transform-origin:700px 64px" stroke="#FFC53D" stroke-width="5" stroke-linecap="round">
+      <line x1="743.12" y1="72.74" x2="754.88" y2="75.13"/>
+      <line x1="724.31" y1="100.67" x2="730.94" y2="110.68"/>
+      <line x1="691.26" y1="107.12" x2="688.87" y2="118.88"/>
+      <line x1="663.33" y1="88.31" x2="653.32" y2="94.94"/>
+      <line x1="656.88" y1="55.26" x2="645.12" y2="52.87"/>
+      <line x1="675.69" y1="27.33" x2="669.06" y2="17.32"/>
+      <line x1="708.74" y1="20.88" x2="711.13" y2="9.12"/>
+      <line x1="736.67" y1="39.69" x2="746.68" y2="33.06"/>
+    </g>
+    <circle cx="700" cy="64" r="34" fill="url(#awg-sun)"/>
+    <g class="aw-layer-far" opacity="0.25">
+      <g class="" transform="translate(164.57,28.7) scale(1.5)" fill="url(#awg-cloud)">
+        <circle cx="19" cy="40" r="11"/>
+        <circle cx="33" cy="31" r="14"/>
+        <circle cx="45" cy="40" r="10"/>
+        <rect x="14" y="36" width="42" height="15" rx="7.5"/>
+      </g>
+    </g>
+    <path d="M0 220 L0 142.83 C56 142.83 112 135.46 168 135.46 C224 135.46 280 150.62 336 150.62 C392 150.62 448 130.4 504 130.4 C560 130.4 616 135.17 672 135.17 C728 135.17 784 147.27 840 147.27 L840 220 Z" fill="rgba(18,38,58,0.28)"/>
+    <path d="M0 220 L0 176.4 C56 176.4 112 162.94 168 162.94 C224 162.94 280 163.1 336 163.1 C392 163.1 448 165.46 504 165.46 C560 165.46 616 180.89 672 180.89 C728 180.89 784 176.74 840 176.74 L840 220 Z" fill="rgba(9,22,38,0.42)"/>
+  </g>
+  <text x="36" y="64" font-family="-apple-system, &#39;Segoe UI&#39;, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" class="aw-ink" paint-order="stroke" stroke="rgba(8,20,32,0.3)" stroke-width="4">crystal-garage/lustra</text>
+  <text x="36" y="92" font-family="-apple-system, &#39;Segoe UI&#39;, Helvetica, Arial, sans-serif" font-size="14" class="aw-sub" paint-order="stroke" stroke="rgba(8,20,32,0.3)" stroke-width="3">Clear skies — commits are pouring in</text>
+  <rect x="36" y="106" width="120.25" height="26" rx="13" fill="rgba(10,24,40,0.28)" class="aw-stroke"/>
+  <text x="96.12" y="123" text-anchor="middle" font-family="-apple-system, &#39;Segoe UI&#39;, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#F2F6FA">27° · SUNNY →</text>
+  <text x="36" y="200" font-family="-apple-system, &#39;Segoe UI&#39;, Helvetica, Arial, sans-serif" font-size="12" fill="rgba(242,246,250,0.88)">26 commits · 1 prs · 0 issues · +0 stars · last 7 days</text>
+</svg>
