@@ -13,6 +13,8 @@ migrations, associations, validations, lifecycle callbacks, and direct access to
 PostgreSQL features such as JSONB, arrays, CTEs, cursors, full-text search,
 enums, UUIDs, and geometric types.
 
+![Activity Weather](ACTIVITY_WEATHER.svg)
+
 Lustra started as a fork of [Clear](https://github.com/anykeyh/clear) at version
 0.8 and has since evolved as an independent project.
 
