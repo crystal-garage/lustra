@@ -2,7 +2,7 @@ name: lustra
 
 version: 0.18.3
 
-crystal: ">= 1.0.0"
+crystal: ">= 1.21.0"
 
 authors:
    - Yacine Petitprez <anykeyh@gmail.com>

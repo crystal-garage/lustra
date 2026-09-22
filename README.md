@@ -31,6 +31,8 @@ Lustra is PostgreSQL-only. It is not designed for MySQL, MariaDB, or SQLite.
 
 ## Installation
 
+Requires Crystal 1.21.0 or newer.
+
 Add Lustra to `shards.yml`:
 
 ```yaml

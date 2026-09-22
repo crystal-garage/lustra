@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated expression `between(a, b)` in favor of the predicate-style `between?(a, b)`.
 
 ### Changed
+- The minimum supported Crystal version is now 1.21.0.
 - Lustra connection pools now default to `prepared_statements_cache=false` to avoid retaining a statement for every distinct SQL string containing literal values. Explicit URL settings are preserved; use `prepared_statements_cache=true` to opt in to caching.
 - `Collection#to_a` now avoids allocating and copying an intermediate model array.
 - SQL query errors now include the original exception type in their message, including when the original exception has no message.
@@ -36,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Synchronize connection-pool state, transaction callbacks, and savepoint IDs across parallel execution contexts. Nested calls retain their fiber-owned connection, and pool replacement cannot race with checkout. Database operations and callbacks run outside the shared-state locks.
 - Pagination now rejects nonpositive page sizes before modifying or counting the query. Offset and page calculations use Int64 integer arithmetic, avoiding Int32 overflow and floating-point rounding for large result sets.
 - Cursor iteration now closes its cursor on completion, early exit, or callback failure, including inside an outer transaction. Nonpositive batch sizes are rejected before query execution, and cleanup preserves the original iteration error.
 - Model inserts skipped by conflict handling now return `false` from `save` and `save_with_associations`, or raise `Model::InvalidError` from `save!`. Skipped models retain their pending state, remain unpersisted, and do not run successful-create or successful-save callbacks.
