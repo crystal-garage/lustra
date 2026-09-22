@@ -1,3 +1,5 @@
+require "sync/mutex"
+
 module Lustra::SQL::Transaction
   # Represents the different transaction isolation levels,
   #   as described in https://www.postgresql.org/docs/9.5/transaction-iso.html
@@ -22,6 +24,7 @@ module Lustra::SQL::Transaction
     end
   end
 
+  @@transaction_mutex = Sync::Mutex.new
   @@savepoint_uid : UInt64 = 0_u64
   @@commit_callbacks = Hash(DB::Connection, Array(DB::Connection ->)).new { [] of DB::Connection -> }
 
@@ -69,7 +72,7 @@ module Lustra::SQL::Transaction
         ensure
           cnx._in_transaction = false
 
-          callbacks = @@commit_callbacks.delete(cnx)
+          callbacks = @@transaction_mutex.synchronize { @@commit_callbacks.delete(cnx) }
 
           unless has_rollback
             execute(connection, "COMMIT")
@@ -102,7 +105,7 @@ module Lustra::SQL::Transaction
   def after_commit(connection : String = "default", &block : DB::Connection -> Nil)
     Lustra::SQL::ConnectionPool.with_connection(connection) do |cnx|
       if cnx._in_transaction?
-        @@commit_callbacks[cnx] <<= block
+        @@transaction_mutex.synchronize { @@commit_callbacks[cnx] <<= block }
       else
         raise Lustra::SQL::Error.new("you need to be in transaction to add after_commit callback")
       end
@@ -123,8 +126,10 @@ module Lustra::SQL::Transaction
   # ```
   def with_savepoint(sp_name : Symbolic? = nil, connection_name : String = "default", &)
     transaction(connection_name) do |cnx|
-      callback_count = @@commit_callbacks[cnx]?.try(&.size) || 0
-      sp_name ||= "sp_#{@@savepoint_uid += 1}"
+      callback_count = @@transaction_mutex.synchronize do
+        sp_name ||= "sp_#{@@savepoint_uid += 1}"
+        @@commit_callbacks[cnx]?.try(&.size) || 0
+      end
       begin
         execute(connection_name, "SAVEPOINT #{sp_name}")
         yield
@@ -139,8 +144,10 @@ module Lustra::SQL::Transaction
   end
 
   private def discard_savepoint_callbacks(connection, count)
-    if callbacks = @@commit_callbacks[connection]?
-      callbacks.pop(callbacks.size - count)
+    @@transaction_mutex.synchronize do
+      if callbacks = @@commit_callbacks[connection]?
+        callbacks.pop(callbacks.size - count)
+      end
     end
   end
 

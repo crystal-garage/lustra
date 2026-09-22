@@ -1,12 +1,15 @@
+require "sync/mutex"
+
 class Lustra::SQL::ConnectionPool
   @@databases = {} of String => DB::Database
 
   @@connections = {} of {String, Fiber} => DB::Connection
   @@checkouts = Hash(String, Int32).new(0)
+  @@mutex = Sync::Mutex.new
 
   def self.init(uri, name)
     name = name.to_s
-    ensure_idle(name)
+    @@mutex.synchronize { ensure_idle(name) }
     connection_uri = URI.parse(uri.to_s)
     params = HTTP::Params.parse(connection_uri.query || "")
     # Literal SQL values produce distinct cache keys on long-lived connections.
@@ -17,13 +20,16 @@ class Lustra::SQL::ConnectionPool
     replacement = DB.open(connection_uri)
     begin
       # Opening the replacement can yield to a fiber using the existing pool.
-      ensure_idle(name)
+      previous = @@mutex.synchronize do
+        ensure_idle(name)
+        old = @@databases[name]?
+        @@databases[name] = replacement
+        old
+      end
     rescue e
       replacement.close
       raise e
     end
-    previous = @@databases[name]?
-    @@databases[name] = replacement
     previous.try(&.close)
     replacement
   end
@@ -40,27 +46,33 @@ class Lustra::SQL::ConnectionPool
   def self.with_connection(target : String, &)
     fiber_target = {target, Fiber.current}
 
-    database = @@databases.fetch(target) { raise Lustra::ErrorMessages.uninitialized_db_connection(target) }
-
-    if connection = @@connections[fiber_target]?
-      return yield connection
+    # Reserve the pool before releasing the lock so init cannot replace it
+    # between lookup and checkout. Never hold this lock during database I/O.
+    database, existing = @@mutex.synchronize do
+      pool = @@databases.fetch(target) { raise Lustra::ErrorMessages.uninitialized_db_connection(target) }
+      cached = @@connections[fiber_target]?
+      @@checkouts[target] += 1 unless cached
+      {pool, cached}
     end
+
+    return yield existing if existing
 
     # Retry acquisition only. Replaying the caller's block could repeat writes
     # or application side effects, including an entire transaction body.
-    @@checkouts[target] += 1
     begin
       connection = database.retry { database.checkout }
       begin
-        @@connections[fiber_target] = connection
+        @@mutex.synchronize { @@connections[fiber_target] = connection }
         yield connection
       ensure
-        @@connections.delete(fiber_target)
+        @@mutex.synchronize { @@connections.delete(fiber_target) }
         connection.release
       end
     ensure
-      @@checkouts[target] -= 1
-      @@checkouts.delete(target) if @@checkouts[target] == 0
+      @@mutex.synchronize do
+        @@checkouts[target] -= 1
+        @@checkouts.delete(target) if @@checkouts[target] == 0
+      end
     end
   end
 end

@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        crystal: ["crystallang/crystal", "crystallang/crystal:nightly"]
+        crystal: ["crystallang/crystal:1.21.0", "crystallang/crystal", "crystallang/crystal:nightly"]
     container: ${{ matrix.crystal }}
     # Service containers to run with `container-job`
     services:
