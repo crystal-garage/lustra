@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated expression `between(a, b)` in favor of the predicate-style `between?(a, b)`.
 
 ### Changed
+- Through associations now select distinct target rows instead of implicitly using `DISTINCT ON (primary_key)`, allowing ordering by target columns and selected computed values. Custom selections are deduplicated by all selected columns; use explicit `.distinct("table.id")` with matching leading ordering when primary-key deduplication is required.
 - The minimum supported Crystal version is now 1.21.0.
 - Lustra connection pools now default to `prepared_statements_cache=false` to avoid retaining a statement for every distinct SQL string containing literal values. Explicit URL settings are preserved; use `prepared_statements_cache=true` to opt in to caching.
 - `Collection#to_a` now avoids allocating and copying an intermediate model array.
