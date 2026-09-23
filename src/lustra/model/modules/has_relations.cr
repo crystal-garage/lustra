@@ -81,6 +81,16 @@ module Lustra::Model::HasRelations
   #   has_many posts : Post, foreign_key: "author_id"
   # end
   # ```
+  #
+  # Associations declared with `through:` select distinct target rows, allowing
+  # ordering by target columns without putting the primary key first. Filters
+  # may still reference columns on the joined through table.
+  #
+  # Distinctness applies to the entire selection: selecting extra through-table
+  # columns can return multiple rows for the same target. All selected types
+  # must support PostgreSQL equality, and ordering expressions must appear in
+  # the selection. Use explicit `.distinct("targets.id")` with matching leading
+  # `.order_by("targets.id")` when you need PostgreSQL DISTINCT ON semantics.
   macro has_many(
     name,
     through = nil,

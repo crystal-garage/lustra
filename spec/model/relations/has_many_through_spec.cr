@@ -406,7 +406,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           user = User.create!({first_name: "John", last_name: "Doe"})
           post = Post.create!({title: "Test Post", user_id: user.id})
 
-          expected_sql = "SELECT DISTINCT ON (\"tags\".\"id\") \"tags\".* " +
+          expected_sql = "SELECT DISTINCT \"tags\".* " +
                          "FROM \"tags\" " +
                          "INNER JOIN \"post_tags\" ON " +
                          "(\"post_tags\".\"tag_id\" = \"tags\".\"id\") " +
@@ -424,7 +424,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post = Post.create!({title: "Test Post", user_id: user.id})
           tag1 = Tag.create!({name: "Ruby"})
 
-          expected_sql = "SELECT DISTINCT ON (\"posts\".\"id\") \"posts\".* " +
+          expected_sql = "SELECT DISTINCT \"posts\".* " +
                          "FROM \"posts\" " +
                          "INNER JOIN \"post_tags\" ON " +
                          "(\"post_tags\".\"post_id\" = \"posts\".\"id\") " +
@@ -557,7 +557,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
 
           user1.dependencies << user2
 
-          expected_sql = "SELECT DISTINCT ON (\"users\".\"id\") \"users\".* " +
+          expected_sql = "SELECT DISTINCT \"users\".* " +
                          "FROM \"users\" " +
                          "INNER JOIN \"relationships\" ON " +
                          "(\"relationships\".\"dependency_id\" = \"users\".\"id\") " +
@@ -637,6 +637,88 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           loaded_user.categories.count.should eq(1)
           loaded_user.categories.first!.name.should eq("Technology")
         end
+      end
+    end
+  end
+
+  context "ordering through associations" do
+    it "sorts and paginates unique targets without requiring primary-key ordering" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        zulu = Category.create!({name: "Zulu"})
+        alpha = Category.create!({name: "Alpha"})
+        beta = Category.create!({name: "Beta"})
+        [zulu, alpha, zulu, beta].each do |category|
+          Post.create!({title: "Post", user_id: user.id, category_id: category.id})
+        end
+
+        categories = user.categories.order_by(:name).order_by("categories.id")
+        categories.count.should eq(3)
+        categories.map(&.name).should eq(["Alpha", "Beta", "Zulu"])
+
+        first_page = user.categories.with_posts.order_by(:name).order_by("categories.id").paginate(1, 2)
+        first_page.total_entries.should eq(3)
+        first_page.map(&.name).should eq(["Alpha", "Beta"])
+        first_page.first!.posts.count.should eq(1)
+
+        second_page = user.categories.order_by(:name).order_by("categories.id").paginate(2, 2)
+        second_page.total_entries.should eq(3)
+        second_page.map(&.name).should eq(["Zulu"])
+      end
+    end
+
+    it "supports through-table filters and ordering by selected association counts" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        small = Category.create!({name: "Small"})
+        large = Category.create!({name: "Large"})
+        hidden = Category.create!({name: "Hidden"})
+        [small, large, large].each do |category|
+          Post.create!({title: "Published", user_id: user.id, category_id: category.id, published: true})
+        end
+        Post.create!({title: "Draft", user_id: user.id, category_id: hidden.id, published: false})
+
+        categories = user.categories
+          .where { posts.published.true? }
+          .with_count(:posts)
+          .order_by(:posts_count, :desc)
+          .order_by("categories.id")
+          .paginate(1, 1)
+
+        categories.total_entries.should eq(2)
+        category = categories.first!(fetch_columns: true)
+        category.id.should eq(large.id)
+        category.attributes["posts_count"].should eq(2_i64)
+
+        loaded_user = User.query.with_categories do |query|
+          query.where { posts.published.true? }.order_by(:name)
+        end.find!(user.id)
+        loaded_user.categories.map(&.name).should eq(["Large", "Small"])
+      end
+    end
+
+    it "deduplicates selected rows and permits explicit DISTINCT ON for custom projections" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        Post.create!({title: "First", user_id: user.id, category_id: category.id})
+        Post.create!({title: "Second", user_id: user.id, category_id: category.id})
+
+        categories = user.categories.select("posts.title AS post_title")
+        categories.order_by("posts.title").map(fetch_columns: true) { |row| row.attributes["post_title"] }
+          .should eq(["First", "Second"])
+
+        one_per_category = user.categories.select("posts.title AS post_title")
+          .distinct("categories.id")
+          .order_by("categories.id")
+          .order_by("posts.title")
+        one_per_category.map(fetch_columns: true) { |row| row.attributes["post_title"] }.should eq(["First"])
       end
     end
   end

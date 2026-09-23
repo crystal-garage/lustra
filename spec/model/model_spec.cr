@@ -2059,7 +2059,7 @@ module ModelSpec
           Post.create!({title: "Post about Dogs", user_id: u.id, category_id: c.id})
 
           # Categories should return 1, as we remove duplicate
-          u.categories.to_sql.should eq "SELECT DISTINCT ON (\"categories\".\"id\") \"categories\".* " +
+          u.categories.to_sql.should eq "SELECT DISTINCT \"categories\".* " +
                                         "FROM \"categories\" " +
                                         "INNER JOIN \"posts\" ON " +
                                         "(\"posts\".\"category_id\" = \"categories\".\"id\") " +

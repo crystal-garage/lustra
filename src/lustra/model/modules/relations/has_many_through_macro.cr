@@ -40,7 +40,7 @@ module Lustra::Model::Relations::HasManyThroughMacro
             var(%through_table, %through_key) == var(%final_table, %final_pkey)
           }.where {
             var(%through_table, %own_key) == current_model_id
-          }.distinct("#{Lustra::SQL.escape(%final_table)}.#{Lustra::SQL.escape(%final_pkey)}")
+          }.distinct
 
       if cache && cache.active?("{{ method_name }}")
         arr = cache.hit("{{ method_name }}", self.__pkey_column__.to_sql_value, {{ relation_type }})
