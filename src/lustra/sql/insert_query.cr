@@ -164,15 +164,17 @@ class Lustra::SQL::InsertQuery
 
     table = table.is_a?(Symbol) ? Lustra::SQL.escape(table) : table
 
-    o = [print_ctes, "INSERT INTO", table, print_keys]
+    o = [print_ctes, "INSERT INTO", table]
     v = @values
     case v
     when SelectBuilder
+      o << print_keys
       o << "(" + v.to_sql + ")"
     else
       if v.empty? || (v.size == 1 && v[0].empty?) # < Case happening with model
         o << "DEFAULT VALUES"
       else
+        o << print_keys
         o << "VALUES"
         o << print_values
       end

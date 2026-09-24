@@ -21,6 +21,76 @@ module InsertSpec
 
   describe "Lustra::SQL" do
     describe "InsertQuery" do
+      it "clears accumulated rows so an insert can use new columns" do
+        temporary do
+          Lustra::SQL.execute("CREATE TEMP TABLE reset_insert_values (value integer DEFAULT 7, label text DEFAULT 'default')")
+          query = Lustra::SQL.insert_into(:reset_insert_values)
+            .values({value: 1}).values({value: 2}).returning("value, label")
+          query.execute["value"].should eq(2)
+
+          replacement = query.clear_values.values({label: "replacement"}).execute
+          replacement["value"].should eq(7)
+          replacement["label"].should eq("replacement")
+
+          Lustra::SQL.select.from(:reset_insert_values).order_by(:value).order_by(:label)
+            .to_a.map { |row| {row["value"], row["label"]} }
+            .should eq([{1, "default"}, {2, "default"}, {7, "replacement"}])
+        end
+      end
+
+      it "inserts database defaults after clear_values and retains columns for reuse" do
+        temporary do
+          Lustra::SQL.execute("CREATE TEMP TABLE reset_insert_defaults (other integer DEFAULT 99, value integer DEFAULT 7)")
+          query = Lustra::SQL.insert_into(:reset_insert_defaults, {value: 1}).returning("value")
+
+          query.clear_values.execute["value"].should eq(7)
+          query.values(Lustra::SQL.select("11")).execute["value"].should eq(11)
+          Lustra::SQL.select.from(:reset_insert_defaults).order_by(:value)
+            .to_a.map { |row| {row["other"], row["value"]} }.should eq([{99, 7}, {99, 11}])
+        end
+      end
+
+      it "can switch between literal rows and an INSERT SELECT after clearing values" do
+        temporary do
+          Lustra::SQL.execute("CREATE TEMP TABLE reset_insert_source (value integer)")
+          query = Lustra::SQL.insert_into(:reset_insert_source, {value: 99}).returning("value")
+
+          query.clear_values.values(Lustra::SQL.select("5 AS value")).execute["value"].should eq(5)
+          query.clear_values.values({value: 9}).execute["value"].should eq(9)
+
+          Lustra::SQL.select.from(:reset_insert_source).order_by(:value).pluck_col(:value).should eq([5, 9])
+        end
+      end
+
+      {:nothing, :update}.each do |action|
+        it "restores unique-constraint errors after clearing ON CONFLICT DO #{action}" do
+          temporary do
+            Lustra::SQL.execute("CREATE TEMP TABLE reset_insert_conflict (id integer PRIMARY KEY, value integer)")
+            Lustra::SQL.insert_into(:reset_insert_conflict, {id: 1, value: 1}).execute
+            query = Lustra::SQL.insert_into(:reset_insert_conflict, {id: 1, value: 2})
+              .on_conflict("(id)").returning("value")
+            if action == :update
+              query.do_update(&.set(value: 2))
+            else
+              query.do_nothing
+            end
+            query.execute
+            Lustra::SQL.select("value").from(:reset_insert_conflict).scalar(Int32)
+              .should eq(action == :update ? 2 : 1)
+
+            query.clear_conflict
+            Lustra::SQL.with_savepoint do
+              expect_raises(PQ::PQError, /duplicate key/) { query.execute }
+              Lustra::SQL.rollback
+            end
+
+            query.on_conflict("(id)").do_update(&.set(value: 3))
+            query.execute["value"].should eq(3)
+            Lustra::SQL.select.from(:reset_insert_conflict).count.should eq(1)
+          end
+        end
+      end
+
       it "executes inserts on the query's selected connection" do
         with_insert_connection_tables do
           Lustra::SQL.insert_into(:insert_connection_selection, {value: 1})
