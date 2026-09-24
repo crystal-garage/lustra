@@ -5,6 +5,20 @@ module AggregateSpec
   extend self
 
   describe "Lustra::SQL::Query::Aggregate" do
+    it "clears all grouping expressions without removing filters, ordering, or limits" do
+      original = Lustra::SQL.select("SUM(value) AS total")
+        .from("(VALUES ('a', 1), ('a', 2), ('b', 4), ('skip', 100)) AS entries(bucket, value)")
+        .where { bucket != "skip" }.group_by(:bucket).group_by("value % 2")
+        .order_by(:total, :desc).limit(2)
+
+      original.to_a.map(&.["total"]).should eq([4_i64, 2_i64])
+      cleared = original.dup.clear_group_bys
+      cleared.to_a.map(&.["total"]).should eq([7_i64])
+      original.to_a.map(&.["total"]).should eq([4_i64, 2_i64])
+
+      cleared.group_by(:bucket).to_a.map(&.["total"]).should eq([4_i64, 3_i64])
+    end
+
     it "does not run or consume eager-loading hooks for count" do
       temporary do
         reinit_example_models

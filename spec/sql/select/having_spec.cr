@@ -16,6 +16,21 @@ module HavingSpec
   end
 
   describe Lustra::SQL::Query::Having do
+    it "clears all HAVING predicates without removing WHERE, grouping, or ordering" do
+      original = Lustra::SQL.select("bucket", "COUNT(*) AS total")
+        .from("(VALUES ('a'), ('a'), ('b'), ('c'), ('c'), ('c'), ('skip')) AS entries(bucket)")
+        .where { bucket != "skip" }.group_by(:bucket).order_by(:bucket)
+        .having("COUNT(*) > 1").having { bucket != "c" }
+
+      original.to_a.map { |row| {row["bucket"], row["total"]} }.should eq([{"a", 2_i64}])
+      cleared = original.dup.clear_havings
+      cleared.to_a.map { |row| {row["bucket"], row["total"]} }
+        .should eq([{"a", 2_i64}, {"b", 1_i64}, {"c", 3_i64}])
+      original.to_a.map(&.["bucket"]).should eq(["a"])
+
+      cleared.having("COUNT(*) > 2").to_a.map(&.["bucket"]).should eq(["c"])
+    end
+
     it "accepts simple string as parameter" do
       r = Lustra::SQL.select.from(:users).having("a = b")
       r.to_sql.should eq %(SELECT * FROM "users" HAVING a = b)

@@ -12,6 +12,20 @@ module WhereSpec
   end
 
   describe Lustra::SQL::Query::Where do
+    it "clears all predicates on a copy while preserving ordering and limits" do
+      original = Lustra::SQL.select("value")
+        .from("(VALUES (1), (2), (3), (4)) AS entries(value)")
+        .where { value > 1 }.where { value < 4 }
+        .order_by(:value, :desc).limit(2)
+
+      original.to_a.map(&.["value"]).should eq([3, 2])
+      cleared = original.dup.clear_wheres
+      cleared.to_a.map(&.["value"]).should eq([4, 3])
+      original.to_a.map(&.["value"]).should eq([3, 2])
+
+      cleared.where { value < 3 }.to_a.map(&.["value"]).should eq([2, 1])
+    end
+
     it "accepts simple string as parameter" do
       r = Lustra::SQL.select.from(:users).where("a = b")
       r.to_sql.should eq %(SELECT * FROM "users" WHERE a = b)
