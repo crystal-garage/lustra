@@ -640,4 +640,72 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
   end
+
+  # Deduplicate by target identity, not by every selected column.
+  # These cases guard against replacing DISTINCT ON with whole-row DISTINCT.
+  context "target identity and distinctness" do
+    it "loads targets containing a PostgreSQL point column" do
+      temporary do
+        reinit_example_models
+
+        # The wildcard selection includes database columns even when the model
+        # does not map them explicitly.
+        Lustra::SQL.execute("ALTER TABLE categories ADD COLUMN coordinates point DEFAULT point(1, 2)")
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        2.times { Post.create!({title: "Post", user_id: user.id, category_id: category.id}) }
+
+        user.categories.map(&.id).should eq([category.id])
+      end
+    end
+
+    it "returns one target when selecting different through-table values" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        Post.create!({title: "First", user_id: user.id, category_id: category.id})
+        Post.create!({title: "Second", user_id: user.id, category_id: category.id})
+
+        categories = user.categories.select("posts.title AS post_title")
+          .order_by("categories.id").order_by("posts.title")
+
+        categories.map(fetch_columns: true) { |row| {row.id, row.attributes["post_title"]} }
+          .should eq([{category.id, "First"}])
+      end
+    end
+
+    it "counts and paginates targets rather than distinct through-table projections" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        Post.create!({title: "First", user_id: user.id, category_id: category.id})
+        Post.create!({title: "Second", user_id: user.id, category_id: category.id})
+
+        categories = user.categories.select("posts.title AS post_title")
+          .order_by("categories.id").order_by("posts.title").paginate(1, 1)
+
+        categories.total_entries.should eq(1)
+        categories.total_pages.should eq(1)
+        categories.next_page.should be_nil
+      end
+    end
+
+    it "orders by an unselected through-table column after the target primary key" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        Post.create!({title: "First", user_id: user.id, category_id: category.id})
+        Post.create!({title: "Second", user_id: user.id, category_id: category.id})
+
+        user.categories.order_by("categories.id").order_by("posts.title")
+          .map(&.id).should eq([category.id])
+      end
+    end
+  end
 end
