@@ -644,6 +644,64 @@ describe "Lustra::Model::Relations::HasManyThrough" do
   # Deduplicate by target identity, not by every selected column.
   # These cases guard against replacing DISTINCT ON with whole-row DISTINCT.
   context "target identity and distinctness" do
+    it "allows duplicate targets after clearing implicit or explicit distinctness" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        2.times { Post.create!({title: "Post", user_id: user.id, category_id: category.id}) }
+
+        categories = user.categories
+        categories.map(&.id).should eq([category.id])
+        categories.clear_distinct.map(&.id).should eq([category.id, category.id])
+        categories.distinct.map(&.id).should eq([category.id])
+        categories.clear_distinct.map(&.id).should eq([category.id, category.id])
+      end
+    end
+
+    it "counts and paginates duplicate through rows after clear_distinct" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        Post.create!({title: "First", user_id: user.id, category_id: category.id})
+        Post.create!({title: "Second", user_id: user.id, category_id: category.id})
+
+        categories = user.categories.clear_distinct
+          .select("posts.title AS post_title").order_by("posts.title")
+        categories.count.should eq(2)
+
+        first_page = categories.dup.paginate(1, 1)
+        first_page.total_entries.should eq(2)
+        first_page.total_pages.should eq(2)
+        first_page.next_page.should eq(2)
+        first_page.map(fetch_columns: true) { |row| {row.id, row.attributes["post_title"]} }
+          .should eq([{category.id, "First"}])
+
+        second_page = categories.dup.paginate(2, 1)
+        second_page.next_page.should be_nil
+        second_page.map(fetch_columns: true) { |row| {row.id, row.attributes["post_title"]} }
+          .should eq([{category.id, "Second"}])
+      end
+    end
+
+    it "preserves duplicate targets when clear_distinct is used in the eager-loading scope" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!({first_name: "Jane", last_name: "Smith"})
+        category = Category.create!({name: "Technology"})
+        2.times { Post.create!({title: "Post", user_id: user.id, category_id: category.id}) }
+
+        loaded_user = User.query.with_categories(&.clear_distinct).find!(user.id)
+
+        loaded_user.categories.count.should eq(2)
+        loaded_user.categories.map(&.id).should eq([category.id, category.id])
+      end
+    end
+
     it "loads targets containing a PostgreSQL point column" do
       temporary do
         reinit_example_models
