@@ -2,6 +2,33 @@ require "../../spec_helper"
 
 module PaginationSpec
   describe Lustra::SQL::Query::WithPagination do
+    context "page predicates" do
+      it "reports an unpaginated query as both the first and last page" do
+        query = Lustra::SQL.select("1 AS value")
+
+        query.first_page?.should be_true
+        query.last_page?.should be_true
+      end
+
+      {
+        {"first page of multiple pages", 25_i64, 0, true, false},
+        {"middle page", 25_i64, 10, false, false},
+        {"partially filled last page", 25_i64, 20, false, true},
+        {"full last page", 30_i64, 20, false, true},
+        {"single page", 10_i64, 0, true, true},
+        {"empty results", 0_i64, 0, true, true},
+        {"page beyond the last page", 25_i64, 30, false, true},
+      }.each do |description, total, offset, first, last|
+        it "identifies the #{description}" do
+          query = Lustra::SQL.select("1 AS value").limit(10).offset(offset)
+          query.total_entries = total
+
+          query.first_page?.should eq(first)
+          query.last_page?.should eq(last)
+        end
+      end
+    end
+
     context "input boundaries" do
       {0, -1}.each do |size|
         it "rejects page size #{size} without changing the query" do
@@ -63,6 +90,8 @@ module PaginationSpec
           query.offset.should eq(0_i64)
           query.current_page.should eq(1)
           query.previous_page.should be_nil
+          query.first_page?.should be_true
+          query.last_page?.should be_true
         end
       end
     end
