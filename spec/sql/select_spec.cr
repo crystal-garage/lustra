@@ -165,11 +165,48 @@ module SelectSpec
       end
 
       describe "cte" do
+        {"order", "MixedCase"}.each do |name|
+          it "supports #{name.inspect} as a CTE name" do
+            query = Lustra::SQL.select(:value).from(Lustra::SQL.escape(name))
+              .with_cte(name, "SELECT 1 AS value")
+
+            query.to_a.should eq([{"value" => 1}])
+          end
+        end
+
+        it "supports a reserved-word CTE name through a named tuple" do
+          query = Lustra::SQL.select(:value).from(:order)
+            .with_cte({order: "SELECT 1 AS value"})
+
+          query.to_a.should eq([{"value" => 1}])
+        end
+
+        it "preserves a mixed-case CTE name through a named tuple" do
+          query = Lustra::SQL.select(:value).from(:MixedCase)
+            .with_cte({MixedCase: Lustra::SQL.select("1 AS value")})
+
+          query.to_a.should eq([{"value" => 1}])
+        end
+
+        it "supports a column list embedded in the CTE declaration" do
+          query = Lustra::SQL.select(:id).from(:items)
+            .with_cte("items(id)", "SELECT 1")
+
+          query.to_a.should eq([{"id" => 1}])
+        end
+
+        it "preserves an explicitly quoted CTE declaration with a column list" do
+          query = Lustra::SQL.select(:id).from(:MixedCase)
+            .with_cte(%("MixedCase"("id")), "SELECT 1")
+
+          query.to_a.should eq([{"id" => 1}])
+        end
+
         it "executes a raw SQL CTE" do
           query = Lustra::SQL.select(:value).from(:numbers).order_by(:value)
 
           query.with_cte("numbers", "SELECT 2 AS value UNION ALL SELECT 1").should be(query)
-          query.to_sql.should eq %(WITH numbers AS (SELECT 2 AS value UNION ALL SELECT 1) SELECT "value" FROM "numbers" ORDER BY "value" ASC)
+          query.to_sql.should eq %(WITH "numbers" AS (SELECT 2 AS value UNION ALL SELECT 1) SELECT "value" FROM "numbers" ORDER BY "value" ASC)
           query.pluck_col(:value).should eq([1, 2])
         end
 
@@ -178,7 +215,7 @@ module SelectSpec
           query = Lustra::SQL.select(:value).from(:derived)
 
           query.with_cte({base: "SELECT 4 AS value", derived: derived}).should be(query)
-          query.to_sql.should eq %(WITH base AS (SELECT 4 AS value), derived AS (SELECT value + 1 AS value FROM "base") SELECT "value" FROM "derived")
+          query.to_sql.should eq %(WITH "base" AS (SELECT 4 AS value), "derived" AS (SELECT value + 1 AS value FROM "base") SELECT "value" FROM "derived")
           query.scalar(Int32).should eq(5)
         end
 
@@ -216,14 +253,14 @@ module SelectSpec
           # Simple CTE
           cte = Lustra::SQL.select.from(:users_info).where("x > 10")
           sql = Lustra::SQL.select.from(:ui).with_cte("ui", cte).to_sql
-          sql.should eq "WITH ui AS (SELECT * FROM \"users_info\" WHERE x > 10) SELECT * FROM \"ui\""
+          sql.should eq "WITH \"ui\" AS (SELECT * FROM \"users_info\" WHERE x > 10) SELECT * FROM \"ui\""
 
           # Complex CTE
           cte1 = Lustra::SQL.select.from(:users_info).where { a == b }
           cte2 = Lustra::SQL.select.from(:just_another_table).where { users_infos.x == just_another_table.w }
           sql = Lustra::SQL.select.with_cte({ui: cte1, at: cte2}).from(:at).to_sql
-          sql.should eq "WITH ui AS (SELECT * FROM \"users_info\" WHERE (\"a\" = \"b\"))," +
-                        " at AS (SELECT * FROM \"just_another_table\" WHERE (" +
+          sql.should eq "WITH \"ui\" AS (SELECT * FROM \"users_info\" WHERE (\"a\" = \"b\"))," +
+                        " \"at\" AS (SELECT * FROM \"just_another_table\" WHERE (" +
                         "\"users_infos\".\"x\" = \"just_another_table\".\"w\")) SELECT * FROM \"at\""
         end
       end

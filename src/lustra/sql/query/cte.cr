@@ -7,7 +7,8 @@ module Lustra::SQL::Query::CTE
   # while the value is the fragment (string or Sub-select)
   getter cte : Hash(String, CTEAuthorized) = {} of String => CTEAuthorized
 
-  # Add a CTE to the query.
+  # Add a CTE to the query. Plain identifier names are quoted; other strings
+  # are treated as raw declarations, allowing column lists such as "items(id)".
   #
   # ```
   # Lustra::SQL.select.with_cte("full_year",
@@ -39,6 +40,7 @@ module Lustra::SQL::Query::CTE
     unless cte.empty?
       {"WITH ",
        cte.join(", ") do |name, cte_declaration|
+         name = Lustra::SQL.escape(name) if name.matches?(/\A[A-Za-z_][A-Za-z0-9_$]*\z/)
          value = if cte_declaration.responds_to?(:to_sql)
                    cte_declaration.to_sql
                  else
