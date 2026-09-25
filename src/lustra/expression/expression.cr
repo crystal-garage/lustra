@@ -113,7 +113,7 @@ class Lustra::Expression
 
   # :nodoc:
   def self.safe_literal(x : ::Lustra::SQL::SelectBuilder)
-    {"(", x.to_sql, ")"}
+    {"(", x.to_sql, ")"}.join
   end
 
   # :nodoc:

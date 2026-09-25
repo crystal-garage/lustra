@@ -64,6 +64,15 @@ module WhereSpec
         .should eq %(SELECT * FROM "users" WHERE ("x" < 10))
     end
 
+    it "interpolates a scalar subquery into a positional placeholder" do
+      subquery = Lustra::SQL.select("2")
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (1), (2), (3)) AS entries(value)")
+        .where("value = ?", subquery)
+
+      query.to_a.map(&.["value"]).should eq([2])
+    end
+
     it "allows prepared query" do
       r = Lustra::SQL.select.from(:users).where("a LIKE ?", "hello")
       r.to_sql.should eq "SELECT * FROM \"users\" WHERE a LIKE 'hello'"
