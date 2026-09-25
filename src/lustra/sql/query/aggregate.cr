@@ -41,7 +41,7 @@ module Lustra::SQL::Query::Aggregate
     # we need to wrap in a subquery so the aggregation applies to the filtered set
     if @offset || @limit || @group_bys
       # SELECT agg_func FROM ( $subquery ) AS subquery
-      subquery = dup.clear_order_bys
+      subquery = dup
       X.cast(Lustra::SQL.select(field).from({subquery: subquery}).use_connection(connection_name).scalar(X))
     else
       dup.clear_select.clear_order_bys.select(field).scalar(X)

@@ -5,6 +5,42 @@ module AggregateSpec
   extend self
 
   describe "Lustra::SQL::Query::Aggregate" do
+    it "aggregates the rows selected by ordering and a limit" do
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (10), (30), (20), (40)) AS entries(value)")
+        .order_by(:value, :desc).limit(2)
+
+      query.to_a.map(&.["value"]).should eq([40, 30])
+      query.sum("value", Int64).should eq(70_i64)
+      query.min("value", Int32).should eq(30)
+      query.max("value", Int32).should eq(40)
+      query.avg("value", PG::Numeric).to_f.should eq(35.0)
+    end
+
+    it "aggregates the rows remaining after ordering and an offset" do
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (10), (30), (20), (40)) AS entries(value)")
+        .order_by(:value, :desc).offset(1)
+
+      query.to_a.map(&.["value"]).should eq([30, 20, 10])
+      query.sum("value", Int64).should eq(60_i64)
+      query.min("value", Int32).should eq(10)
+      query.max("value", Int32).should eq(30)
+      query.avg("value", PG::Numeric).to_f.should eq(20.0)
+    end
+
+    it "aggregates the representatives selected by DISTINCT ON ordering" do
+      query = Lustra::SQL.select(:id, :value)
+        .from("(VALUES (1, 10), (1, 30), (2, 20), (2, 40)) AS entries(id, value)")
+        .distinct("id").order_by(:id).order_by(:value, :desc)
+
+      query.to_a.map(&.["value"]).should eq([30, 40])
+      query.sum("value", Int64).should eq(70_i64)
+      query.min("value", Int32).should eq(30)
+      query.max("value", Int32).should eq(40)
+      query.avg("value", PG::Numeric).to_f.should eq(35.0)
+    end
+
     it "clears all grouping expressions without removing filters, ordering, or limits" do
       original = Lustra::SQL.select("SUM(value) AS total")
         .from("(VALUES ('a', 1), ('a', 2), ('b', 4), ('skip', 100)) AS entries(bucket, value)")
