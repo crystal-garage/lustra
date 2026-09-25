@@ -29,13 +29,19 @@ module Lustra::SQL
         end
 
       if c = @condition
-        [type,
-         lateral? ? "LATERAL" : nil,
-         from,
-         "ON",
-         c.resolve].compact.join(" ")
+        [
+          type,
+          lateral? ? "LATERAL" : nil,
+          from,
+          "ON",
+          c.resolve,
+        ].compact.join(" ")
       else
-        [type, lateral? ? "LATERAL" : nil, SQL.sel_str(from)].compact.join(" ")
+        [
+          type,
+          lateral? ? "LATERAL" : nil,
+          SQL.sel_str(from),
+        ].compact.join(" ")
       end
     end
   end
