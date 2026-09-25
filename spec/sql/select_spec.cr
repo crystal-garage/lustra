@@ -165,6 +165,53 @@ module SelectSpec
       end
 
       describe "cte" do
+        it "executes a raw SQL CTE" do
+          query = Lustra::SQL.select(:value).from(:numbers).order_by(:value)
+
+          query.with_cte("numbers", "SELECT 2 AS value UNION ALL SELECT 1").should be(query)
+          query.to_sql.should eq %(WITH numbers AS (SELECT 2 AS value UNION ALL SELECT 1) SELECT "value" FROM "numbers" ORDER BY "value" ASC)
+          query.pluck_col(:value).should eq([1, 2])
+        end
+
+        it "accepts dependent raw SQL and query-builder CTEs in a named tuple" do
+          derived = Lustra::SQL.select("value + 1 AS value").from(:base)
+          query = Lustra::SQL.select(:value).from(:derived)
+
+          query.with_cte({base: "SELECT 4 AS value", derived: derived}).should be(query)
+          query.to_sql.should eq %(WITH base AS (SELECT 4 AS value), derived AS (SELECT value + 1 AS value FROM "base") SELECT "value" FROM "derived")
+          query.scalar(Int32).should eq(5)
+        end
+
+        it "replaces a named CTE through either overload without changing dependency order" do
+          query = Lustra::SQL.select(:value).from(:derived)
+            .with_cte({base: "SELECT 1 AS value", derived: "SELECT value + 1 AS value FROM base"})
+
+          query.with_cte("base", Lustra::SQL.select("4 AS value"))
+          query.cte.keys.should eq(["base", "derived"])
+          query.scalar(Int32).should eq(5)
+
+          query.with_cte({base: "SELECT 9 AS value"})
+          query.cte.keys.should eq(["base", "derived"])
+          query.scalar(Int32).should eq(10)
+        end
+
+        it "keeps CTE additions and replacements independent after duplication" do
+          original = Lustra::SQL.select(:value).from(:base)
+            .with_cte("base", Lustra::SQL.select("1 AS value"))
+          copy = original.dup
+          copy.to_sql.should eq(original.to_sql)
+
+          copy.with_cte({base: "SELECT 2 AS value", extra: "SELECT 3 AS value"})
+          original.cte.keys.should eq(["base"])
+          original.scalar(Int32).should eq(1)
+          copy.scalar(Int32).should eq(2)
+
+          original.with_cte("base", "SELECT 4 AS value")
+          original.scalar(Int32).should eq(4)
+          copy.scalar(Int32).should eq(2)
+          copy.clear_from.from(:extra).scalar(Int32).should eq(3)
+        end
+
         it "build request with CTE" do
           # Simple CTE
           cte = Lustra::SQL.select.from(:users_info).where("x > 10")
