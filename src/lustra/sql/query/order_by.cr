@@ -144,6 +144,8 @@ module Lustra::SQL::Query::OrderBy
   # When passing a `String`, the column expression is used as-is, which allows
   # table-qualified references such as `"\"posts\".\"status\""`.
   def in_order_of(column : String, values : Array(T)) forall T
+    return self if values.empty?
+
     whens = String.build do |io|
       values.each_with_index do |v, i|
         io << " WHEN " << Lustra::Expression[v] << " THEN " << i

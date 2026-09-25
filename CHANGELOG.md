@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- `in_order_of` now leaves the query unchanged when given an empty value list, instead of generating an invalid `CASE` expression.
 - Unary negation now parenthesizes its operand, preventing nested negation and negative literals from generating SQL comments (`--`).
 - Scalar subqueries interpolated into SQL placeholders now render as parenthesized SQL instead of Crystal tuple representations.
 - Window queries now emit the `WINDOW` keyword, separate multiple declarations with commas, and place the clause after `GROUP BY` and `HAVING`, producing valid PostgreSQL queries.

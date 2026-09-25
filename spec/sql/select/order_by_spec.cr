@@ -31,6 +31,28 @@ module OrderBySpec
     end
 
     describe "#in_order_of" do
+      it "preserves existing ordering when the value list is empty" do
+        query = Lustra::SQL.select(:value)
+          .from("(VALUES (1), (2), (3)) AS entries(value)")
+          .where { value > 1 }.order_by(:value, :desc).limit(1)
+        original_sql = query.to_sql
+
+        query.in_order_of(:value, [] of Int32).should be(query)
+
+        query.to_a.map(&.["value"]).should eq([3])
+        query.to_sql.should eq(original_sql)
+      end
+
+      it "leaves an unordered query unchanged for an empty list and a raw column expression" do
+        query = Lustra::SQL.select("1 AS value")
+        original_sql = query.to_sql
+
+        query.in_order_of("value", [] of Int32).should be(query)
+
+        query.to_a.map(&.["value"]).should eq([1])
+        query.to_sql.should eq(original_sql)
+      end
+
       it "orders by a custom sequence of string values" do
         qry = Lustra::SQL.select.from("posts").in_order_of(:status, ["started", "enrolled", "completed"])
         qry.to_sql.should eq(
