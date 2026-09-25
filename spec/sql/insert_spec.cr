@@ -21,6 +21,27 @@ module InsertSpec
 
   describe "Lustra::SQL" do
     describe "InsertQuery" do
+      {
+        {"Float32 infinity", Float32::INFINITY, "Infinity"},
+        {"Float32 negative infinity", -Float32::INFINITY, "-Infinity"},
+        {"Float32 NaN", Float32::NAN, "NaN"},
+        {"Float64 infinity", Float64::INFINITY, "Infinity"},
+        {"Float64 negative infinity", -Float64::INFINITY, "-Infinity"},
+        {"Float64 NaN", Float64::NAN, "NaN"},
+      }.each do |description, value, expected|
+        it "inserts #{description} into real and double precision columns" do
+          temporary do
+            Lustra::SQL.execute("CREATE TEMP TABLE nonfinite_insert (single_value real, double_value double precision)")
+
+            row = Lustra::SQL.insert(:nonfinite_insert, {single_value: value, double_value: value})
+              .returning("single_value::text AS single_value, double_value::text AS double_value").execute
+
+            row["single_value"].should eq(expected)
+            row["double_value"].should eq(expected)
+          end
+        end
+      end
+
       it "clears accumulated rows so an insert can use new columns" do
         temporary do
           Lustra::SQL.execute("CREATE TEMP TABLE reset_insert_values (value integer DEFAULT 7, label text DEFAULT 'default')")

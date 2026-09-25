@@ -102,6 +102,11 @@ class Lustra::Expression
   end
 
   # :nodoc:
+  def self.safe_literal(x : Float32 | Float64) : String
+    x.finite? ? x.to_s : safe_literal(x.to_s)
+  end
+
+  # :nodoc:
   def self.safe_literal(x : Nil) : String
     "NULL"
   end

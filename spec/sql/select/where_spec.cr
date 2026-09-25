@@ -150,6 +150,23 @@ module WhereSpec
       r.to_sql.should eq "SELECT * FROM \"users\" WHERE (-(\"users\".\"id\") < -1000)"
     end
 
+    {
+      {"Float32 infinity", Float32::INFINITY, "Infinity"},
+      {"Float32 negative infinity", -Float32::INFINITY, "-Infinity"},
+      {"Float32 NaN", Float32::NAN, "NaN"},
+      {"Float64 infinity", Float64::INFINITY, "Infinity"},
+      {"Float64 negative infinity", -Float64::INFINITY, "-Infinity"},
+      {"Float64 NaN", Float64::NAN, "NaN"},
+    }.each do |description, special_value, expected|
+      it "compares a column with #{description}" do
+        query = Lustra::SQL.select("value::text AS value")
+          .from("(VALUES ('Infinity'::float8), ('-Infinity'::float8), ('NaN'::float8), (0::float8), (NULL::float8)) AS entries(value)")
+          .where { value == special_value }
+
+        query.to_a.map(&.["value"]).should eq([expected])
+      end
+    end
+
     it "use expression engine equal" do
       r = Lustra::SQL.select.from(:users).where { users.id == var("test") }
       r.to_sql.should eq "SELECT * FROM \"users\" WHERE (\"users\".\"id\" = \"test\")"
