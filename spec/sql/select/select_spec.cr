@@ -10,6 +10,22 @@ module SelectSpec
   end
 
   describe Lustra::SQL::Query::Select do
+    it "preserves a mixed-case named-tuple alias when ordering by it" do
+      query = Lustra::SQL.select({MixedCase: "value"})
+        .from("(VALUES (1), (2)) AS entries(value)")
+        .order_by(:MixedCase, :desc)
+
+      query.to_a.should eq([{"MixedCase" => 2}, {"MixedCase" => 1}])
+    end
+
+    it "supports a reserved-word named-tuple alias" do
+      query = Lustra::SQL.select({order: "value"})
+        .from("(VALUES (1), (2)) AS entries(value)")
+        .order_by(:order, :desc)
+
+      query.to_a.should eq([{"order" => 2}, {"order" => 1}])
+    end
+
     it "select wildcard *" do
       r = Lustra::SQL.select("*")
       r.to_sql.should eq "SELECT *"
@@ -39,7 +55,7 @@ module SelectSpec
 
     it "select using multiple strings" do
       r = Lustra::SQL.select({uid: "user_id", some_cool_stuff: "column"})
-      r.to_sql.should eq "SELECT user_id AS uid, column AS some_cool_stuff"
+      r.to_sql.should eq %(SELECT user_id AS "uid", column AS "some_cool_stuff")
     end
 
     it "reset the select" do
@@ -49,7 +65,7 @@ module SelectSpec
 
     it "select a subquery" do
       r = Lustra::SQL.select({max_updated_at: one_request})
-      r.to_sql.should eq "SELECT ( #{one_request.to_sql} ) AS max_updated_at"
+      r.to_sql.should eq %(SELECT ( #{one_request.to_sql} ) AS "max_updated_at")
     end
   end
 end

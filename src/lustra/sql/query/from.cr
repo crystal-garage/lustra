@@ -11,7 +11,7 @@ module Lustra::SQL
       args.each do |arg|
         case arg
         when NamedTuple
-          arg.each { |k, v| @froms << Lustra::SQL::From.new(v, k.to_s) }
+          arg.each { |k, v| @froms << Lustra::SQL::From.new(v, Lustra::SQL.escape(k)) }
         else
           @froms << Lustra::SQL::From.new(arg)
         end
@@ -21,7 +21,7 @@ module Lustra::SQL
     end
 
     def from(**tuple)
-      tuple.each { |k, v| @froms << Lustra::SQL::From.new(v, k.to_s) }
+      tuple.each { |k, v| @froms << Lustra::SQL::From.new(v, Lustra::SQL.escape(k)) }
       change!
     end
 

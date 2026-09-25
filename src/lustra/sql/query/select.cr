@@ -50,7 +50,7 @@ module Lustra::SQL::Query::Select
     args.each do |arg|
       case arg
       when NamedTuple
-        arg.each { |k, v| @columns << Column.new(v, k.to_s) }
+        arg.each { |k, v| @columns << Column.new(v, SQL.escape(k)) }
       else
         @columns << Column.new(arg)
       end

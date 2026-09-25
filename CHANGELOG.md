@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Named-tuple SELECT and FROM aliases are now quoted as identifiers, preserving mixed case and supporting reserved words without changing raw SQL fragments.
 - Block-based `on_conflict` index predicates now preserve an explicitly supplied column or expression target. Missing targets and named-constraint targets are rejected; update conditions remain supported through `do_update.where`.
 - Nonfinite `Float32` and `Float64` values (`Infinity`, `-Infinity`, and `NaN`) now render as quoted SQL literals, allowing inserts and predicates to use PostgreSQL's special floating-point values.
 - JSONB any/all key predicates and SQL helpers now type empty key arrays as `text[]`, preventing PostgreSQL type errors while preserving SQL NULL behavior.

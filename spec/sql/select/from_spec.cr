@@ -4,6 +4,20 @@ module FromSpec
   extend self
 
   describe Lustra::SQL::Query::From do
+    it "preserves a mixed-case named-tuple alias for a subquery" do
+      query = Lustra::SQL.select("\"MixedCase\".value")
+        .from({MixedCase: Lustra::SQL.select("1 AS value")})
+
+      query.to_a.should eq([{"value" => 1}])
+    end
+
+    it "supports a reserved-word named-tuple alias for a raw FROM expression" do
+      query = Lustra::SQL.select("\"order\".value")
+        .from({order: "(SELECT 1 AS value)"})
+
+      query.to_a.should eq([{"value" => 1}])
+    end
+
     it "allows simple string" do
       Lustra::SQL.select.from("users").to_sql.should eq("SELECT * FROM users")
     end
@@ -13,13 +27,13 @@ module FromSpec
     end
 
     it "accepts named tuple" do
-      Lustra::SQL.select.from(clients: "users").to_sql.should eq("SELECT * FROM users AS clients")
-      Lustra::SQL.select.from(clients: :users).to_sql.should eq(%(SELECT * FROM "users" AS clients))
+      Lustra::SQL.select.from(clients: "users").to_sql.should eq(%(SELECT * FROM users AS "clients"))
+      Lustra::SQL.select.from(clients: :users).to_sql.should eq(%(SELECT * FROM "users" AS "clients"))
     end
 
     it "accepts subquery" do
       subquery = Lustra::SQL.select("generate_series(1, 100, 1)")
-      Lustra::SQL.select.from(series: subquery).to_sql.should eq("SELECT * FROM (SELECT generate_series(1, 100, 1)) series")
+      Lustra::SQL.select.from(series: subquery).to_sql.should eq(%(SELECT * FROM (SELECT generate_series(1, 100, 1)) "series"))
     end
 
     it "accepts multiple from clauses" do
