@@ -2,13 +2,18 @@ module Lustra::SQL::Query::BeforeQuery
   macro included
     @before_query_triggers : Array(Lustra::SQL::SelectBuilder -> Nil)
 
-    # A hook to apply some operation just before the query is executed.
+    # Run a callback before fetching results, in registration order.
+    # Callbacks are cleared once all have completed successfully, before SQL
+    # execution. If a callback raises, fetching stops and callbacks remain
+    # registered for the next attempt. `execute` does not run these callbacks.
     #
     # ```
-    # call = 0
-    # req = Lustra::SQL.select("1").before_query { call += 1 }
-    # 10.times { req.execute }
-    # pp call # 10
+    # calls = 0
+    # query = Lustra::SQL.select("1").before_query { calls += 1 }
+    # query.to_a
+    # pp calls # 1
+    # query.to_a
+    # pp calls # Still 1: the callback was cleared after the first fetch.
     # ```
     def before_query(&block : -> Nil)
       before_query_with_context { |_| block.call }
