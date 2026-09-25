@@ -244,6 +244,32 @@ module InsertSpec
         )
       end
 
+      {false, true}.each do |use_block|
+        it "uses a partial unique index with a #{use_block ? "block" : "raw SQL"} conflict predicate" do
+          temporary do
+            Lustra::SQL.execute("CREATE TEMP TABLE partial_conflict (email text, active boolean, value integer)")
+            Lustra::SQL.execute("CREATE UNIQUE INDEX partial_conflict_active_email ON partial_conflict (email) WHERE active = TRUE")
+            Lustra::SQL.insert(:partial_conflict, {email: "user@example.com", active: true, value: 1}).execute
+            Lustra::SQL.insert(:partial_conflict, {email: "user@example.com", active: false, value: 10}).execute
+
+            query = Lustra::SQL.insert(:partial_conflict, {email: "user@example.com", active: true, value: 2})
+            if use_block
+              query.on_conflict("(email)").on_conflict { active == true }
+            else
+              query.on_conflict("(email) WHERE active = TRUE")
+            end
+            query.do_update do |update|
+              update.set(value: 2).where("partial_conflict.value = 1")
+            end
+
+            query.execute_and_count.should eq(1)
+            query.execute_and_count.should eq(0)
+            Lustra::SQL.select(:value).from(:partial_conflict).order_by(:active, :desc)
+              .to_a.map(&.["value"]).should eq([2, 10])
+          end
+        end
+      end
+
       it "insert with ON CONFLICT" do
         insert_request.values({a: "c", b: 12}).on_conflict("(a)").do_nothing
           .to_sql.should eq(
@@ -258,13 +284,26 @@ module InsertSpec
           %(INSERT INTO "users" ("a", "b") VALUES ('c', 12) ON CONFLICT (b) DO UPDATE SET "a" = 1 WHERE ("b" = 2))
         )
 
-        req = insert_request.values({a: "c", b: 12}).on_conflict { age < 18 }.do_update do |upd|
+        req = insert_request.values({a: "c", b: 12}).on_conflict("(b)").on_conflict { age < 18 }.do_update do |upd|
           upd.set(a: 1).where { b == 2 }
         end
 
         req.to_sql.should eq(
-          %(INSERT INTO "users" ("a", "b") VALUES ('c', 12) ON CONFLICT WHERE ("age" < 18) DO UPDATE SET "a" = 1 WHERE ("b" = 2))
+          %(INSERT INTO "users" ("a", "b") VALUES ('c', 12) ON CONFLICT (b) WHERE ("age" < 18) DO UPDATE SET "a" = 1 WHERE ("b" = 2))
         )
+      end
+
+      {false, true, "", "ON CONSTRAINT users_pkey"}.each do |target|
+        it "rejects a conflict predicate for #{target.inspect} without changing the query" do
+          query = insert_request.values({id: 1}).on_conflict(target)
+          original_sql = query.to_sql
+
+          expect_raises(Lustra::SQL::QueryBuildingError, /explicit column or expression target/) do
+            query.on_conflict { id > 0 }
+          end
+
+          query.to_sql.should eq(original_sql)
+        end
       end
 
       it "build an empty insert?" do

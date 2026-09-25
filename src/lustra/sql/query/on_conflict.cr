@@ -4,16 +4,22 @@ module Lustra::SQL::Query::OnConflict
   getter on_conflict_condition : String | OnConflictWhereClause | Bool = false
   getter on_conflict_action : String | Lustra::SQL::UpdateQuery = "NOTHING"
 
-  # Fragment used when ON CONFLICT WHERE ...
+  # Conflict index target and its optional predicate.
   class OnConflictWhereClause
     include Query::Where
 
-    def initialize
+    getter target : String?
+
+    def initialize(@target : String? = nil)
+      target = @target
+      unless target && target.lstrip.starts_with?("(")
+        raise QueryBuildingError.new("A conflict index predicate requires an explicit column or expression target, such as on_conflict(\"(email)\")")
+      end
       @wheres = [] of Lustra::Expression::Node
     end
 
     def to_s
-      print_wheres
+      "#{@target} #{print_wheres}"
     end
 
     def change!
@@ -42,8 +48,18 @@ module Lustra::SQL::Query::OnConflict
     change!
   end
 
+  # Add an index predicate to a previously supplied conflict target.
+  # Use do_update { |update| update.where(...) } for an update condition.
   def on_conflict(&)
-    condition = OnConflictWhereClause.new
+    target =
+      case current = @on_conflict_condition
+      when String
+        current
+      when OnConflictWhereClause
+        current.target
+      end
+
+    condition = OnConflictWhereClause.new(target)
     condition.where(
       Lustra::Expression.ensure_node!(with Lustra::Expression.new yield)
     )
