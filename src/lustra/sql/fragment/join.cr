@@ -20,12 +20,13 @@ module Lustra::SQL
     def to_sql
       from = @from
 
-      from = case from
-             when SQL::SelectBuilder
-               "(#{from.to_sql})"
-             else
-               from.to_s
-             end
+      from =
+        case from
+        when SQL::SelectBuilder
+          "(#{from.to_sql})"
+        else
+          from.to_s
+        end
 
       if c = @condition
         [type,

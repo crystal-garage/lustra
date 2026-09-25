@@ -52,17 +52,18 @@ class Lustra::CLI::Migration < Admiral::Command
     define_argument to : Int64, required: true
 
     def run_impl
-      dir_symbol = case flags.direction
-                   when "up"
-                     :up
-                   when "down"
-                     :down
-                   when "both"
-                     :both
-                   else
-                     puts "Bad argument --direction : #{flags.direction}. Must be up|down|both"
-                     exit 1
-                   end
+      dir_symbol =
+        case flags.direction
+        when "up"
+          :up
+        when "down"
+          :down
+        when "both"
+          :both
+        else
+          puts "Bad argument --direction : #{flags.direction}. Must be up|down|both"
+          exit 1
+        end
 
       Lustra::Migration::Manager.instance.apply_to(arguments.to, direction: dir_symbol)
     end
