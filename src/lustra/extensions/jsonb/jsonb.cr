@@ -43,6 +43,8 @@ module Lustra::SQL::JSONB
   # jsonb `?|` operator
   # Do any of these array strings exist as top-level keys?
   def jsonb_any_exists?(field, keys : Array(String))
+    return "#{field} ?| array[]::text[]" if keys.empty?
+
     {field, "array[" + keys.join(",") { |x| Lustra::SQL.sanitize(x) } + "]"}.join(" ?| ")
   end
 
@@ -54,6 +56,8 @@ module Lustra::SQL::JSONB
   # jsonb `?&` operator
   # Do all of these array strings exist as top-level keys?
   def jsonb_all_exists?(field, keys : Array(String))
+    return "#{field} ?& array[]::text[]" if keys.empty?
+
     {field, "array[" + keys.join(",") { |x| Lustra::SQL.sanitize(x) } + "]"}.join(" ?& ")
   end
 

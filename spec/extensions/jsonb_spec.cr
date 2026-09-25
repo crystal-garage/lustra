@@ -8,6 +8,24 @@ module JSONBSpec
 
   describe "Lustra::SQL" do
     describe "JSONB" do
+      it "evaluates the any-key helper with empty keys and preserves SQL NULL" do
+        predicate = jsonb_any_exists?("data", [] of String)
+        query = Lustra::SQL.select("#{predicate} AS matches")
+          .from(%((VALUES (1, '{}'::jsonb), (2, '{"a":1}'::jsonb), (3, 'null'::jsonb), (4, NULL::jsonb)) AS documents(id, data)))
+          .order_by(:id)
+
+        query.to_a.map(&.["matches"]).should eq([false, false, false, nil])
+      end
+
+      it "evaluates the all-keys helper with empty keys and preserves SQL NULL" do
+        predicate = jsonb_all_exists?("data", [] of String)
+        query = Lustra::SQL.select("#{predicate} AS matches")
+          .from(%((VALUES (1, '{}'::jsonb), (2, '{"a":1}'::jsonb), (3, 'null'::jsonb), (4, NULL::jsonb)) AS documents(id, data)))
+          .order_by(:id)
+
+        query.to_a.map(&.["matches"]).should eq([true, true, true, nil])
+      end
+
       it "splits string into array of path elements" do
         jsonb_k2a("a.b\\.c.d").should eq(["a", "b.c", "d"])
         jsonb_k2a("\\.a").should eq([".a"])
@@ -43,6 +61,24 @@ module JSONBSpec
       end
 
       describe "Expression engine" do
+        it "evaluates any-key predicates with empty keys and preserves SQL NULL" do
+          predicate = Lustra::Expression.where { data.jsonb_any_key_exists?([] of String) }
+          query = Lustra::SQL.select("#{predicate.resolve} AS matches")
+            .from(%((VALUES (1, '{}'::jsonb), (2, '{"a":1}'::jsonb), (3, 'null'::jsonb), (4, NULL::jsonb)) AS documents(id, data)))
+            .order_by(:id)
+
+          query.to_a.map(&.["matches"]).should eq([false, false, false, nil])
+        end
+
+        it "evaluates all-keys predicates with empty keys and preserves SQL NULL" do
+          predicate = Lustra::Expression.where { data.jsonb_all_keys_exists?([] of String) }
+          query = Lustra::SQL.select("#{predicate.resolve} AS matches")
+            .from(%((VALUES (1, '{}'::jsonb), (2, '{"a":1}'::jsonb), (3, 'null'::jsonb), (4, NULL::jsonb)) AS documents(id, data)))
+            .order_by(:id)
+
+          query.to_a.map(&.["matches"]).should eq([true, true, true, nil])
+        end
+
         it "use -> operator when it cannot test presence" do
           Lustra::SQL.select("*").from("users")
             .where { data.jsonb("personal email").cast("text").like "%@gmail.com" }.to_sql

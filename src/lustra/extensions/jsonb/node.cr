@@ -6,7 +6,7 @@ module Lustra::Expression::JSONB::Node
   # :nodoc:
   private def _jsonb_keys_exists(keys : Array(T), op) forall T
     Lustra::Expression::Node::DoubleOperator.new(self,
-      Lustra::Expression::Node::PGArray(T).new(keys),
+      keys.empty? ? Lustra::Expression::Node::Raw.new("array[]::text[]") : Lustra::Expression::Node::PGArray(T).new(keys),
       op)
   end
 
