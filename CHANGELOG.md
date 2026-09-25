@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Unary negation now parenthesizes its operand, preventing nested negation and negative literals from generating SQL comments (`--`).
 - Scalar subqueries interpolated into SQL placeholders now render as parenthesized SQL instead of Crystal tuple representations.
 - Window queries now emit the `WINDOW` keyword, separate multiple declarations with commas, and place the clause after `GROUP BY` and `HAVING`, producing valid PostgreSQL queries.
 - Synchronize connection-pool state, transaction callbacks, and savepoint IDs across parallel execution contexts. Nested calls retain their fiber-owned connection, and pool replacement cannot race with checkout. Database operations and callbacks run outside the shared-state locks.

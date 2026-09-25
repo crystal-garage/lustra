@@ -5,6 +5,6 @@ class Lustra::Expression::Node::Minus < Lustra::Expression::Node
   def initialize(@a : Node); end
 
   def resolve : String
-    {"-", @a.resolve}.join
+    {"-(", @a.resolve, ")"}.join
   end
 end

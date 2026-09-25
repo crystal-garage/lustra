@@ -125,7 +125,7 @@ module HavingSpec
       r = Lustra::SQL.select.from(:users).having { users.id - 2 == 1 }
       r.to_sql.should eq "SELECT * FROM \"users\" HAVING ((\"users\".\"id\" - 2) = 1)"
       r = Lustra::SQL.select.from(:users).having { -users.id < -1000 }
-      r.to_sql.should eq "SELECT * FROM \"users\" HAVING (-\"users\".\"id\" < -1000)"
+      r.to_sql.should eq "SELECT * FROM \"users\" HAVING (-(\"users\".\"id\") < -1000)"
     end
 
     it "use expression engine equal" do
@@ -270,7 +270,7 @@ module HavingSpec
 
       it "Minus" do
         Lustra::SQL.select.having { -x > 2 }
-          .to_sql.should eq(%(SELECT * HAVING (-"x" > 2)))
+          .to_sql.should eq(%(SELECT * HAVING (-("x") > 2)))
       end
 
       it "Not" do

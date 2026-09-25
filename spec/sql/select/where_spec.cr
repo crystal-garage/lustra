@@ -147,7 +147,7 @@ module WhereSpec
       r = Lustra::SQL.select.from(:users).where { users.id - 2 == 1 }
       r.to_sql.should eq "SELECT * FROM \"users\" WHERE ((\"users\".\"id\" - 2) = 1)"
       r = Lustra::SQL.select.from(:users).where { -users.id < -1000 }
-      r.to_sql.should eq "SELECT * FROM \"users\" WHERE (-\"users\".\"id\" < -1000)"
+      r.to_sql.should eq "SELECT * FROM \"users\" WHERE (-(\"users\".\"id\") < -1000)"
     end
 
     it "use expression engine equal" do
@@ -333,7 +333,7 @@ module WhereSpec
 
       it "unary minus" do
         Lustra::SQL.select.where { -x > 2 }
-          .to_sql.should eq(%(SELECT * WHERE (-"x" > 2)))
+          .to_sql.should eq(%(SELECT * WHERE (-("x") > 2)))
       end
 
       it "not()" do
@@ -433,6 +433,21 @@ module WhereSpec
     end
 
     describe "unary operators" do
+      it "executes nested unary minus without starting a SQL comment" do
+        query = Lustra::SQL.select(:value)
+          .from("(VALUES (-1), (0), (1)) AS entries(value)")
+          .where { -(-value) == 1 }
+
+        query.to_a.map(&.["value"]).should eq([1])
+      end
+
+      it "negates a negative literal without commenting out the selected value" do
+        literal = Lustra::Expression::Node::Literal.new(-1)
+        query = Lustra::SQL.select("#{(-literal).resolve} AS value")
+
+        query.to_a.should eq([{"value" => 1}])
+      end
+
       it "supports unary NOT operator" do
         r = Lustra::SQL.select.from(:users).where { ~users.active }
         r.to_sql.should eq %(SELECT * FROM "users" WHERE NOT "users"."active")
