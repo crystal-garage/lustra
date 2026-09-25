@@ -25,7 +25,9 @@ module Lustra::SQL::Query::Window
   end
 
   def print_windows
-    @windows.join do |name, value|
+    return "" if @windows.empty?
+
+    "WINDOW " + @windows.join(", ") do |name, value|
       {name.to_s, " AS ", value}.join
     end
   end

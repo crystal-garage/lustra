@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Window queries now emit the `WINDOW` keyword, separate multiple declarations with commas, and place the clause after `GROUP BY` and `HAVING`, producing valid PostgreSQL queries.
 - Synchronize connection-pool state, transaction callbacks, and savepoint IDs across parallel execution contexts. Nested calls retain their fiber-owned connection, and pool replacement cannot race with checkout. Database operations and callbacks run outside the shared-state locks.
 - Pagination now rejects nonpositive page sizes before modifying or counting the query. Offset and page calculations use Int64 integer arithmetic, avoiding Int32 overflow and floating-point rounding for large result sets.
 - Cursor iteration now closes its cursor on completion, early exit, or callback failure, including inside an outer transaction. Nonpositive batch sizes are rejected before query execution, and cleanup preserves the original iteration error.
