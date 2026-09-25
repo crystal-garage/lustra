@@ -26,11 +26,12 @@ module Lustra::SQL::Query::ConditionBuilder
        current.link == "OR"
       current.expression << node
     else
-      old_clause = if clauses.size == 1
-                     clauses.first
-                   else
-                     Lustra::Expression::Node::NodeArray.new(clauses, "AND")
-                   end
+      old_clause =
+        if clauses.size == 1
+          clauses.first
+        else
+          Lustra::Expression::Node::NodeArray.new(clauses, "AND")
+        end
 
       clauses.clear
       clauses << Lustra::Expression::Node::NodeArray.new([old_clause, node], "OR")

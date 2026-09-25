@@ -176,15 +176,18 @@ class Lustra::View
   # :nodoc:
   def self.apply(direction : Symbol, view_name : String, apply_cache : Set(String), visiting = Set(String).new)
     return if apply_cache.includes?(view_name)
+
     raise ArgumentError.new("Cyclic view dependency involving '#{view_name}'") if visiting.includes?(view_name)
+
     visiting << view_name
 
     view = @@views[view_name]
-    dependencies = if direction == :drop
-                     @@views.values.select(&.requirement.includes?(view_name)).map(&.name)
-                   else
-                     view.requirement
-                   end
+    dependencies =
+      if direction == :drop
+        @@views.values.select(&.requirement.includes?(view_name)).map(&.name)
+      else
+        view.requirement
+      end
     dependencies.each { |dep_view| apply(direction, dep_view, apply_cache, visiting) }
 
     Lustra::SQL.execute(view.connection, direction == :drop ? view.to_drop_sql : view.to_create_sql)

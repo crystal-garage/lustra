@@ -588,15 +588,16 @@ module Lustra::Model
     end
 
     private def relation_operation_not_permitted(operation : String, item : T)
-      relation = if parent = parent_model
-                   if name = association_name
-                     " Association context: #{parent.class}##{name}."
-                   else
-                     " Association context: #{parent.class}."
-                   end
-                 else
-                   " This collection is a plain #{T}.query result."
-                 end
+      relation =
+        if parent = parent_model
+          if name = association_name
+            " Association context: #{parent.class}##{name}."
+          else
+            " Association context: #{parent.class}."
+          end
+        else
+          " This collection is a plain #{T}.query result."
+        end
 
       "Cannot #{operation} #{item.class} on this collection. " \
       "This operation is only available on writable `has_many` or `has_many through` association collections." \

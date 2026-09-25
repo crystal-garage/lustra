@@ -41,11 +41,12 @@ module Lustra::SQL::Query::CTE
       {"WITH ",
        cte.join(", ") do |name, cte_declaration|
          name = Lustra::SQL.escape(name) if name.matches?(/\A[A-Za-z_][A-Za-z0-9_$]*\z/)
-         value = if cte_declaration.responds_to?(:to_sql)
-                   cte_declaration.to_sql
-                 else
-                   cte_declaration.to_s
-                 end
+         value =
+           if cte_declaration.responds_to?(:to_sql)
+             cte_declaration.to_sql
+           else
+             cte_declaration.to_s
+           end
 
          {name, " AS (", value, ")"}.join
        end,
