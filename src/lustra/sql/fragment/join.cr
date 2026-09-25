@@ -2,11 +2,13 @@ require "./fragment"
 
 module Lustra::SQL
   struct Join < Fragment
-    TYPE = {left:       "LEFT JOIN",
-            inner:      "INNER JOIN",
-            right:      "RIGHT JOIN",
-            full_outer: "FULL OUTER JOIN",
-            cross:      "CROSS JOIN"}
+    TYPE = {
+      left:       "LEFT JOIN",
+      inner:      "INNER JOIN",
+      right:      "RIGHT JOIN",
+      full_outer: "FULL OUTER JOIN",
+      cross:      "CROSS JOIN",
+    }
 
     getter type : String
     getter from : Selectable
