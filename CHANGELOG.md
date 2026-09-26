@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Named window declarations now quote their identifiers, supporting reserved words and mixed-case names.
 - `exists?` now returns `false` for queries with `LIMIT 0`.
 - Aggregates over qualified fields now resolve the source table in the correct query scope, including when pagination wraps the selected rows.
 - `count` now counts the rows produced by the full SELECT, preserving aggregate projections and grouping by selected aliases or column positions.

@@ -28,7 +28,7 @@ module Lustra::SQL::Query::Window
     return "" if @windows.empty?
 
     "WINDOW " + @windows.join(", ") do |name, value|
-      {name.to_s, " AS ", value}.join
+      {Lustra::SQL.escape(name), " AS ", value}.join
     end
   end
 end

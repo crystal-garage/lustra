@@ -14,14 +14,22 @@ module WindowSpec
 
       query.window(:ranked, "(ORDER BY id)").should be(query)
       query.windows.should eq([{"ranked", "(ORDER BY id)"}])
-      query.to_sql.should eq %(SELECT ROW_NUMBER() OVER ranked FROM "users" WINDOW ranked AS (ORDER BY id))
+      query.to_sql.should eq %(SELECT ROW_NUMBER() OVER ranked FROM "users" WINDOW "ranked" AS (ORDER BY id))
+    end
+
+    it "executes a window with a reserved name" do
+      query = Lustra::SQL.select(%(ROW_NUMBER() OVER "order" AS position))
+        .from("(VALUES (2), (1)) AS entries(value)")
+        .window(:order, "(ORDER BY value)").order_by(:value)
+
+      query.to_a.map(&.["position"]).should eq([1_i64, 2_i64])
     end
 
     it "accepts multiple windows as a named tuple" do
       query = Lustra::SQL.select.from(:users)
 
       query.window({ranked: "(ORDER BY id)", grouped: "(PARTITION BY role_id)"}).should be(query)
-      query.to_sql.should eq %(SELECT * FROM "users" WINDOW ranked AS (ORDER BY id), grouped AS (PARTITION BY role_id))
+      query.to_sql.should eq %(SELECT * FROM "users" WINDOW "ranked" AS (ORDER BY id), "grouped" AS (PARTITION BY role_id))
     end
 
     it "appends windows across calls" do
@@ -29,7 +37,7 @@ module WindowSpec
         .window("grouped", "(PARTITION BY role_id)")
         .window({ranked: "(grouped ORDER BY id)"})
 
-      query.to_sql.should eq %(SELECT * FROM "users" WINDOW grouped AS (PARTITION BY role_id), ranked AS (grouped ORDER BY id))
+      query.to_sql.should eq %(SELECT * FROM "users" WINDOW "grouped" AS (PARTITION BY role_id), "ranked" AS (grouped ORDER BY id))
     end
 
     it "clears windows on a copy without changing the original and allows reuse" do
@@ -46,7 +54,7 @@ module WindowSpec
       original.to_sql.should eq(original_sql)
 
       copy.window(:replacement, "(ORDER BY id DESC)")
-      copy.to_sql.should eq %(SELECT * FROM "users" WHERE ("id" = 1) WINDOW replacement AS (ORDER BY id DESC) ORDER BY "id" ASC LIMIT 2)
+      copy.to_sql.should eq %(SELECT * FROM "users" WHERE ("id" = 1) WINDOW "replacement" AS (ORDER BY id DESC) ORDER BY "id" ASC LIMIT 2)
     end
 
     it "executes partitioned rankings and running totals using multiple windows" do
