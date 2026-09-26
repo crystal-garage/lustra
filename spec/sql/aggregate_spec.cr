@@ -5,6 +5,25 @@ module AggregateSpec
   extend self
 
   describe "Lustra::SQL::Query::Aggregate" do
+    it "aggregates a qualified field from its original table" do
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (10), (20), (30), (40)) AS entries(value)")
+
+      query.to_a.map(&.["value"]).should eq([10, 20, 30, 40])
+      query.sum("entries.value", Int64).should eq(100_i64)
+      query.min("entries.value", Int32).should eq(10)
+    end
+
+    it "aggregates a qualified field after ordering and pagination" do
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (10), (20), (30), (40)) AS entries(value)")
+        .order_by(:value, :desc).limit(2)
+
+      query.to_a.map(&.["value"]).should eq([40, 30])
+      query.sum("entries.value", Int64).should eq(70_i64)
+      query.max("entries.value", Int32).should eq(40)
+    end
+
     it "counts groups defined by a selected alias" do
       query = Lustra::SQL.select("value % 2 AS bucket")
         .from("(VALUES (1), (2), (3), (4)) AS entries(value)")

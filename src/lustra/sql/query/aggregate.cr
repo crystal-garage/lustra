@@ -29,7 +29,8 @@ module Lustra::SQL::Query::Aggregate
     if @offset || @limit || @group_bys
       # SELECT agg_func FROM ( $subquery ) AS subquery
       subquery = dup
-      X.cast(Lustra::SQL.select(field).from({subquery: subquery}).use_connection(connection_name).scalar(X))
+      source = field.to_s.match(/[A-Za-z_]\w*(?=\.[A-Za-z_]\w*)/).try(&.[0]) || "subquery"
+      X.cast(Lustra::SQL.select(field).from("(#{subquery.to_sql}) #{Lustra::SQL.escape(source)}").use_connection(connection_name).scalar(X))
     else
       dup.clear_select.clear_order_bys.select(field).scalar(X)
     end

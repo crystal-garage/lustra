@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Aggregates over qualified fields now resolve the source table in the correct query scope, including when pagination wraps the selected rows.
 - `count` now counts the rows produced by the full SELECT, preserving aggregate projections and grouping by selected aliases or column positions.
 - Aggregate subqueries now preserve ordering, so `SUM`, `MIN`, `MAX`, and `AVG` use the intended rows with limits, offsets, and `DISTINCT ON`.
 - Plain CTE names are now quoted, supporting reserved words and preserving mixed case. Raw declarations such as `items(id)` remain supported.
