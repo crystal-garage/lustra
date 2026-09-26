@@ -5,6 +5,32 @@ module AggregateSpec
   extend self
 
   describe "Lustra::SQL::Query::Aggregate" do
+    it "counts groups defined by a selected alias" do
+      query = Lustra::SQL.select("value % 2 AS bucket")
+        .from("(VALUES (1), (2), (3), (4)) AS entries(value)")
+        .group_by(:bucket)
+
+      query.to_a.size.should eq(2)
+      query.count.should eq(2_i64)
+    end
+
+    it "counts groups defined by a selected column position" do
+      query = Lustra::SQL.select(:id)
+        .from("(VALUES (1), (1), (2), (2)) AS entries(id)")
+        .group_by("1")
+
+      query.to_a.size.should eq(2)
+      query.count.should eq(2_i64)
+    end
+
+    it "counts the result rows of an aggregate selection" do
+      query = Lustra::SQL.select("SUM(value) AS total")
+        .from("(VALUES (10), (20), (30), (40)) AS entries(value)")
+
+      query.to_a.should eq([{"total" => 100_i64}])
+      query.count.should eq(1_i64)
+    end
+
     it "aggregates the rows selected by ordering and a limit" do
       query = Lustra::SQL.select(:value)
         .from("(VALUES (10), (30), (20), (40)) AS entries(value)")
