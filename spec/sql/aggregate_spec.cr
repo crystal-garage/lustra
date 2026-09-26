@@ -5,6 +5,14 @@ module AggregateSpec
   extend self
 
   describe "Lustra::SQL::Query::Aggregate" do
+    it "does not find rows in a query limited to zero" do
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (10)) AS entries(value)").limit(0)
+
+      query.to_a.should be_empty
+      query.exists?.should be_false
+    end
+
     it "aggregates a qualified field from its original table" do
       query = Lustra::SQL.select(:value)
         .from("(VALUES (10), (20), (30), (40)) AS entries(value)")

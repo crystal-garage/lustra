@@ -66,6 +66,8 @@ module Lustra::SQL::Query::Aggregate
   # User.query.where { active == true }.exists? # => true/false
   # ```
   def exists? : Bool
+    return false if @limit == 0
+
     # Use a simple EXISTS subquery for optimal performance
     Lustra::SQL.select("1").from({subquery: dup.limit(1)}).use_connection(connection_name).first != nil
   end
