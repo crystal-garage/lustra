@@ -66,7 +66,7 @@ module Lustra::Model::HasFactory
 
     Lustra::Model::Factory.add(
       "{{ @type }}",
-      Lustra::Model::Factory::PolymorphicFactory({{ @type }}).new({{ through.id.stringify }}, "{{ @type }}")
+      Lustra::Model::Factory::PolymorphicFactory({{ @type }}).new({{ through.id.stringify }})
     )
 
     macro inherited

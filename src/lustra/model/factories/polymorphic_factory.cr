@@ -4,9 +4,8 @@ module Lustra::Model::Factory
   class PolymorphicFactory(T)
     include Base
     property type_field : String = ""
-    property self_class : String = ""
 
-    def initialize(@type_field, @self_class)
+    def initialize(@type_field)
     end
 
     def build(
