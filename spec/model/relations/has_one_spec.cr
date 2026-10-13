@@ -14,7 +14,7 @@ describe "Lustra::Model::Relations::HasOne" do
         end
       end
 
-      it "deletes user_info" do
+      it "updates user_info" do
         temporary do
           reinit_example_models
 
