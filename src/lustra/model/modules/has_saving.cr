@@ -106,28 +106,7 @@ module Lustra::Model::HasSaving
   # Successful-create and successful-save callbacks are not run.
   #
   def save(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
-    return false if self.class.read_only?
-
-    with_triggers(:save) do
-      if valid?
-        if persisted?
-          h = update_h
-          unless h.empty?
-            with_triggers(:update) do
-              save_main_model(on_conflict)
-            end
-          end
-        else
-          return false unless save_new_model(on_conflict)
-        end
-
-        clear_change_flags
-
-        return true
-      else
-        return false
-      end
-    end
+    save_record(on_conflict, save_associations: false)
   end
 
   def save(&block)
@@ -157,33 +136,7 @@ module Lustra::Model::HasSaving
 
   # Save the model along with all built associations
   def save_with_associations(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
-    return false if self.class.read_only?
-
-    with_triggers(:save) do
-      if valid?
-        save_built_associations
-
-        if persisted?
-          h = update_h
-          unless h.empty?
-            with_triggers(:update) do
-              save_main_model(on_conflict)
-            end
-          end
-        else
-          return false unless save_new_model(on_conflict)
-        end
-
-        handle_through_associations
-
-        clear_change_flags
-        clear_built_associations
-
-        return true
-      else
-        return false
-      end
-    end
+    save_record(on_conflict, save_associations: true)
   end
 
   # Set the fields passed as argument and call `save` on the object
@@ -417,6 +370,34 @@ module Lustra::Model::HasSaving
     reset(columns)
 
     self
+  end
+
+  private def save_record(on_conflict : (Lustra::SQL::InsertQuery ->)?, save_associations : Bool)
+    return false if self.class.read_only?
+
+    with_triggers(:save) do
+      return false unless valid?
+
+      save_built_associations if save_associations
+
+      if persisted?
+        h = update_h
+        unless h.empty?
+          with_triggers(:update) do
+            save_main_model(on_conflict)
+          end
+        end
+      else
+        return false unless save_new_model(on_conflict)
+      end
+
+      handle_through_associations if save_associations
+
+      clear_change_flags
+      clear_built_associations if save_associations
+
+      return true
+    end
   end
 
   private def save_built_associations
