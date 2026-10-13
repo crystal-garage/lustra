@@ -21,7 +21,13 @@ describe "Lustra::Model::Relations::HasMany" do
 
           user = User.create!({first_name: "John", last_name: "Doe"})
 
-          user.posts << Post.new({title: "First Post"})
+          post = Post.new({title: "First Post"})
+          user.posts << post
+
+          post.persisted?.should be_true
+          post.user_id.should eq(user.id)
+          user.posts.count.should eq(1)
+
           user.posts << Post.new({title: "Second Post"})
 
           user.posts.count.should eq(2)

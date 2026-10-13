@@ -27,6 +27,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           tag3 = Tag.create!({name: "Programming"})
 
           post.tags << tag1
+
+          PostTag.query.count.should eq(1)
+          post.tags.count.should eq(1)
+          post.tags.first!.name.should eq("Ruby")
+
           post.tags << tag2
           post.tags << tag3
 
@@ -35,6 +40,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post.tags.map(&.name).should contain("Crystal")
           post.tags.map(&.name).should contain("Programming")
 
+          Tag.query.count.should eq(3)
           PostTag.query.count.should eq(3)
           {tag1, tag2, tag3}.each do |tag|
             PostTag.query.find_by({post_id: post.id, tag_id: tag.id}).should_not be_nil
@@ -316,6 +322,8 @@ describe "Lustra::Model::Relations::HasManyThrough" do
 
           # Should prevent duplicate associations
           post.tags.count.should eq(1)
+          Tag.query.count.should eq(1)
+          PostTag.query.count.should eq(1)
           # Should only create one PostTag record (no duplicates)
           PostTag.query.where({post_id: post.id, tag_id: tag1.id}).count.should eq(1)
         end
