@@ -13,25 +13,103 @@ module AggregateSpec
       query.exists?.should be_false
     end
 
-    # Original table qualifiers are not visible outside the aggregate subquery.
-    # Keep these cases pending until scope handling has a solution without SQL guessing.
-    pending "aggregates a qualified field from its original table" do
+    it "aggregates a qualified field from its original table" do
       query = Lustra::SQL.select(:value)
         .from("(VALUES (10), (20), (30), (40)) AS entries(value)")
 
       query.to_a.map(&.["value"]).should eq([10, 20, 30, 40])
-      query.sum("entries.value", Int64).should eq(100_i64)
-      query.min("entries.value", Int32).should eq(10)
+      query.sum(Lustra::SQL::Column.new("entries.value"), Int64).should eq(100_i64)
+      query.min(Lustra::SQL::Column.new("entries.value"), Int32).should eq(10)
     end
 
-    pending "aggregates a qualified field after ordering and pagination" do
+    it "aggregates a qualified field after ordering and pagination" do
       query = Lustra::SQL.select(:value)
         .from("(VALUES (10), (20), (30), (40)) AS entries(value)")
         .order_by(:value, :desc).limit(2)
 
       query.to_a.map(&.["value"]).should eq([40, 30])
-      query.sum("entries.value", Int64).should eq(70_i64)
-      query.max("entries.value", Int32).should eq(40)
+      original_sql = query.to_sql
+      query.sum(Lustra::SQL::Column.new("entries.value")).should eq(70.0)
+      query.sum(Lustra::SQL::Column.new("entries.value"), Int64).should eq(70_i64)
+      query.min(Lustra::SQL::Column.new("entries.value"), Int32).should eq(30)
+      query.max(Lustra::SQL::Column.new("entries.value"), Int32).should eq(40)
+      query.avg(Lustra::SQL::Column.new("entries.value"), PG::Numeric).to_f.should eq(35.0)
+      query.to_sql.should eq(original_sql)
+    end
+
+    it "aggregates quoted qualified columns" do
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (10), (20)) AS entries(value)").limit(1)
+
+      query.sum(Lustra::SQL::Column.new(%("entries"."value")), Int64).should eq(10_i64)
+    end
+
+    it "aggregates source expressions with and without pagination" do
+      query = Lustra::SQL.select
+        .from("(VALUES (10), (20)) AS entries(value)")
+      expression = Lustra::SQL::Column.new("entries.value * 2 + 0.5")
+
+      query.sum(expression, PG::Numeric).to_f.should eq(61.0)
+      query.order_by(:value).limit(1).sum(expression, PG::Numeric).to_f.should eq(20.5)
+    end
+
+    it "aggregates a qualified join column without confusing matching column names" do
+      query = Lustra::SQL.select("entries.value AS entry_value", "other.value AS other_value")
+        .from("(VALUES (1, 10), (2, 20)) AS entries(id, value)")
+        .inner_join("(VALUES (1, 100), (2, 200)) AS other(id, value)", "entries.id = other.id")
+        .order_by("entries.id").limit(1)
+
+      query.sum(Lustra::SQL::Column.new("entries.value"), Int64).should eq(10_i64)
+      query.sum(Lustra::SQL::Column.new("other.value"), Int64).should eq(100_i64)
+    end
+
+    it "preserves selected aliases when aggregating paginated results" do
+      query = Lustra::SQL.select("value * 2 AS doubled")
+        .from("(VALUES (10), (20), (30)) AS entries(value)")
+        .order_by(:doubled).limit(2)
+
+      query.sum("doubled", Int64).should eq(60_i64)
+    end
+
+    it "preserves selected aliases without pagination" do
+      query = Lustra::SQL.select("value * 2 AS doubled")
+        .from("(VALUES (10), (20)) AS entries(value)")
+
+      query.sum("doubled", Int64).should eq(60_i64)
+    end
+
+    it "aggregates grouped source columns and distinct result columns" do
+      query = Lustra::SQL.select(:value)
+        .from("(VALUES (10), (10), (20)) AS entries(value)")
+
+      query.dup.group_by("entries.value").sum(Lustra::SQL::Column.new("entries.value"), Int64).should eq(30_i64)
+      query.dup.distinct.sum("value", Int64).should eq(30_i64)
+    end
+
+    it "rejects source expressions that could change plain DISTINCT rows" do
+      query = Lustra::SQL.select(:id)
+        .from("(VALUES (1, 10), (1, 20)) AS entries(id, value)").distinct
+      original_sql = query.to_sql
+
+      query.to_a.should eq([{"id" => 1}])
+      expect_raises(Lustra::SQL::QueryBuildingError, "plain DISTINCT") do
+        query.sum(Lustra::SQL::Column.new("entries.value"), Int64)
+      end
+      query.to_sql.should eq(original_sql)
+    end
+
+    it "avoids collisions with existing selected aggregate aliases" do
+      query = Lustra::SQL.select("value AS __lustra_aggregate_value")
+        .from("(VALUES (10), (20)) AS entries(value)").limit(1)
+
+      query.sum(Lustra::SQL::Column.new("entries.value"), Int64).should eq(10_i64)
+    end
+
+    it "avoids collisions with wildcard column names" do
+      query = Lustra::SQL.select
+        .from("(VALUES (10, 100), (20, 200)) AS entries(value, __lustra_aggregate_value)").limit(1)
+
+      query.sum(Lustra::SQL::Column.new("entries.value"), Int64).should eq(10_i64)
     end
 
     it "counts groups defined by a selected alias" do
@@ -91,6 +169,7 @@ module AggregateSpec
 
       query.to_a.map(&.["value"]).should eq([30, 40])
       query.sum("value", Int64).should eq(70_i64)
+      query.sum(Lustra::SQL::Column.new("entries.value"), Int64).should eq(70_i64)
       query.min("value", Int32).should eq(30)
       query.max("value", Int32).should eq(40)
       query.avg("value", PG::Numeric).to_f.should eq(35.0)
