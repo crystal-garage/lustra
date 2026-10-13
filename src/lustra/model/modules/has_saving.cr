@@ -118,9 +118,7 @@ module Lustra::Model::HasSaving
             end
           end
         else
-          with_triggers(:create) do
-            return false unless save_main_model(on_conflict)
-          end
+          return false unless save_new_model(on_conflict)
         end
 
         clear_change_flags
@@ -173,9 +171,7 @@ module Lustra::Model::HasSaving
             end
           end
         else
-          with_triggers(:create) do
-            return false unless save_main_model(on_conflict)
-          end
+          return false unless save_new_model(on_conflict)
         end
 
         handle_through_associations
@@ -429,6 +425,18 @@ module Lustra::Model::HasSaving
         model.save! unless model.persisted?
       end
     end
+  end
+
+  private def save_new_model(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)
+    with_column_state_rollback do
+      with_triggers(:create) do
+        return false unless save_main_model(on_conflict)
+      end
+    end
+    true
+  rescue e
+    @persisted = false
+    raise e
   end
 
   private def save_main_model(on_conflict : (Lustra::SQL::InsertQuery ->)? = nil)

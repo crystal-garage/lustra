@@ -411,6 +411,19 @@ module Lustra::Model::HasColumns
       {% end %}
     end
 
+    private def with_column_state_rollback(&)
+      {% for name, settings in COLUMNS %}
+        saved_{{ settings[:crystal_variable_name] }} = @{{ settings[:crystal_variable_name] }}_column.dup
+      {% end %}
+
+      yield
+    rescue e
+      {% for name, settings in COLUMNS %}
+        @{{ settings[:crystal_variable_name] }}_column = saved_{{ settings[:crystal_variable_name] }}.not_nil!
+      {% end %}
+      raise e
+    end
+
     # Reset the `changed?` flag on all columns
     #
     # The model behaves as if it is no longer dirty, and calling save would apply
