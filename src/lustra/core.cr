@@ -1,4 +1,6 @@
 # Require everything except the extensions and the CLI
+require "random/secure"
+
 require "./version"
 require "./log"
 require "./util"

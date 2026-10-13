@@ -1,5 +1,3 @@
-require "random/secure"
-
 module Lustra::SQL::Query::Aggregate
   # Use SQL `COUNT` over your query, and return this number as a Int64
   #
