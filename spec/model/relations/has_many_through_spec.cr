@@ -54,15 +54,16 @@ describe "Lustra::Model::Relations::HasManyThrough" do
 
           user = User.create!({first_name: "John", last_name: "Doe"})
           post = Post.create!({title: "Test Post", user_id: user.id})
-          tag1 = Tag.create!({name: "Ruby"})
-          tag2 = Tag.create!({name: "Crystal"})
-          tag3 = Tag.create!({name: "Programming"})
+          tag1 = Tag.new({name: "Ruby"})
+          tag2 = Tag.new({name: "Crystal"})
+          tag3 = Tag.new({name: "Programming"})
 
           post.tags << tag1
           post.tags << tag2
           post.tags << tag3
 
-          post.tags.unlink(tag2)
+          post.tags.count.should eq(3)
+          post.tags.unlink(Tag.query.find_by!({name: "Crystal"}))
 
           post.tags.count.should eq(2)
           post.tags.map(&.name).should contain("Ruby")
@@ -154,6 +155,8 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           second_tag = post.tags.offset(1).limit(1).first!
 
           first_tag.should_not eq(second_tag)
+          first_tag.name.should eq("Ruby")
+          second_tag.name.should eq("Crystal")
         end
       end
 
@@ -438,6 +441,14 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           Post.create!({title: "Tech Post 1", user_id: user.id, category_id: category1.id})
           Post.create!({title: "Tech Post 2", user_id: user.id, category_id: category1.id})
 
+          user.categories.to_sql.should eq "SELECT DISTINCT ON (\"categories\".\"id\") \"categories\".* " +
+                                           "FROM \"categories\" " +
+                                           "INNER JOIN \"posts\" ON " +
+                                           "(\"posts\".\"category_id\" = \"categories\".\"id\") " +
+                                           "WHERE (\"posts\".\"user_id\" = #{user.id})"
+
+          user.posts << Post.new({title: "Another Tech Post", category_id: category1.id})
+
           # Should only return unique categories
           user.categories.count.should eq(1)
           user.categories.first!.name.should eq("Technology")
@@ -478,11 +489,31 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           user3 = User.create!({first_name: "Charlie", last_name: "Brown"})
 
           user1.dependencies << user2
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
+          user1.dependencies.map(&.first_name).should eq(["Bob"])
+          user2.dependents.map(&.first_name).should eq(["Alice"])
+
           user1.dependencies << user3
 
           user1.dependencies.count.should eq(2)
           user1.dependencies.map(&.first_name).should contain("Bob")
           user1.dependencies.map(&.first_name).should contain("Charlie")
+        end
+      end
+
+      it "creates dependencies through the join model" do
+        temporary do
+          reinit_example_models
+
+          user1 = User.create!({first_name: "John"})
+          user2 = User.create!({first_name: "Jane"})
+
+          Relationship.create!({master: user1, dependency: user2})
+
+          user1.dependencies.count.should eq(1)
+          user2.dependents.count.should eq(1)
         end
       end
 
@@ -514,10 +545,18 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           user1.dependencies << user2
           user1.dependencies << user3
 
-          user1.dependencies.unlink(user2)
+          user1.dependencies.count.should eq(2)
+          user2.dependents.count.should eq(1)
+          user1.dependencies.unlink(User.query.find_by!({first_name: "Bob"}))
 
           user1.dependencies.count.should eq(1)
           user1.dependencies.first!.first_name.should eq("Charlie")
+          user2.dependents.count.should eq(0)
+
+          user1.dependencies.unlink(user3)
+
+          user1.dependencies.count.should eq(0)
+          user3.dependents.count.should eq(0)
         end
       end
 
