@@ -1,6 +1,12 @@
 require "../../spec_helper"
 
 module PaginationSpec
+  def self.query_with_total_entries
+    query = Lustra::SQL.select.from(:users)
+    query.total_entries = 1_901_902_i64
+    query
+  end
+
   describe Lustra::SQL::Query::WithPagination do
     context "page predicates" do
       it "reports an unpaginated query as both the first and last page" do
@@ -98,73 +104,62 @@ module PaginationSpec
 
     context "when there's 1901902 records and limit of 25" do
       it "sets the per_page to 25" do
-        r = Lustra::SQL.select.from(:users).offset(0).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(0).limit(25)
         r.per_page.should eq 25
       end
 
       it "returns 1 for current_page with no limit set" do
-        r = Lustra::SQL.select.from(:users)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries
         r.current_page.should eq 1
       end
 
       it "returns 5 for current_page when offset is 100" do
-        r = Lustra::SQL.select.from(:users).offset(100).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(100).limit(25)
         r.current_page.should eq 5
       end
 
       it "returns 1 for total_pages when there's no limit" do
-        r = Lustra::SQL.select.from(:users)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries
         r.total_pages.should eq 1
       end
 
       it "returns 76077 total_pages when 25 per_page" do
-        r = Lustra::SQL.select.from(:users).offset(100).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(100).limit(25)
         r.total_pages.should eq 76_077
       end
 
       it "returns 4 as previous_page when on page 5" do
-        r = Lustra::SQL.select.from(:users).offset(100).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(100).limit(25)
         r.current_page.should eq 5
         r.previous_page.should eq 4
       end
 
       it "returns nil for previous_page when on page 1" do
-        r = Lustra::SQL.select.from(:users).offset(0).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(0).limit(25)
         r.current_page.should eq 1
         r.previous_page.should be_nil
       end
 
       it "returns 6 as next_page when on page 5" do
-        r = Lustra::SQL.select.from(:users).offset(100).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(100).limit(25)
         r.current_page.should eq 5
         r.next_page.should eq 6
       end
 
       it "returns nil for next_page when on page 76077" do
-        r = Lustra::SQL.select.from(:users).offset(1_901_900).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(1_901_900).limit(25)
         r.current_page.should eq 76_077
         r.next_page.should be_nil
       end
 
       it "returns true for out_of_bounds? when current_page is 76078" do
-        r = Lustra::SQL.select.from(:users).offset(1_901_925).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(1_901_925).limit(25)
         r.current_page.should eq 76_078
         r.out_of_bounds?.should be_true
       end
 
       it "returns false for out_of_bounds? when current_page is in normal range" do
-        r = Lustra::SQL.select.from(:users).offset(925).limit(25)
-        r.total_entries = 1_901_902_i64
+        r = query_with_total_entries.offset(925).limit(25)
         r.out_of_bounds?.should be_false
       end
     end
