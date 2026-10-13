@@ -399,16 +399,21 @@ module Lustra::Model::HasSaving
   end
 
   # :ditto:
-  def update_columns(columns : Hash(String, Lustra::SQL::Any))
+  def update_columns(columns : Hash(String, _))
     update_columns_direct(columns)
   end
 
   private def update_columns_direct(columns)
     raise "Model must be persisted before updating columns" unless persisted?
 
+    db_columns = {} of String => Lustra::SQL::Any
+    columns.each do |name, value|
+      db_columns[name.to_s] = column_to_db(name.to_s, value)
+    end
+
     # Update database directly
     Lustra::SQL.update(self.class.full_table_name)
-      .set(columns)
+      .set(db_columns)
       .where { raw(self.class.__pkey__) == __pkey__ }
       .execute(@@connection)
 

@@ -145,6 +145,16 @@ module JSONConverterSpec
 
         tommy = JsonModel.query.where { var("actor").jsonb("children").contains?("Suri") }.first!
         tommy.actor.name.should eq("Tommy Cruise")
+
+        actor.name = "Tom"
+        model.update_column(:actor, actor)
+        model.actor_column.changed?.should be_false
+        model.reload.actor.name.should eq("Tom")
+
+        actor.name = "Thomas"
+        model.update_columns(actor: actor)
+        model.actor_column.changed?.should be_false
+        model.reload.actor.name.should eq("Thomas")
       end
     end
   end

@@ -3,6 +3,40 @@ require "./model_spec"
 
 module ModelSpec
   describe "JSON" do
+    it "converts Crystal collections for direct JSON column updates" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "John")
+
+        preferences = {"email" => true}
+        user.update_column(:notification_preferences, preferences).should be(user)
+        user.notification_preferences.as_h["email"].as_bool.should be_true
+        User.find!(user.id).notification_preferences.should eq(user.notification_preferences)
+
+        channels = ["email", "push"]
+        user.update_columns(notification_preferences: channels).should be(user)
+        user.notification_preferences.as_a.map(&.as_s).should eq(channels)
+        User.find!(user.id).notification_preferences.should eq(user.notification_preferences)
+
+        preferences = {email: false, push: true}
+        user.update_columns({notification_preferences: preferences}).should be(user)
+        user.notification_preferences.as_h["email"].as_bool.should be_false
+        user.notification_preferences.as_h["push"].as_bool.should be_true
+        User.find!(user.id).notification_preferences.should eq(user.notification_preferences)
+
+        preferences = {"push" => false}
+        user.update_columns({"notification_preferences" => preferences}).should be(user)
+        user.notification_preferences.as_h["push"].as_bool.should be_false
+        User.find!(user.id).notification_preferences.should eq(user.notification_preferences)
+
+        user.update_column(:notification_preferences, JSON.parse("null"))
+        user.reload.notification_preferences.raw.should be_nil
+
+        user.update_column("notification_preferences", preferences.to_json)
+        user.reload.notification_preferences.as_h["push"].as_bool.should be_false
+      end
+    end
+
     it "load and export from JSON::Any" do
       json = JSON.parse(%({"id": 1, "first_name": "hello", "last_name": "boss"}))
 
