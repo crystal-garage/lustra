@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Reused eager-loaded model queries now refresh their association caches on each execution.
 - Model queries now honor explicit `use_connection` overrides, and `Model.import` uses the model's configured schema.
 - Failed create callbacks now restore the model's column and persistence state, allowing rolled-back inserts to be retried.
 - Cached `belongs_to` parents now respect changed foreign keys and polymorphic types, and assigning `nil` clears nullable associations without restoring the previous parent on save.

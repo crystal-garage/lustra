@@ -95,7 +95,7 @@ module Lustra::Model::Relations::HasManyThroughMacro
       # Eager load the relation {{ method_name }}.
       # Use it to avoid N+1 queries.
       def with_{{ method_name }}(&block : {{ relation_type }}::Collection ->) : self
-        before_query_with_context do |query|
+        before_eager_load do |query|
           collection = query.as(typeof(self))
           %final_table = {{ relation_type }}.table
           %final_pkey = {{ relation_type }}.__pkey__

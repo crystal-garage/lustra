@@ -96,7 +96,7 @@ module Lustra::Model::Relations::HasManyMacro
       # Eager load the has many relation {{ method_name }}.
       # Use it to avoid N+1 queries.
       def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
-        before_query_with_context do |query|
+        before_eager_load do |query|
           collection = query.as(typeof(self))
           %primary_key = {{ (primary_key || "#{relation_type}.__pkey__").id }}
 

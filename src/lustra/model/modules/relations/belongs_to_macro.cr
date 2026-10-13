@@ -319,24 +319,14 @@ module Lustra::Model::Relations::BelongsToMacro
         # Eager loading a polymorphic belongs_to relation runs one query for each
         # declared target type, then stores parents in the association cache.
         def with_{{ method_name }}(fetch_columns = false) : self
-          before_query_with_context do |query|
+          before_eager_load do |query|
             collection = query.as(typeof(self))
             base_query = collection.dup
 
             collection.cache.active "{{ method_name }}"
 
             {% for target_type in polymorphic_types %}
-              {%
-                target_type_name = target_type.stringify
-                target_type_name = target_type_name[2..] if target_type_name.starts_with?("::")
-                if !target_type_name.includes?("::") && self_type.stringify.includes?("::")
-                  target_type_name = "#{self_type.stringify.split("::")[0...-1].join("::")}::#{target_type_name}"
-                end
-              %}
-              source_query = base_query
-                .dup
-                .where { raw({{ type_key.stringify }}) == {{ target_type_name }} }
-              sub_query = collection.key_subquery("{{ foreign_key.id }}", source_query)
+              sub_query = collection.key_subquery("{{ foreign_key.id }}", base_query.dup)
 
               {{ target_type }}.query
                 .where { raw("#{{{ target_type }}.table}.#{{{ target_type }}.__pkey__}").in?(sub_query) }
@@ -352,7 +342,7 @@ module Lustra::Model::Relations::BelongsToMacro
     {% else %}
       class Collection
         def with_{{ method_name }}(fetch_columns = false, &block : {{ relation_type }}::Collection ->) : self
-          before_query_with_context do |query|
+          before_eager_load do |query|
             collection = query.as(typeof(self))
             source_query = collection.dup
             {% if polymorphic_type %}

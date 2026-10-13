@@ -203,6 +203,7 @@ module Lustra::Model
 
     # :nodoc:
     @cached_result : Array(T)?
+    @eager_load_triggers = [] of Lustra::SQL::SelectBuilder -> Nil
 
     # :nodoc:
     property append_operation : Proc(T, T)?
@@ -241,6 +242,7 @@ module Lustra::Model
 
     def dup
       copy = super
+      copy.eager_load_triggers = @eager_load_triggers.dup
       copy.tags(@tags)
       copy.append_operation = append_operation
       copy.unlink_operation = unlink_operation
@@ -252,6 +254,29 @@ module Lustra::Model
         copy.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
       end
       copy
+    end
+
+    protected setter eager_load_triggers : Array(Lustra::SQL::SelectBuilder -> Nil)
+
+    # :nodoc:
+    def before_eager_load(&block : Lustra::SQL::SelectBuilder -> Nil)
+      @eager_load_triggers << block
+      self
+    end
+
+    def clear_before_query_triggers
+      super
+      @eager_load_triggers.clear
+      self
+    end
+
+    protected def trigger_before_query
+      super
+      unless @eager_load_triggers.empty?
+        @cache = Lustra::Model::QueryCache.new
+        @eager_load_triggers.each &.call(self)
+      end
+      self
     end
 
     # Return the model class for this collection.

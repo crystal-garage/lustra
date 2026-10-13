@@ -35,6 +35,27 @@ module CacheSpec
 
   describe "Lustra::Model" do
     context "cache system" do
+      it "refreshes eager-loaded associations when the same query is executed again" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          query = User.query.where(id: user.id).with_posts
+
+          first_user = query.to_a.first
+          first_user.posts.to_a.should be_empty
+
+          post = Post.create!(user_id: user.id, title: "New post")
+
+          User.query.where(id: user.id).with_posts.to_a.first.posts.map(&.id).should eq([post.id])
+          query.to_a.first.posts.map(&.id).should eq([post.id])
+          first_user.posts.to_a.should be_empty
+
+          post.delete
+
+          query.to_a.first.posts.to_a.should be_empty
+        end
+      end
+
       it "eager loads associations for each filtered duplicate" do
         temporary do
           reinit
