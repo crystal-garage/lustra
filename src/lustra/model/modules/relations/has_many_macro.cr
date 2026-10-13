@@ -42,30 +42,17 @@ module Lustra::Model::Relations::HasManyMacro
       cache = @cache
 
       query =
-        if cache && cache.active?("{{ method_name }}")
-          arr = cache.hit("{{ method_name }}", self.__pkey_column__.to_sql_value, {{ relation_type }})
+        {{ relation_type }}
+          .query
+          .tags(%tags)
+          .where { raw(%foreign_key) == %primary_key }
 
-          # This relation will trigger the cache if it exists
-          qry =
-            {{ relation_type }}
-              .query
-              .tags(%tags)
-              .where { raw(%foreign_key) == %primary_key }
+      query.where { raw(%type_key) == self.class.name } if %type_key
 
-          qry.where { raw(%type_key) == self.class.name } if %type_key
-
-          qry.with_cached_result(arr)
-        else
-          qry =
-            {{ relation_type }}
-              .query
-              .tags(%tags)
-              .where { raw(%foreign_key) == %primary_key }
-
-          qry.where { raw(%type_key) == self.class.name } if %type_key
-
-          qry
-        end
+      if cache && cache.active?("{{ method_name }}")
+        arr = cache.hit("{{ method_name }}", self.__pkey_column__.to_sql_value, {{ relation_type }})
+        query.with_cached_result(arr)
+      end
 
       query.append_operation = -> (x : {{ relation_type }}) {
         if x.persisted?
