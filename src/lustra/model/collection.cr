@@ -236,6 +236,7 @@ module Lustra::Model
       @cache = Lustra::Model::QueryCache.new,
       @cached_result = nil,
     )
+      @connection_name = T.connection
     end
 
     def dup
@@ -251,12 +252,6 @@ module Lustra::Model
         copy.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
       end
       copy
-    end
-
-    # :nodoc:
-    # Set this query's connection to the model class connection.
-    def connection_name
-      T.connection
     end
 
     # Return the model class for this collection.

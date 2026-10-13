@@ -43,7 +43,7 @@ module Lustra::Model::HasSaving
           item.to_h
         end
 
-        query = Lustra::SQL.insert_into(self.table, hashes).returning("*")
+        query = Lustra::SQL.insert_into(self.full_table_name, hashes).returning("*")
         on_conflict.call(query) if on_conflict
 
         o = [] of self

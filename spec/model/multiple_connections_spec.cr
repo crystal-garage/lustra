@@ -85,6 +85,21 @@ module MultipleConnectionsSpec
     Lustra::SQL.execute("secondary", "DELETE FROM models_post_stats")
   end
 
+  def self.with_posts_in_both_databases(&)
+    temporary do
+      Lustra::SQL.with_savepoint(connection_name: "secondary") do
+        create_table = "CREATE TABLE models_posts_two (id serial PRIMARY KEY, title text NOT NULL)"
+        Lustra::SQL.execute(create_table)
+        Lustra::SQL.execute("secondary", create_table)
+        Post.create!(title: "Default database")
+        Lustra::SQL.insert_into("models_posts_two", {title: "Secondary database"}).execute("secondary")
+
+        yield
+        Lustra::SQL.rollback
+      end
+    end
+  end
+
   def self.create_counter_tables
     Lustra::SQL.execute("secondary", <<-SQL)
       CREATE TABLE secondary_counter_parents (
@@ -107,9 +122,29 @@ module MultipleConnectionsSpec
 
   describe "Lustra::Model" do
     context "multiple connections" do
+      it "reads from an explicitly selected connection" do
+        with_posts_in_both_databases do
+          posts = Post.query.use_connection("secondary").to_a
+
+          posts.map(&.title).should eq(["Secondary database"])
+        end
+      end
+
+      it "bulk updates only the explicitly selected database" do
+        with_posts_in_both_databases do
+          Post.query.use_connection("secondary").update_all(title: "Updated").should eq(1)
+
+          Post.query.first!.title.should eq("Default database")
+          Lustra::SQL.select("title").from("models_posts_two")
+            .use_connection("secondary").pluck_col("title", String).should eq(["Updated"])
+        end
+      end
+
       it "know about the different connections on models" do
         Post.connection.should eq "default"
         PostStat.connection.should eq "secondary"
+        Post::Collection.new.connection_name.should eq "default"
+        PostStat::Collection.new.connection_name.should eq "secondary"
       end
 
       it "load data from the default database" do

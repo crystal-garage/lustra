@@ -63,6 +63,16 @@ module CustomSchemaSpec
   end
 
   describe "Associations inside another schema" do
+    it "imports into the configured schema when a public table has the same name" do
+      CustomSchemaSpec.with_association_tables do
+        authors = Author.import([Author.new({id: 3_i64, name: "Imported author"})])
+
+        authors.first.name.should eq("Imported author")
+        Author.query.where(id: 3_i64).count.should eq(1)
+        Lustra::SQL.select.from("public.schema_authors").where(id: 3_i64).count.should eq(0)
+      end
+    end
+
     it "joins the has_many target in its configured schema" do
       CustomSchemaSpec.with_association_tables do
         Author.query.join(:articles).to_a.map(&.id).should eq([1_i64, 1_i64])
