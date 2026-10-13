@@ -29,7 +29,7 @@ module Lustra::SQL::Query::Fetch
     trigger_before_query
 
     Lustra::SQL.transaction(connection_name) do |cnx|
-      cursor_name = "__lustra_cursor_#{Random::Secure.hex(16)}"
+      cursor_name = "#{SQL::CURSOR_PREFIX}#{Random::Secure.hex(16)}"
 
       cursor_declaration = "DECLARE #{cursor_name} CURSOR FOR #{to_sql}"
 

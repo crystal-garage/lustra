@@ -963,17 +963,18 @@ module Lustra::Model
     # Build a single-column key query while preserving selected expressions
     # required by ordering and pagination in the inner query.
     protected def key_subquery(column : String, source : CollectionBase(T) = dup)
-      key_alias = "__lustra_query_key"
-      source_alias = "__lustra_query_source"
-
       source.select(SQL::Column.new(
         "#{Lustra::SQL.escape(T.table)}.#{Lustra::SQL.escape(column)}",
-        key_alias
+        SQL::QUERY_KEY_ALIAS
       ))
 
       Lustra::SQL
-        .select("#{source_alias}.#{key_alias}")
-        .from({__lustra_query_source: source})
+        .select("#{SQL::QUERY_SOURCE_ALIAS}.#{SQL::QUERY_KEY_ALIAS}")
+        .from(
+          {% begin %}
+            { {{ Lustra::SQL::QUERY_SOURCE_ALIAS.id }}: source }
+          {% end %}
+        )
         .use_connection(connection_name)
     end
 
@@ -1400,7 +1401,7 @@ module Lustra::Model
     #
     # Returns an array of primary key values (typically `Array(Int64)` or `Array(Int32)`).
     def ids : Array(Lustra::SQL::Any)
-      key_subquery(T.__pkey__).pluck_col("__lustra_query_key")
+      key_subquery(T.__pkey__).pluck_col(SQL::QUERY_KEY_ALIAS)
     end
   end
 end

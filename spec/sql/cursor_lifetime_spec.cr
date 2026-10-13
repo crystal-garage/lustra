@@ -2,7 +2,7 @@ require "../spec_helper"
 
 module CursorLifetimeSpec
   def self.cursor_names(connection : DB::Connection)
-    connection.query_all("SELECT name FROM pg_cursors WHERE name LIKE '__lustra_cursor_%' ORDER BY name", as: String)
+    connection.query_all("SELECT name FROM pg_cursors WHERE name LIKE '#{Lustra::SQL::CURSOR_PREFIX}%' ORDER BY name", as: String)
   end
 
   describe "Cursor resource lifetime" do

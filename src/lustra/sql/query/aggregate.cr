@@ -52,7 +52,7 @@ module Lustra::SQL::Query::Aggregate
     end
 
     if aggregate_subquery?
-      column_alias = "__lustra_aggregate_#{Random::Secure.hex(16)}"
+      column_alias = "#{SQL::AGGREGATE_PREFIX}#{Random::Secure.hex(16)}"
       subquery = dup
       subquery.select(print_wildcard) if @columns.empty?
       subquery.select(SQL::Column.new(field.value, column_alias))
