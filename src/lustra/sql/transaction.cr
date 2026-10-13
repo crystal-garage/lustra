@@ -125,6 +125,10 @@ module Lustra::SQL::Transaction
   # end
   # ```
   def with_savepoint(sp_name : Symbolic? = nil, connection_name : String = "default", &)
+    with_savepoint_impl(sp_name, connection_name) { yield }
+  end
+
+  private def with_savepoint_impl(sp_name : Symbolic?, connection_name : String, &)
     transaction(connection_name) do |cnx|
       callback_count = @@transaction_mutex.synchronize do
         sp_name ||= "sp_#{@@savepoint_uid += 1}"

@@ -132,8 +132,6 @@ module Lustra
       Lustra::SQL::ConnectionPool.init(url, name)
     end
 
-    @@savepoint_uid : UInt64 = 0_u64
-
     # Create a transaction, but this one is stackable
     # using savepoints.
     #
@@ -148,20 +146,7 @@ module Lustra
     # end
     # ```
     def with_savepoint(connection_name = "default", &)
-      transaction(connection_name) do |cnx|
-        callback_count = @@commit_callbacks[cnx]?.try(&.size) || 0
-        sp_name = "sp_#{@@savepoint_uid += 1}"
-        begin
-          execute(connection_name, "SAVEPOINT #{sp_name}")
-          yield
-          execute(connection_name, "RELEASE SAVEPOINT #{sp_name}") if cnx._in_transaction?
-        rescue RollbackError
-          if cnx._in_transaction?
-            execute(connection_name, "ROLLBACK TO SAVEPOINT #{sp_name}")
-            discard_savepoint_callbacks(cnx, callback_count)
-          end
-        end
-      end
+      with_savepoint_impl(nil, connection_name) { yield }
     end
 
     # Raise a rollback, in case of transaction
