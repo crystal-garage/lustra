@@ -111,6 +111,15 @@ module Lustra::Model::HasColumns
     {} of String => ::Lustra::SQL::Any
   end
 
+  private def column_to_db(column_name : String, value) : ::Lustra::SQL::Any
+    case value
+    when ::Lustra::SQL::Any
+      value
+    else
+      raise "Cannot convert column #{column_name} to a database value"
+    end
+  end
+
   # Bind a column to the model.
   #
   # Simple example:
@@ -353,6 +362,18 @@ module Lustra::Model::HasColumns
 
     def set(from_json : JSON::Any)
       set(from_json.as_h)
+    end
+
+    private def column_to_db(column_name : String, value) : ::Lustra::SQL::Any
+      case column_name
+      {% for name, settings in COLUMNS %}
+        when {{ settings[:db_column_name] }}
+          {% converter = Lustra::Model::Converter::CONVERTERS[settings[:converter]] %}
+          {{ converter }}.to_db({{ converter }}.to_column(value))
+      {% end %}
+      else
+        super
+      end
     end
 
     # Generate the hash for an update request (like during save).
