@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- `update_column` and `update_columns` now apply column converters before writing to the database, including Crystal collections assigned to `JSON::Any` columns, while continuing to skip validations, callbacks, and timestamp updates.
 - `count` now removes unnecessary ordering from a query copy, avoiding extra database sorts while preserving ordering for limits, offsets, and `DISTINCT ON`.
 - Named window declarations now quote their identifiers, supporting reserved words and mixed-case names.
 - `exists?` now returns `false` for queries with `LIMIT 0`.
