@@ -33,17 +33,38 @@ module Lustra::Model::Relations::BelongsToMacro
       column {{ type_key.id }} : {{ nilable ? String? : String }}, presence: {{ nilable }}
     {% end %}
     getter _cached_{{ method_name }} : {{ relation_type }}?
+    @_bt_pending_{{ method_name }} = false
+
+    private def _bt_check_cached_{{ method_name }}
+      if cached = @_cached_{{ method_name }}
+        if cached.persisted? && !@_bt_pending_{{ method_name }}
+          matches = @{{ foreign_key.id }}_column.value(nil) == cached.__pkey__
+          {% if polymorphic %}
+            matches &&= @{{ type_key.id }}_column.value(nil) == cached.class.name
+          {% elsif polymorphic_type %}
+            matches &&= @{{ fixed_type_key.id }}_column.value(nil) == {{ polymorphic_type }}
+          {% end %}
+
+          unless matches
+            @_cached_{{ method_name }} = nil
+            @cache = nil
+          end
+        end
+      end
+    end
 
     def invalidate_caching
       previous_def
 
       @_cached_{{ method_name }} = nil
+      @_bt_pending_{{ method_name }} = false
 
       self
     end
 
     # The method {{ method_name }} is a `belongs_to` relation to {{ relation_type }}
     def {{ method_name }} : {{ relation_type_nilable }}
+      _bt_check_cached_{{ method_name }}
       if cached = @_cached_{{ method_name }}
         cached
       else
@@ -125,7 +146,11 @@ module Lustra::Model::Relations::BelongsToMacro
           end
 
           @_cached_{{ method_name }} = model
+          @_bt_pending_{{ method_name }} = !model.persisted?
         else
+          @_cached_{{ method_name }} = nil
+          @_bt_pending_{{ method_name }} = false
+          @cache = nil
           @{{ foreign_key.id }}_column.value = nil
           {% if polymorphic %}
             @{{ type_key.id }}_column.value = nil
@@ -148,17 +173,20 @@ module Lustra::Model::Relations::BelongsToMacro
         end
 
         @_cached_{{ method_name }} = model
+        @_bt_pending_{{ method_name }} = !model.persisted?
       end
     {% end %}
 
     # :nodoc:
     # save the belongs_to model first if needed
     def _bt_save_{{ method_name }}
+      _bt_check_cached_{{ method_name }}
       c = @_cached_{{ method_name }}
 
       return if c.nil?
 
       if c.persisted?
+        @_bt_pending_{{ method_name }} = false
         @{{ foreign_key.id }}_column.value = c.__pkey__
         {% if polymorphic %}
           @{{ type_key.id }}_column.value = c.class.name
@@ -167,6 +195,7 @@ module Lustra::Model::Relations::BelongsToMacro
         {% end %}
       else
         if c.save
+          @_bt_pending_{{ method_name }} = false
           @{{ foreign_key.id }}_column.value = c.__pkey__
           {% if polymorphic %}
             @{{ type_key.id }}_column.value = c.class.name

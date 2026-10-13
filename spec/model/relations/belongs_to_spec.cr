@@ -15,6 +15,61 @@ module BelongsToSpec
       end
     end
 
+    it "refreshes a cached parent after update_column changes the foreign key" do
+      temporary do
+        reinit_example_models
+
+        original_user = User.create!(first_name: "Original")
+        new_user = User.create!(first_name: "New")
+        post = Post.create!(user_id: original_user.id, title: "Post").reload
+        post.user.id.should eq(original_user.id)
+
+        post.update_column(:user_id, new_user.id)
+
+        Post.find!(post.id).user_id.should eq(new_user.id)
+        post.user.id.should eq(new_user.id)
+      end
+    end
+
+    it "preserves a foreign key changed by update_columns when saving another attribute" do
+      temporary do
+        reinit_example_models
+
+        original_user = User.create!(first_name: "Original")
+        new_user = User.create!(first_name: "New")
+        post = Post.create!(user_id: original_user.id, title: "Post").reload
+        post.user.id.should eq(original_user.id)
+
+        post.update_columns(user_id: new_user.id)
+        Post.find!(post.id).user_id.should eq(new_user.id)
+
+        post.title = "Updated post"
+        post.save!
+
+        persisted_post = Post.find!(post.id)
+        persisted_post.title.should eq("Updated post")
+        persisted_post.user_id.should eq(new_user.id)
+      end
+    end
+
+    it "refreshes an eager-loaded parent after assigning another foreign key" do
+      temporary do
+        reinit_example_models
+
+        original_user = User.create!(first_name: "Original")
+        new_user = User.create!(first_name: "New")
+        post = Post.create!(user_id: original_user.id, title: "Post")
+        post = Post.query.with_user.find!(post.id)
+        post.user.id.should eq(original_user.id)
+
+        post.user_id = new_user.id
+
+        post.user.id.should eq(new_user.id)
+        post.save!
+        Post.find!(post.id).user_id.should eq(new_user.id)
+      end
+    end
+
     it "throw error if not found" do
       temporary do
         reinit_example_models
@@ -189,6 +244,36 @@ module BelongsToSpec
   end
 
   describe("belongs_to relation (nilable)") do
+    it "clears a cached parent when the association is assigned nil" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!(first_name: "User")
+        post = PostWithOptionalUser.create!(user_id: user.id, title: "Post").reload
+        post.user.not_nil!.id.should eq(user.id)
+
+        post.user = nil
+
+        post.user_id.should be_nil
+        post.user.should be_nil
+      end
+    end
+
+    it "preserves a nil association when saving after its parent was cached" do
+      temporary do
+        reinit_example_models
+
+        user = User.create!(first_name: "User")
+        post = PostWithOptionalUser.create!(user_id: user.id, title: "Post").reload
+        post.user.not_nil!.id.should eq(user.id)
+
+        post.user = nil
+        post.save!
+
+        PostWithOptionalUser.find!(post.id).user_id.should be_nil
+      end
+    end
+
     it "access" do
       temporary do
         reinit_example_models
@@ -201,6 +286,26 @@ module BelongsToSpec
   end
 
   describe("polymorphic belongs_to relation") do
+    it "respects a changed type when parents share the same id" do
+      temporary do
+        reinit_example_models
+
+        employee = Employee.create!(name: "employee")
+        product = Product.create!(name: "product")
+        employee.id.should eq(product.id)
+        picture = Picture.create!(name: "picture", imageable: employee)
+        picture.imageable.should eq(employee)
+        picture.employee.id.should eq(employee.id)
+
+        picture.update_column(:imageable_type, "Product")
+
+        picture.imageable.as(Product).id.should eq(product.id)
+        expect_raises(Lustra::SQL::RecordNotFoundError) { picture.employee }
+        picture.save!
+        Picture.find!(picture.id).imageable_type.should eq("Product")
+      end
+    end
+
     it "assigns an employee parent" do
       temporary do
         reinit_example_models

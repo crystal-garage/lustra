@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Cached `belongs_to` parents now respect changed foreign keys and polymorphic types, and assigning `nil` clears nullable associations without restoring the previous parent on save.
 - `update_column` and `update_columns` now apply column converters before writing to the database, including Crystal collections assigned to `JSON::Any` columns, while continuing to skip validations, callbacks, and timestamp updates.
 - `count` now removes unnecessary ordering from a query copy, avoiding extra database sorts while preserving ordering for limits, offsets, and `DISTINCT ON`.
 - Named window declarations now quote their identifiers, supporting reserved words and mixed-case names.
