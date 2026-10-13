@@ -16,25 +16,7 @@ describe "Lustra::Model::Relations::HasManyThrough" do
         end
       end
 
-      it "can add tags to post using << operator" do
-        temporary do
-          reinit_example_models
-
-          user = User.create!({first_name: "John", last_name: "Doe"})
-          post = Post.create!({title: "Test Post", user_id: user.id})
-          tag1 = Tag.create!({name: "Ruby"})
-          tag2 = Tag.create!({name: "Crystal"})
-
-          post.tags << tag1
-          post.tags << tag2
-
-          post.tags.count.should eq(2)
-          post.tags.map(&.name).should contain("Ruby")
-          post.tags.map(&.name).should contain("Crystal")
-        end
-      end
-
-      it "can add multiple tags at once" do
+      it "adds tags using << and creates their PostTag records" do
         temporary do
           reinit_example_models
 
@@ -52,28 +34,11 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           post.tags.map(&.name).should contain("Ruby")
           post.tags.map(&.name).should contain("Crystal")
           post.tags.map(&.name).should contain("Programming")
-        end
-      end
 
-      it "creates PostTag records when adding tags" do
-        temporary do
-          reinit_example_models
-
-          user = User.create!({first_name: "John", last_name: "Doe"})
-          post = Post.create!({title: "Test Post", user_id: user.id})
-          tag1 = Tag.create!({name: "Ruby"})
-          tag2 = Tag.create!({name: "Crystal"})
-
-          post.tags << tag1
-          post.tags << tag2
-
-          PostTag.query.count.should eq(2)
-
-          post_tag1 = PostTag.query.find_by!({post_id: post.id, tag_id: tag1.id})
-          post_tag2 = PostTag.query.find_by!({post_id: post.id, tag_id: tag2.id})
-
-          post_tag1.should_not be_nil
-          post_tag2.should_not be_nil
+          PostTag.query.count.should eq(3)
+          {tag1, tag2, tag3}.each do |tag|
+            PostTag.query.find_by({post_id: post.id, tag_id: tag.id}).should_not be_nil
+          end
         end
       end
 
