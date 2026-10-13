@@ -31,7 +31,7 @@ module Lustra::SQL::Query::Pluck
   def pluck_col(field : Lustra::SQL::Symbolic, type : T.class) : Array(T) forall T
     field = Lustra::SQL.escape(field) if field.is_a?(Symbol)
 
-    pluck_rows(field) { |rs| rs.read(T) }
+    pluck_rows(field, &.read(T))
   end
 
   # Select specifics columns and return an array of Tuple(*Lustra::SQL::Any) containing the columns in the order of the selected
