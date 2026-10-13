@@ -24,41 +24,14 @@ module Lustra::SQL::Query::Pluck
   def pluck_col(field : Lustra::SQL::Symbolic) : Array(Lustra::SQL::Any)
     field = Lustra::SQL.escape(field) if field.is_a?(Symbol)
 
-    sql = dup.clear_before_query_triggers.clear_select.select(field).to_sql
-
-    Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
-      rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
-
-      o = [] of Lustra::SQL::Any
-
-      while rs.move_next
-        o << rs.read.as(Lustra::SQL::Any)
-      end
-      o
-    ensure
-      rs.try &.close
-    end
+    pluck_rows(field) { |rs| rs.read.as(Lustra::SQL::Any) }
   end
 
   # :ditto:
   def pluck_col(field : Lustra::SQL::Symbolic, type : T.class) : Array(T) forall T
     field = Lustra::SQL.escape(field) if field.is_a?(Symbol)
 
-    sql = dup.clear_before_query_triggers.clear_select.select(field).to_sql
-
-    Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
-      rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
-
-      o = [] of T
-
-      while rs.move_next
-        o << rs.read(T)
-      end
-
-      o
-    ensure
-      rs.try &.close
-    end
+    pluck_rows(field) { |rs| rs.read(T) }
   end
 
   # Select specifics columns and return an array of Tuple(*Lustra::SQL::Any) containing the columns in the order of the selected
@@ -76,21 +49,10 @@ module Lustra::SQL::Query::Pluck
   # :ditto:
   def pluck(fields : Tuple(*T)) forall T
     select_clause = fields.join(", ") { |f| f.is_a?(Symbol) ? Lustra::SQL.escape(f) : f.to_s }
-    sql = dup.clear_before_query_triggers.clear_select.select(select_clause).to_sql
-
-    Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
-      rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
-
+    pluck_rows(select_clause) do |rs|
       {% begin %}
-        o = [] of Tuple({% for t in T %}Lustra::SQL::Any,{% end %})
-
-        while rs.move_next
-          o << { {% for t in T %} rs.read.as(Lustra::SQL::Any), {% end %} }
-        end
-        o
+        { {% for t in T %} rs.read.as(Lustra::SQL::Any), {% end %} }
       {% end %}
-    ensure
-      rs.try &.close
     end
   end
 
@@ -100,19 +62,25 @@ module Lustra::SQL::Query::Pluck
   # User.query.pluck(id: Int64, "UPPER(last_name)": String).each do #...
   # ```
   def pluck(**fields : **T) forall T
-    sql = dup.clear_before_query_triggers.clear_select.select(fields.keys.join(", ")).to_sql
+    pluck_rows(fields.keys.join(", ")) do |rs|
+      {% begin %}
+        { {% for k, v in T %} rs.read({{ v.instance }}), {% end %} }
+      {% end %}
+    end
+  end
+
+  private def pluck_rows(select_clause, & : DB::ResultSet -> T) : Array(T) forall T
+    sql = dup.clear_before_query_triggers.clear_select.select(select_clause).to_sql
 
     Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
 
-      {% begin %}
-        o = [] of Tuple({% for k, v in T %}{{ v.instance }},{% end %})
+      o = [] of T
 
-        while rs.move_next
-          o << { {% for k, v in T %} rs.read({{ v.instance }}), {% end %}}
-        end
-        o
-      {% end %}
+      while rs.move_next
+        o << yield rs
+      end
+      o
     ensure
       rs.try &.close
     end
