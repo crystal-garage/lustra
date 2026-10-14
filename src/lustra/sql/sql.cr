@@ -61,14 +61,18 @@ module Lustra
     include Lustra::SQL::Logger
     include Lustra::SQL::Transaction
 
-    alias Any = Array(PG::BoolArray) | Array(PG::CharArray) | Array(PG::Float32Array) |
-                Array(PG::Float64Array) | Array(PG::Int16Array) | Array(PG::Int32Array) |
-                Array(PG::Int64Array) | Array(PG::StringArray) | Array(PG::TimeArray) |
-                Array(PG::UUIDArray) | Array(PG::NumericArray) |
-                Bool | Char | Float32 | Float64 | Int8 | Int16 | Int32 | Int64 | BigDecimal | JSON::Any | JSON::PullParser | PG::Geo::Box | PG::Geo::Circle |
-                PG::Geo::Line | PG::Geo::LineSegment | PG::Geo::Path | PG::Geo::Point |
-                PG::Geo::Polygon | PG::Numeric | PG::Interval | Slice(UInt8) | String | Time |
-                UInt8 | UInt16 | UInt32 | UInt64 | UUID | ::Crypto::Bcrypt::Password |
+    alias Any = Bool | Char |
+                Int8 | Int16 | Int32 | Int64 | UInt8 | UInt16 | UInt32 | UInt64 |
+                Float32 | Float64 | BigDecimal | PG::Numeric |
+                String | Time | UUID |
+                JSON::Any | JSON::PullParser | PG::Interval | ::Crypto::Bcrypt::Password |
+                PG::Geo::Point | PG::Geo::Line | PG::Geo::LineSegment |
+                PG::Geo::Box | PG::Geo::Circle | PG::Geo::Path | PG::Geo::Polygon |
+                Slice(UInt8) |
+                Array(PG::BoolArray) | Array(PG::CharArray) |
+                Array(PG::Int16Array) | Array(PG::Int32Array) | Array(PG::Int64Array) |
+                Array(PG::Float32Array) | Array(PG::Float64Array) | Array(PG::NumericArray) |
+                Array(PG::StringArray) | Array(PG::TimeArray) | Array(PG::UUIDArray) |
                 Lustra::Expression::UnsafeSql | Lustra::Expression::Literal?
 
     alias Symbolic = String | Symbol
