@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Through-association ordering now recognizes quoted aliases containing `AS`.
 - Automatic through-association ordering now reports duplicate selected column names with guidance to use unique aliases.
 - Through-association ordering now recognizes unquoted target wildcards such as `categories.*`.
 - `pluck` and `pluck_col` now preserve ordering and pagination on implicitly distinct through associations.

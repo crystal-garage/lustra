@@ -707,6 +707,41 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    {"length as value", %(length "quoted" as value)}.each do |name|
+      it "orders and paginates through associations by the quoted alias #{name}" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          alpha = Category.create!(name: "Alpha")
+          zulu = Category.create!(name: "Zulu")
+          2.times { Post.create!(title: "Post", user_id: user.id, category_id: alpha.id) }
+          Post.create!(title: "Another", user_id: user.id, category_id: zulu.id)
+
+          column_alias = Lustra::SQL.escape(name)
+          categories = user.categories.select("LENGTH(CAST(categories.name AS TEXT)) AS #{column_alias}")
+            .order_by(column_alias, :desc).order_by("categories.id")
+
+          categories.count.should eq(2)
+          first_page = categories.dup.paginate(1, 1)
+          first_page.total_entries.should eq(2)
+          records = first_page.to_a(fetch_columns: true)
+          records.map(&.id).should eq([alpha.id])
+          records.first.attributes[name].should eq(5)
+          categories.dup.paginate(2, 1).map(&.id).should eq([zulu.id])
+        end
+      end
+    end
+
+    it "rejects duplicate quoted aliases containing AS" do
+      categories = User.new({id: 1_i64}).categories
+        .select(%(LENGTH(categories.name) AS "length as value"), %(LENGTH(posts.title) AS "length as value"))
+        .order_by("categories.name").order_by("categories.id")
+
+      expect_raises(Lustra::SQL::QueryBuildingError, "Column 'length as value' is selected more than once") do
+        categories.to_sql
+      end
+    end
+
     {"raw SQL", "structured column"}.each do |selection|
       it "paginates unique self-referential targets ordered by a computed alias selected as #{selection}" do
         temporary do

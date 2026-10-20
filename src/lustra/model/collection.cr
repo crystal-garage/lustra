@@ -382,8 +382,13 @@ module Lustra::Model
     private def raw_order_alias(value : SQL::Selectable) : String?
       return unless value.is_a?(String)
 
-      if position = value.downcase.rindex(" as ")
-        value[(position + 4)..].strip
+      sql = value.downcase
+      offset = 0
+      while position = sql.index(" as ", offset)
+        column_alias = value[(position + 4)..].strip
+        return column_alias if output_column_name(column_alias)
+
+        offset = position + 4
       end
     end
 
