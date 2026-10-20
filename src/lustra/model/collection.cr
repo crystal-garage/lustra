@@ -218,6 +218,9 @@ module Lustra::Model
     property? autosave : Bool = false
 
     # :nodoc:
+    property? implicit_through_distinct : Bool = false
+
+    # :nodoc:
     def initialize(
       @distinct_value = nil,
       @cte = {} of String => Lustra::SQL::SelectBuilder | String,
@@ -250,10 +253,51 @@ module Lustra::Model
       copy.parent_model = parent_model
       copy.association_name = association_name
       copy.autosave = autosave?
+      copy.implicit_through_distinct = implicit_through_distinct?
       if @polymorphic && (polymorphic_key = @polymorphic_key) && (polymorphic_scope = @polymorphic_scope)
         copy.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
       end
       copy
+    end
+
+    def distinct(on : String? = "")
+      @implicit_through_distinct = false
+      super
+    end
+
+    protected def print_distinct
+      if implicit_through_distinct? && (key = @distinct_value) && !@order_bys.empty?
+        target_columns_only = @order_bys.all? do |order|
+          {% begin %}
+            {% if T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
+              false
+            {% else %}
+              case order.op
+              {% for _, column in T::COLUMNS %}
+                {% name = column[:db_column_name] %}
+              when "#{T.table}." + {{ name }}, "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
+                true
+              when {{ name }}, SQL.escape({{ name }})
+                @columns.all? do |selected|
+                  selected.value == "#{SQL.escape(T.table)}.*" ||
+                    (!selected.var.nil? && selected.var != {{ name }} && selected.var != SQL.escape({{ name }}))
+                end
+              {% end %}
+              else
+                false
+              end
+            {% end %}
+          {% end %}
+        end
+
+        if target_columns_only
+          # Target columns are constant for each primary key, so including them
+          # preserves target identity while matching the requested ORDER BY.
+          return "DISTINCT ON (#{(@order_bys.map(&.op) + [key]).uniq.join(", ")}) "
+        end
+      end
+
+      super
     end
 
     protected setter eager_load_triggers : Array(Lustra::SQL::SelectBuilder -> Nil)

@@ -656,6 +656,51 @@ describe "Lustra::Model::Relations::HasManyThrough" do
   # Deduplicate by target identity, not by every selected column.
   # These cases guard against replacing DISTINCT ON with whole-row DISTINCT.
   context "target identity and distinctness" do
+    {"categories.name", %("categories"."name"), :name}.each do |order_column|
+      it "paginates unique targets ordered by a non-primary column before their primary key using #{order_column}" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "Jane")
+          first_category = Category.create!(name: "Alpha")
+          second_category = Category.create!(name: "Zulu")
+          third_category = Category.create!(name: "Zulu")
+
+          Post.create!(title: "Alpha post", user_id: user.id, category_id: first_category.id)
+          2.times { Post.create!(title: "Zulu post", user_id: user.id, category_id: second_category.id) }
+          Post.create!(title: "Another Zulu post", user_id: user.id, category_id: third_category.id)
+
+          categories = user.categories.with_posts.with_users
+            .order_by(order_column, :desc)
+            .order_by("categories.id", :asc)
+
+          first_page = categories.dup.paginate(1, 2)
+          first_page.total_entries.should eq(3)
+          first_page.total_pages.should eq(2)
+          first_page.next_page.should eq(2)
+
+          records = first_page.to_a
+          records.map(&.id).should eq([second_category.id, third_category.id])
+          records.map { |category| category.posts.count }.should eq([2, 1])
+          records.each { |category| category.users.map(&.id).should eq([user.id]) }
+
+          second_page = categories.dup.paginate(2, 2)
+          second_page.total_entries.should eq(3)
+          second_page.next_page.should be_nil
+          second_page.map(&.id).should eq([first_category.id])
+
+          categories.dup.clear_distinct.count.should eq(4)
+          categories.dup.distinct.count.should eq(3)
+        end
+      end
+    end
+
+    it "preserves an explicit DISTINCT ON clause when ordering by a target column" do
+      categories = User.new({id: 1_i64}).categories.order_by("categories.name", :desc)
+
+      categories.distinct("categories.id").to_sql.should contain("SELECT DISTINCT ON (categories.id)")
+    end
+
     it "allows duplicate targets after clearing implicit or explicit distinctness" do
       temporary do
         reinit_example_models
