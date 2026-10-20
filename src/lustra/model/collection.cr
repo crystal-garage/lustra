@@ -397,8 +397,7 @@ module Lustra::Model
 
       @columns.any? do |selected|
         if column_alias = selected.var
-          next false unless column_alias.to_s == SQL.escape(name) ||
-                            (unquoted_order_identifier?(name) && column_alias.to_s.downcase == name)
+          next false unless output_column_name(column_alias.to_s) == name
           next true if expression.nil?
         end
 
