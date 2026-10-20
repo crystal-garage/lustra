@@ -277,18 +277,18 @@ module Lustra::Model
               case order.op
               {% for _, column in T::COLUMNS %}
                 {% name = column[:db_column_name] %}
-              when "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
-                projects_order_column?(order.op, {{ name }})
-              {% if name == name.downcase %}
-              when "#{T.table}." + {{ name }}
-                unquoted_order_identifier?(T.table.to_s) && unquoted_order_identifier?({{ name }}) && projects_order_column?(order.op, {{ name }})
-              {% end %}
-              when SQL.escape({{ name }})
-                projects_order_column?(nil, {{ name }})
-              {% if name == name.downcase %}
-              when {{ name }}
-                unquoted_order_identifier?({{ name }}) && projects_order_column?(nil, {{ name }})
-              {% end %}
+                when "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
+                  projects_order_column?(order.op, {{ name }})
+                {% if name == name.downcase %}
+                  when "#{T.table}." + {{ name }}
+                    unquoted_order_identifier?(T.table.to_s) && unquoted_order_identifier?({{ name }}) && projects_order_column?(order.op, {{ name }})
+                {% end %}
+                when SQL.escape({{ name }})
+                  projects_order_column?(nil, {{ name }})
+                {% if name == name.downcase %}
+                  when {{ name }}
+                    unquoted_order_identifier?({{ name }}) && projects_order_column?(nil, {{ name }})
+                {% end %}
               {% end %}
               else
                 false
