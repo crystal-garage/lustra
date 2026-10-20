@@ -265,18 +265,11 @@ module Lustra::Model
       super
     end
 
-    protected def print_distinct
+    def to_sql : String
       if implicit_through_distinct? && (key = @distinct_value) && !@order_bys.empty?
-        # Keep already-valid ordering unchanged, including when this query is
-        # embedded in an outer query whose CTEs are not visible here.
         return super if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
 
-        # Custom sources and shadowing CTEs may return different values for the
-        # same key, so only adapt ordering against the original model table.
-        return super unless @cte.empty? && @froms.size == 1 &&
-                            @froms.first.var.nil? && @froms.first.value == T.full_table_name
-
-        target_columns_only = @order_bys.all? do |order|
+        projected_order_columns = @order_bys.all? do |order|
           {% begin %}
             {% if T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
               false
@@ -284,13 +277,18 @@ module Lustra::Model
               case order.op
               {% for _, column in T::COLUMNS %}
                 {% name = column[:db_column_name] %}
-              when "#{T.table}." + {{ name }}, "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
-                true
-              when {{ name }}, SQL.escape({{ name }})
-                @columns.all? do |selected|
-                  selected.value == "#{SQL.escape(T.table)}.*" ||
-                    (!selected.var.nil? && selected.var != {{ name }} && selected.var != SQL.escape({{ name }}))
-                end
+              when "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
+                projects_order_column?(order.op, {{ name }})
+              {% if name == name.downcase %}
+              when "#{T.table}." + {{ name }}
+                unquoted_order_identifier?(T.table.to_s) && unquoted_order_identifier?({{ name }}) && projects_order_column?(order.op, {{ name }})
+              {% end %}
+              when SQL.escape({{ name }})
+                projects_order_column?(nil, {{ name }})
+              {% if name == name.downcase %}
+              when {{ name }}
+                unquoted_order_identifier?({{ name }}) && projects_order_column?(nil, {{ name }})
+              {% end %}
               {% end %}
               else
                 false
@@ -299,14 +297,52 @@ module Lustra::Model
           {% end %}
         end
 
-        if target_columns_only
-          # Target columns are constant for each primary key, so including them
-          # preserves target identity while matching the requested ORDER BY.
-          return "DISTINCT ON (#{(@order_bys.map(&.op) + [key]).uniq.join(", ")}) "
+        if projected_order_columns
+          # Choose one row per target before applying the requested result order
+          # and pagination. Keep DISTINCT ON restricted to the primary key.
+          source = dup.clear_limit.clear_offset
+          source.implicit_through_distinct = false
+          source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + @order_bys)
+
+          return SQL.select.from("(#{source.to_sql}) #{SQL.escape(T.table)}")
+            .order_by(@order_bys.dup).limit(@limit).offset(@offset).to_sql
         end
       end
 
       super
+    end
+
+    private def projects_order_column?(expression : String?, name : String)
+      @columns.any? do |selected|
+        if column_alias = selected.var
+          next false unless column_alias.to_s == SQL.escape(name) ||
+                            (unquoted_order_identifier?(name) && column_alias.to_s.downcase == name)
+          next true if expression.nil?
+        end
+
+        next true if selected.var.nil? && selected.value == "#{SQL.escape(T.table)}.*"
+
+        case value = selected.value
+        when Symbol
+          value.to_s == name
+        when String
+          value == expression || value == SQL.escape(name) ||
+            (unquoted_order_identifier?(name) && value == name) ||
+            (expression.nil? && value == "#{SQL.escape(T.table)}.#{SQL.escape(name)}") ||
+            (expression.nil? && unquoted_order_identifier?(name) && unquoted_order_identifier?(T.table.to_s) && value == "#{T.table}.#{name}")
+        else
+          false
+        end
+      end
+    end
+
+    private def unquoted_order_identifier?(name : String)
+      first = name[0]?
+      return false unless first && (('a' <= first && first <= 'z') || first == '_')
+
+      name.each_char.all? do |char|
+        ('a' <= char && char <= 'z') || ('0' <= char && char <= '9') || char == '_' || char == '$'
+      end
     end
 
     protected setter eager_load_triggers : Array(Lustra::SQL::SelectBuilder -> Nil)

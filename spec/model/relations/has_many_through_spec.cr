@@ -748,6 +748,59 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "preserves target identity with non-primary ordering inside an outer shadowing CTE" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Original")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+        values = "VALUES (#{category.id}, 'Alpha'), (#{category.id}, 'Zulu')"
+        query = Lustra::SQL.select("source.id", "source.name")
+          .with_cte("categories", "SELECT * FROM (#{values}) AS records(id, name)")
+          .from({source: categories})
+
+        query.to_a.map { |row| {row["id"], row["name"]} }.should eq([{category.id, "Alpha"}])
+        query.count.should eq(1)
+      end
+    end
+
+    it "preserves target identity when an unquoted selected alias folds to a target column name" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Original")
+        Post.create!(title: "Alpha", user_id: user.id, category_id: category.id)
+        Post.create!(title: "Zulu", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.clear_select
+          .select(Lustra::SQL::Column.new("categories.id", "id"))
+          .select(Lustra::SQL::Column.new("posts.title", "NAME"))
+          .order_by(:name).order_by("categories.id")
+
+        categories.map { |record| {record.id, record.name} }.should eq([{category.id, "Alpha"}])
+        categories.count.should eq(1)
+      end
+    end
+
+    it "does not rebind qualified ordering to a different selected expression" do
+      categories = User.new({id: 1_i64}).categories.clear_select
+        .select(Lustra::SQL::Column.new("categories.id", "id"))
+        .select(Lustra::SQL::Column.new("posts.title", "name"))
+        .order_by("categories.name").order_by("categories.id")
+
+      categories.to_sql.should start_with(%(SELECT DISTINCT ON ("categories"."id")))
+    end
+
+    it "does not move an unselected ordering column outside its source scope" do
+      categories = User.new({id: 1_i64}).categories.clear_select
+        .select(Lustra::SQL::Column.new("categories.id", "id"))
+        .order_by(:name).order_by("categories.id")
+
+      categories.to_sql.should start_with(%(SELECT DISTINCT ON ("categories"."id")))
+    end
+
     it "allows duplicate targets after clearing implicit or explicit distinctness" do
       temporary do
         reinit_example_models
