@@ -54,6 +54,8 @@ module Lustra
     # :nodoc:
     AGGREGATE_PREFIX = "__lustra_aggregate_"
     # :nodoc:
+    PLUCK_PREFIX = "__lustra_pluck_"
+    # :nodoc:
     QUERY_KEY_ALIAS = "__lustra_query_key"
     # :nodoc:
     QUERY_SOURCE_ALIAS = "__lustra_query_source"

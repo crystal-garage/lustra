@@ -274,9 +274,7 @@ module Lustra::Model
     end
 
     protected def ordered_through_query : SQL::SelectQuery?
-      if implicit_through_distinct? && (key = @distinct_value) && !@order_bys.empty?
-        return if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
-
+      if key = through_ordering_key
         projected_order_columns = @order_bys.all? do |order|
           next true if projects_order_alias?(order.op)
 
@@ -324,12 +322,72 @@ module Lustra::Model
       nil
     end
 
-    private def pluck_sql(select_clause) : String
-      if query = ordered_through_query
-        query.select(select_clause).to_sql
-      else
-        super
+    private def through_ordering_key : String?
+      return if @order_bys.empty?
+      return unless implicit_through_distinct? && (key = @distinct_value)
+      return if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
+
+      key
+    end
+
+    private def pluck_sql(fields) : String
+      return super unless key = through_ordering_key
+
+      order_expressions = @order_bys.map do |order|
+        expression = through_pluck_expression(order.op)
+        return super unless expression
+        unaliased_pluck_expression(expression)
       end
+      validate_through_projection!
+
+      # Keep field and sort expressions in the original join scope. The outer
+      # query exposes only requested values after deduplication and ordering.
+      source = dup.clear_before_query_triggers.clear_select.clear_limit.clear_offset
+      source.implicit_through_distinct = false
+      prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
+      columns = [] of String
+      fields.each_with_index do |field, index|
+        column_alias = "#{prefix}_column_#{index}"
+        expression = unaliased_pluck_expression(through_pluck_expression(field) || field)
+        source.select(SQL::Column.new(expression, column_alias))
+        columns << column_alias
+      end
+
+      orders = @order_bys.map_with_index do |order, index|
+        column_alias = "#{prefix}_order_#{index}"
+        source.select(SQL::Column.new(order_expressions[index], column_alias))
+        SQL::Query::OrderBy::Record.new(column_alias, order.dir, order.nulls)
+      end
+      source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
+
+      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{SQL.escape(T.table)}")
+        .order_by(orders).limit(@limit).offset(@offset).to_sql
+    end
+
+    private def unaliased_pluck_expression(expression : String) : String
+      raw_order_column(expression).try(&.value.to_s) || expression
+    end
+
+    private def through_pluck_expression(field : String) : String?
+      if name = output_column_name(field)
+        selected = @columns.find do |column|
+          column_alias = column.var.try(&.to_s) || raw_order_alias(column.value)
+          column_alias && output_column_name(column_alias) == name
+        end
+        return selected.to_sql if selected
+      end
+
+      {% begin %}
+        {% unless T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
+          {% for _, column in T::COLUMNS %}
+            {% name = column[:db_column_name] %}
+            if order_column_sources(nil, {{ name }}).includes?(field)
+              return "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
+            end
+          {% end %}
+        {% end %}
+      {% end %}
+      nil
     end
 
     private def projects_order_alias?(order : String)
@@ -380,13 +438,17 @@ module Lustra::Model
     end
 
     private def raw_order_alias(value : SQL::Selectable) : String?
+      raw_order_column(value).try(&.var.try(&.to_s))
+    end
+
+    private def raw_order_column(value : SQL::Selectable) : SQL::Column?
       return unless value.is_a?(String)
 
       sql = value.downcase
       offset = 0
       while position = sql.index(" as ", offset)
         column_alias = value[(position + 4)..].strip
-        return column_alias if output_column_name(column_alias)
+        return SQL::Column.new(value[0, position].rstrip, column_alias) if output_column_name(column_alias)
 
         offset = position + 4
       end

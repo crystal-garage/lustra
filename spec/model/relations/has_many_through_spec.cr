@@ -693,6 +693,54 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "plucks joined expressions in source scope while preserving target ordering and pagination" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+        categories.pluck_col("posts.title", String).should eq(["First", "Last"])
+        categories.pluck("categories.id", "UPPER(posts.title) AS title")
+          .should eq([{alpha.id, "FIRST"}, {zulu.id, "LAST"}])
+        categories.dup.limit(1).offset(1).pluck("categories.id", "posts.title")
+          .should eq([{zulu.id, "Last"}])
+        categories.pluck("categories.id": Int64, "LOWER(posts.title)": String)
+          .should eq([{alpha.id, "first"}, {zulu.id, "last"}])
+        categories.dup.group_by("categories.id").pluck("categories.id": Int64, "COUNT(posts.id)": Int64)
+          .should eq([{alpha.id, 1_i64}, {zulu.id, 2_i64}])
+
+        Lustra::SQL.execute("CREATE TEMP SEQUENCE through_pluck_sequence")
+        categories.pluck_col("nextval('through_pluck_sequence')", Int64).uniq.size.should eq(2)
+        positions = categories.dup.select("nextval('through_pluck_sequence') AS position")
+          .clear_order_bys.order_by(:position, :desc).order_by("categories.id")
+          .pluck(position: Int64, "POSITION": Int64)
+        positions.each { |first, second| first.should eq(second) }
+        positions.map(&.[0]).should eq(positions.map(&.[0]).sort!.reverse!)
+      end
+    end
+
+    it "plucks target columns omitted by a partial selection without losing ordering" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.clear_select.select("categories.name")
+          .order_by("categories.name", :desc).order_by("categories.id")
+        categories.pluck_col("categories.id", Int64).should eq([zulu.id, alpha.id])
+        categories.pluck_col(:id).should eq([zulu.id, alpha.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name).should eq([{alpha.id, "Alpha"}])
+        categories.columns.map(&.value).should eq(["categories.name"])
+      end
+    end
+
     it "plucks multiple target columns and expressions from ordered through associations" do
       temporary do
         reinit_example_models
