@@ -656,6 +656,37 @@ describe "Lustra::Model::Relations::HasManyThrough" do
   # Deduplicate by target identity, not by every selected column.
   # These cases guard against replacing DISTINCT ON with whole-row DISTINCT.
   context "target identity and distinctness" do
+    {"raw SQL", "structured column"}.each do |selection|
+      it "paginates unique self-referential targets ordered by a computed alias selected as #{selection}" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          low = User.create!(first_name: "Low", posts_count: 1)
+          high = User.create!(first_name: "High", posts_count: 10)
+          [low, high].each do |dependent|
+            Relationship.create!(master_id: dependent.id, dependency_id: user.id)
+          end
+
+          dependents = user.dependents.with_dependencies.group_by("users.id")
+          if selection == "raw SQL"
+            dependents.select("COALESCE(users.posts_count, 0) AS dependents_count")
+          else
+            dependents.select(Lustra::SQL::Column.new("COALESCE(users.posts_count, 0)", "dependents_count"))
+          end
+          dependents.order_by("dependents_count", :desc).order_by("users.id")
+
+          dependents.count.should eq(2)
+          first_page = dependents.dup.paginate(1, 1)
+          first_page.total_entries.should eq(2)
+          records = first_page.to_a(fetch_columns: true)
+          records.map(&.id).should eq([high.id])
+          records.first.attributes["dependents_count"].should eq(10)
+          records.first.dependencies.map(&.id).should eq([user.id])
+          dependents.dup.paginate(2, 1).map(&.id).should eq([low.id])
+        end
+      end
+    end
+
     {"categories.name", %("categories"."name"), :name}.each do |order_column|
       it "paginates unique targets ordered by a non-primary column before their primary key using #{order_column}" do
         temporary do

@@ -270,6 +270,8 @@ module Lustra::Model
         return super if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
 
         projected_order_columns = @order_bys.all? do |order|
+          next true if projects_order_alias?(order.op)
+
           {% begin %}
             {% if T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
               false
@@ -310,6 +312,30 @@ module Lustra::Model
       end
 
       super
+    end
+
+    private def projects_order_alias?(order : String)
+      if order.starts_with?('"')
+        name = order[1...-1].gsub(%(""), %("))
+        return false unless SQL.escape(name) == order
+      else
+        name = order.downcase
+        return false unless unquoted_order_identifier?(name)
+      end
+
+      @columns.any? do |selected|
+        column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)
+        column_alias == SQL.escape(name) ||
+          (unquoted_order_identifier?(name) && column_alias.try(&.downcase) == name)
+      end
+    end
+
+    private def raw_order_alias(value : SQL::Selectable) : String?
+      return unless value.is_a?(String)
+
+      if position = value.downcase.rindex(" as ")
+        value[(position + 4)..].strip
+      end
     end
 
     private def projects_order_column?(expression : String?, name : String)
