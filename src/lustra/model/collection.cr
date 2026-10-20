@@ -267,6 +267,11 @@ module Lustra::Model
 
     protected def print_distinct
       if implicit_through_distinct? && (key = @distinct_value) && !@order_bys.empty?
+        # Custom sources and shadowing CTEs may return different values for the
+        # same key, so only adapt ordering against the original model table.
+        return super unless @cte.empty? && @froms.size == 1 &&
+                            @froms.first.var.nil? && @froms.first.value == T.full_table_name
+
         target_columns_only = @order_bys.all? do |order|
           {% begin %}
             {% if T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}

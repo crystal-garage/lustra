@@ -701,6 +701,33 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       categories.distinct("categories.id").to_sql.should contain("SELECT DISTINCT ON (categories.id)")
     end
 
+    {"derived table", "CTE", "CTE column list"}.each do |source_kind|
+      it "preserves target identity when a #{source_kind} replaces the model table" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          category = Category.create!(name: "Original")
+          Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+          values = "VALUES (#{category.id}, 'Alpha'), (#{category.id}, 'Zulu')"
+          categories = user.categories
+          case source_kind
+          when "derived table"
+            categories.clear_from.from("(#{values}) AS categories(id, name)")
+          when "CTE"
+            categories.with_cte("categories", "SELECT * FROM (#{values}) AS source(id, name)")
+          when "CTE column list"
+            categories.with_cte("categories(id, name)", values)
+          end
+          categories.order_by("categories.id").order_by("categories.name")
+
+          categories.map { |record| {record.id, record.name} }.should eq([{category.id, "Alpha"}])
+          categories.count.should eq(1)
+          categories.dup.clear_distinct.count.should eq(2)
+        end
+      end
+    end
+
     it "allows duplicate targets after clearing implicit or explicit distinctness" do
       temporary do
         reinit_example_models
