@@ -313,6 +313,8 @@ module Lustra::Model
     end
 
     private def projects_order_column?(expression : String?, name : String)
+      sources = order_column_sources(expression, name)
+
       @columns.any? do |selected|
         if column_alias = selected.var
           next false unless column_alias.to_s == SQL.escape(name) ||
@@ -326,14 +328,26 @@ module Lustra::Model
         when Symbol
           value.to_s == name
         when String
-          value == expression || value == SQL.escape(name) ||
-            (unquoted_order_identifier?(name) && value == name) ||
-            (expression.nil? && value == "#{SQL.escape(T.table)}.#{SQL.escape(name)}") ||
-            (expression.nil? && unquoted_order_identifier?(name) && unquoted_order_identifier?(T.table.to_s) && value == "#{T.table}.#{name}")
+          sources.includes?(value)
         else
           false
         end
       end
+    end
+
+    private def order_column_sources(expression : String?, name : String) : Array(String)
+      sources = [SQL.escape(name)]
+      unquoted_name = unquoted_order_identifier?(name)
+      sources << name if unquoted_name
+
+      if expression
+        sources << expression
+      else
+        sources << "#{SQL.escape(T.table)}.#{SQL.escape(name)}"
+        sources << "#{T.table}.#{name}" if unquoted_name && unquoted_order_identifier?(T.table.to_s)
+      end
+
+      sources
     end
 
     private def unquoted_order_identifier?(name : String)
