@@ -656,6 +656,38 @@ describe "Lustra::Model::Relations::HasManyThrough" do
   # Deduplicate by target identity, not by every selected column.
   # These cases guard against replacing DISTINCT ON with whole-row DISTINCT.
   context "target identity and distinctness" do
+    it "plucks target IDs without discarding columns needed for ordering and pagination" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Another", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.order_by("categories.name", :desc).order_by("categories.id")
+        first_page = categories.dup.limit(1)
+        first_page.pluck_col("categories.id", Int64).should eq([zulu.id])
+        first_page.pluck_col(:id).should eq([zulu.id])
+        categories.dup.limit(1).offset(1).pluck_col(:id).should eq([alpha.id])
+        categories.map(&.id).should eq([zulu.id, alpha.id])
+      end
+    end
+
+    it "plucks multiple target columns and expressions from ordered through associations" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        2.times { Post.create!(title: "Post", user_id: user.id, category_id: category.id) }
+
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+        categories.pluck("categories.id", "categories.name").should eq([{category.id, "Alpha"}])
+        categories.pluck(:id, :name).should eq([{category.id, "Alpha"}])
+        categories.pluck(id: Int64, "UPPER(categories.name)": String).should eq([{category.id, "ALPHA"}])
+      end
+    end
+
     {"raw SQL", "structured column"}.each do |selection|
       it "paginates unique self-referential targets ordered by a computed alias selected as #{selection}" do
         temporary do
@@ -676,6 +708,8 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           dependents.order_by("dependents_count", :desc).order_by("users.id")
 
           dependents.count.should eq(2)
+          dependents.dup.limit(1).pluck_col(:id).should eq([high.id])
+          dependents.dup.limit(1).pluck_col(:dependents_count).should eq([10])
           first_page = dependents.dup.paginate(1, 1)
           first_page.total_entries.should eq(2)
           records = first_page.to_a(fetch_columns: true)

@@ -266,8 +266,16 @@ module Lustra::Model
     end
 
     def to_sql : String
+      if query = ordered_through_query
+        query.to_sql
+      else
+        super
+      end
+    end
+
+    protected def ordered_through_query : SQL::SelectQuery?
       if implicit_through_distinct? && (key = @distinct_value) && !@order_bys.empty?
-        return super if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
+        return if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
 
         projected_order_columns = @order_bys.all? do |order|
           next true if projects_order_alias?(order.op)
@@ -307,11 +315,19 @@ module Lustra::Model
           source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + @order_bys)
 
           return SQL.select.from("(#{source.to_sql}) #{SQL.escape(T.table)}")
-            .order_by(@order_bys.dup).limit(@limit).offset(@offset).to_sql
+            .order_by(@order_bys.dup).limit(@limit).offset(@offset)
         end
       end
 
-      super
+      nil
+    end
+
+    private def pluck_sql(select_clause) : String
+      if query = ordered_through_query
+        query.select(select_clause).to_sql
+      else
+        super
+      end
     end
 
     private def projects_order_alias?(order : String)

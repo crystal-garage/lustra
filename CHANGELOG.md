@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- `pluck` and `pluck_col` now preserve ordering and pagination on implicitly distinct through associations.
 - Through associations now support ordering by target columns and selected aliases before the primary key, preserving deduplication and pagination.
 - Built-in aggregates now accept `Lustra::SQL::Column` for source expressions in wrapped queries, except with plain `DISTINCT`.
 - Reused eager-loaded model queries now refresh their association caches on each execution.

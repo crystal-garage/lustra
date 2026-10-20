@@ -70,7 +70,7 @@ module Lustra::SQL::Query::Pluck
   end
 
   private def pluck_rows(select_clause, & : DB::ResultSet -> T) : Array(T) forall T
-    sql = dup.clear_before_query_triggers.clear_select.select(select_clause).to_sql
+    sql = pluck_sql(select_clause)
 
     Lustra::SQL::ConnectionPool.with_connection(connection_name) do |cnx|
       rs = Lustra::SQL.log_query(sql) { cnx.query(sql) }
@@ -84,5 +84,9 @@ module Lustra::SQL::Query::Pluck
     ensure
       rs.try &.close
     end
+  end
+
+  private def pluck_sql(select_clause) : String
+    dup.clear_before_query_triggers.clear_select.select(select_clause).to_sql
   end
 end
