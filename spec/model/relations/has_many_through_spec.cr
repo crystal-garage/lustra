@@ -681,8 +681,8 @@ describe "Lustra::Model::Relations::HasManyThrough" do
 
           records = first_page.to_a
           records.map(&.id).should eq([second_category.id, third_category.id])
-          records.map { |category| category.posts.count }.should eq([2, 1])
-          records.each { |category| category.users.map(&.id).should eq([user.id]) }
+          records.map(&.posts.count).should eq([2, 1])
+          records.each(&.users.map(&.id).should(eq([user.id])))
 
           second_page = categories.dup.paginate(2, 2)
           second_page.total_entries.should eq(3)
