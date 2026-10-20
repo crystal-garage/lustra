@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Through-association ordering now recognizes unquoted target wildcards such as `categories.*`.
 - `pluck` and `pluck_col` now preserve ordering and pagination on implicitly distinct through associations.
 - Through associations now support ordering by target columns and selected aliases before the primary key, preserving deduplication and pagination.
 - Built-in aggregates now accept `Lustra::SQL::Column` for source expressions in wrapped queries, except with plain `DISTINCT`.

@@ -356,6 +356,8 @@ module Lustra::Model
 
     private def projects_order_column?(expression : String?, name : String)
       sources = order_column_sources(expression, name)
+      wildcards = ["#{SQL.escape(T.table)}.*"]
+      wildcards << "#{T.table}.*" if unquoted_order_identifier?(T.table.to_s)
 
       @columns.any? do |selected|
         if column_alias = selected.var
@@ -364,7 +366,7 @@ module Lustra::Model
           next true if expression.nil?
         end
 
-        next true if selected.var.nil? && selected.value == "#{SQL.escape(T.table)}.*"
+        next true if selected.var.nil? && wildcards.includes?(selected.value)
 
         case value = selected.value
         when Symbol

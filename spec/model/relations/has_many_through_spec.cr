@@ -656,6 +656,25 @@ describe "Lustra::Model::Relations::HasManyThrough" do
   # Deduplicate by target identity, not by every selected column.
   # These cases guard against replacing DISTINCT ON with whole-row DISTINCT.
   context "target identity and distinctness" do
+    it "orders and paginates unique targets selected with an unquoted table wildcard" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Another", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.clear_select.select("categories.*")
+          .order_by("categories.name", :desc).order_by("categories.id")
+
+        categories.count.should eq(2)
+        categories.map(&.id).should eq([zulu.id, alpha.id])
+        categories.dup.paginate(1, 1).map(&.id).should eq([zulu.id])
+        categories.dup.paginate(2, 1).map(&.id).should eq([alpha.id])
+      end
+    end
+
     it "plucks target IDs without discarding columns needed for ordering and pagination" do
       temporary do
         reinit_example_models
