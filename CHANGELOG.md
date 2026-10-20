@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Through associations retain their original deduplication when ordering starts with the primary key, including inside queries with shadowing CTEs.
 - Through-association ordering preserves deduplication by primary key for custom sources and CTE queries.
 - Through associations now support ordering by target columns before the primary key while preserving deduplication, pagination, and eager loading.
 - Built-in aggregates now accept `Lustra::SQL::Column` for source expressions in wrapped queries, except with plain `DISTINCT`.

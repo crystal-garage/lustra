@@ -719,12 +719,32 @@ describe "Lustra::Model::Relations::HasManyThrough" do
           when "CTE column list"
             categories.with_cte("categories(id, name)", values)
           end
-          categories.order_by("categories.id").order_by("categories.name")
+          categories.order_by("categories.name").order_by("categories.id")
+          categories.to_sql.should contain(%(DISTINCT ON ("categories"."id")))
+          categories.clear_order_bys.order_by("categories.id").order_by("categories.name")
 
           categories.map { |record| {record.id, record.name} }.should eq([{category.id, "Alpha"}])
           categories.count.should eq(1)
           categories.dup.clear_distinct.count.should eq(2)
         end
+      end
+    end
+
+    it "preserves target identity when an outer CTE shadows the model table" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Original")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.order_by("categories.id").order_by("categories.name")
+        values = "VALUES (#{category.id}, 'Alpha'), (#{category.id}, 'Zulu')"
+        query = Lustra::SQL.select("source.id", "source.name")
+          .with_cte("categories", "SELECT * FROM (#{values}) AS records(id, name)")
+          .from({source: categories})
+
+        query.to_a.map { |row| {row["id"], row["name"]} }.should eq([{category.id, "Alpha"}])
+        query.count.should eq(1)
       end
     end
 

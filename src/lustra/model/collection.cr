@@ -267,6 +267,10 @@ module Lustra::Model
 
     protected def print_distinct
       if implicit_through_distinct? && (key = @distinct_value) && !@order_bys.empty?
+        # Keep already-valid ordering unchanged, including when this query is
+        # embedded in an outer query whose CTEs are not visible here.
+        return super if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
+
         # Custom sources and shadowing CTEs may return different values for the
         # same key, so only adapt ordering against the original model table.
         return super unless @cte.empty? && @froms.size == 1 &&
