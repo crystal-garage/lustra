@@ -868,6 +868,58 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    {"raw SQL", "structured column"}.each do |selection|
+      it "rejects duplicate target output names selected as #{selection}" do
+        categories = User.new({id: 1_i64}).categories
+        if selection == "raw SQL"
+          categories.select("posts.title AS NAME")
+        else
+          categories.select(Lustra::SQL::Column.new("posts.title", %("name")))
+        end
+        categories.order_by("categories.name").order_by("categories.id")
+
+        expect_raises(Lustra::SQL::QueryBuildingError, "Column 'name' is selected more than once; give additional expressions a unique alias.") do
+          categories.to_sql
+        end
+      end
+    end
+
+    it "rejects duplicate output names alongside explicitly selected target columns" do
+      categories = User.new({id: 1_i64}).categories.clear_select
+        .select(:id, :name, "posts.title AS name")
+        .order_by("categories.name").order_by("categories.id")
+
+      expect_raises(Lustra::SQL::QueryBuildingError, "Column 'name' is selected more than once") do
+        categories.to_sql
+      end
+    end
+
+    it "rejects duplicate computed aliases when ordering through associations" do
+      categories = User.new({id: 1_i64}).categories
+        .select("posts.title AS label", "LOWER(posts.title) AS LABEL")
+        .order_by("categories.name").order_by("categories.id")
+
+      expect_raises(Lustra::SQL::QueryBuildingError, "Column 'label' is selected more than once") do
+        categories.to_sql
+      end
+    end
+
+    it "allows a unique alias alongside target columns when ordering through associations" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.select("posts.title AS post_name")
+          .order_by("categories.name").order_by("categories.id")
+
+        record = categories.first!(fetch_columns: true)
+        record.name.should eq("Alpha")
+        record.attributes["post_name"].should eq("Post")
+      end
+    end
+
     it "does not rebind qualified ordering to a different selected expression" do
       categories = User.new({id: 1_i64}).categories.clear_select
         .select(Lustra::SQL::Column.new("categories.id", "id"))

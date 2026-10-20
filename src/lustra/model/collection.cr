@@ -308,6 +308,8 @@ module Lustra::Model
         end
 
         if projected_order_columns
+          validate_through_projection!
+
           # Choose one row per target before applying the requested result order
           # and pagination. Keep DISTINCT ON restricted to the primary key.
           source = dup.clear_limit.clear_offset
@@ -331,18 +333,49 @@ module Lustra::Model
     end
 
     private def projects_order_alias?(order : String)
-      if order.starts_with?('"')
-        name = order[1...-1].gsub(%(""), %("))
-        return false unless SQL.escape(name) == order
-      else
-        name = order.downcase
-        return false unless unquoted_order_identifier?(name)
-      end
+      return false unless name = output_column_name(order)
 
       @columns.any? do |selected|
         column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)
-        column_alias == SQL.escape(name) ||
-          (unquoted_order_identifier?(name) && column_alias.try(&.downcase) == name)
+        column_alias && output_column_name(column_alias) == name
+      end
+    end
+
+    private def output_column_name(order : String) : String?
+      if order.starts_with?('"')
+        name = order[1...-1].gsub(%(""), %("))
+        name if SQL.escape(name) == order
+      else
+        name = order.downcase
+        name if unquoted_order_identifier?(name)
+      end
+    end
+
+    private def validate_through_projection!
+      names = [] of String
+      @columns.each do |selected|
+        if column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)
+          if name = output_column_name(column_alias)
+            names << name
+          end
+        else
+          wildcard = target_wildcard?(selected)
+          {% begin %}
+            {% unless T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
+              {% for _, column in T::COLUMNS %}
+                {% name = column[:db_column_name] %}
+                if wildcard || (selected.value.is_a?(Symbol) && selected.value.to_s == {{ name }}) || order_column_sources(nil, {{ name }}).includes?(selected.value)
+                  names << {{ name }}
+                end
+              {% end %}
+            {% end %}
+          {% end %}
+        end
+      end
+
+      seen = Set(String).new
+      if duplicate = names.find { |name| !seen.add?(name) }
+        raise SQL::QueryBuildingError.new("Column '#{duplicate}' is selected more than once; give additional expressions a unique alias.")
       end
     end
 
@@ -356,8 +389,6 @@ module Lustra::Model
 
     private def projects_order_column?(expression : String?, name : String)
       sources = order_column_sources(expression, name)
-      wildcards = ["#{SQL.escape(T.table)}.*"]
-      wildcards << "#{T.table}.*" if unquoted_order_identifier?(T.table.to_s)
 
       @columns.any? do |selected|
         if column_alias = selected.var
@@ -366,7 +397,7 @@ module Lustra::Model
           next true if expression.nil?
         end
 
-        next true if selected.var.nil? && wildcards.includes?(selected.value)
+        next true if target_wildcard?(selected)
 
         case value = selected.value
         when Symbol
@@ -377,6 +408,13 @@ module Lustra::Model
           false
         end
       end
+    end
+
+    private def target_wildcard?(selected : SQL::Column) : Bool
+      return false unless selected.var.nil?
+
+      selected.value == "#{SQL.escape(T.table)}.*" ||
+        (unquoted_order_identifier?(T.table.to_s) && selected.value == "#{T.table}.*")
     end
 
     private def order_column_sources(expression : String?, name : String) : Array(String)
