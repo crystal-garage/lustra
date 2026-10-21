@@ -1,4 +1,3 @@
-require "pg"
 require "json"
 
 module Lustra::Model::Converter

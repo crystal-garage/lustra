@@ -1,5 +1,4 @@
 require "inflector/core_ext"
-require "pg"
 
 # This module declares all methods and macros related to columns in `Lustra::Model`.
 module Lustra::Model::HasColumns

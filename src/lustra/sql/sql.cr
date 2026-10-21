@@ -1,6 +1,5 @@
 require "../expression/expression"
 
-require "pg"
 require "db"
 require "crypto/bcrypt/password"
 

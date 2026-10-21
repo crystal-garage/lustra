@@ -1,5 +1,3 @@
-require "pg"
-
 module Lustra::SQL::Query::Pluck
   # Ask PostgreSQL for native output names and wildcard column order without
   # executing the query, so inspecting projections cannot run modifying CTEs.
