@@ -350,6 +350,13 @@ module Lustra::Model
       end
       source.implicit_through_distinct = false
       prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
+      source_columns = [] of String
+      if bindings = grouping_columns["bindings"]?
+        bindings.each_with_index do |expression, index|
+          source.select(SQL::Column.new("#{expression}\n"))
+          source_columns << "#{prefix}_group_#{index}"
+        end
+      end
       columns = [] of String
       fields.each_with_index do |field, index|
         column_alias = "#{prefix}_column_#{index}"
@@ -360,13 +367,14 @@ module Lustra::Model
 
       orders = @order_bys.map_with_index do |order, index|
         column_alias = "#{prefix}_order_#{index}"
-        source.select(SQL::Column.new(order_expressions[index], column_alias))
+        source.select(SQL::Column.new("#{order_expressions[index]}\n", column_alias))
         SQL::Query::OrderBy::Record.new(column_alias, order.dir, order.nulls)
       end
       source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
 
-      # Rename leading pluck columns by position so PostgreSQL parses their aliases.
-      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{SQL.escape(T.table)} (#{columns.join(", ")})")
+      # Rename grouping and pluck columns by position; only plucked values escape.
+      source_columns.concat(columns)
+      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{SQL.escape(T.table)} (#{source_columns.join(", ")})")
         .order_by(orders).limit(@limit).offset(@offset).to_sql
     end
 
@@ -437,56 +445,51 @@ module Lustra::Model
       columns = cache["selection"] ||= begin
         selected = [] of String
         selected.concat(through_pluck_wildcard_columns) if @columns.empty?
-        @columns.each do |column|
-          if target_wildcard?(column)
-            selected.concat(through_pluck_wildcard_columns)
+        through_selected_columns.each do |column|
+          expression = column.to_sql
+          if column.var.nil? && (wildcard = through_pluck_wildcard_selection(expression))
+            selected.concat(through_pluck_wildcard_columns(wildcard))
           else
-            split_order_sql_expressions(column.to_sql).each do |expression|
-              value = unaliased_pluck_expression(expression)
-              if reference = through_pluck_column_reference(value)
-                selected << "(#{reference}\n)"
-              else
-                key = "#{SQL.escape(T.table)}.#{SQL.escape(T.__pkey__)}"
-                selected << "(SELECT #{expression}\nWHERE #{key} IS NOT NULL)"
-              end
-            end
+            selected << expression
           end
         end
         selected
       end
-      columns[position - 1]? || raise SQL::QueryBuildingError.new("GROUP BY position #{position} is outside the selected columns.")
-    end
-
-    private def through_pluck_column_reference(expression : String) : String?
-      reader = skip_order_sql_trivia(Char::Reader.new(expression))
-      loop do
-        start = reader.pos
-        if reader.current_char == '"'
-          reader = skip_order_sql_quote(reader)
-        else
-          return if reader.current_char.ascii_number?
-          while reader.has_next? && order_sql_identifier_char?(reader.current_char)
-            reader.next_char
-          end
-          word = expression.byte_slice(start, reader.pos - start).downcase
-          return if {"null", "true", "false"}.includes?(word)
-        end
-        return if reader.pos == start
-        ending = reader.pos
-        reader = skip_order_sql_trivia(reader)
-        return expression.byte_slice(0, ending) unless reader.has_next?
-        unless reader.current_char == '.'
-          return read_order_column(reader, ending).try(&.value.to_s)
-        end
-        reader.next_char
-        reader = skip_order_sql_trivia(reader)
+      expression = columns[position - 1]? || raise SQL::QueryBuildingError.new("GROUP BY position #{position} is outside the selected columns.")
+      bindings = cache["bindings"] ||= [] of String
+      unless index = bindings.index(expression)
+        index = bindings.size
+        bindings << expression
       end
+      (index + 1).to_s
     end
 
-    private def through_pluck_wildcard_columns : Array(String)
+    private def through_pluck_wildcard_selection(expression : String) : String?
+      reader = Char::Reader.new(expression)
+      previous = '\0'
+      while reader.has_next?
+        reader = skip_order_sql_trivia(reader)
+        break unless reader.has_next?
+        if reader.current_char == '*' && previous == '.'
+          ending = reader.pos + 1
+          reader.next_char
+          return expression.byte_slice(0, ending) unless skip_order_sql_trivia(reader).has_next?
+        end
+        previous = reader.current_char
+        skipped = skip_order_sql_fragment(reader)
+        if skipped.pos != reader.pos
+          reader = skipped
+        else
+          reader.next_char
+        end
+      end
+      nil
+    end
+
+    private def through_pluck_wildcard_columns(selection : String = "#{SQL.escape(T.table)}.*") : Array(String)
       # Ask PostgreSQL for wildcard order; model declarations need not match it.
-      through_pluck_column_names("#{SQL.escape(T.table)}.*")
-        .map { |name| "#{SQL.escape(T.table)}.#{SQL.escape(name)}" }
+      through_pluck_column_names(selection)
+        .map { |name| "#{selection[0...-1]}#{SQL.escape(name)}" }
     end
 
     private def through_pluck_column_names(selection : String? = nil) : Array(String)
@@ -524,13 +527,24 @@ module Lustra::Model
       raw_order_column(expression).try(&.value.to_s) || expression
     end
 
+    private def through_selected_columns : Array(SQL::Column)
+      @columns.flat_map do |column|
+        value = column.value
+        if column.var.nil? && value.is_a?(String)
+          split_order_sql_expressions(value).map { |expression| SQL::Column.new(expression) }
+        else
+          [column]
+        end
+      end
+    end
+
     private def through_pluck_expression(field : String) : String?
       if name = output_column_name(field)
-        selected = @columns.find do |column|
+        selected = through_selected_columns.find do |column|
           column_alias = column.var.try(&.to_s) || raw_order_alias(column.value)
           column_alias && output_column_name(column_alias) == name
         end
-        return selected.to_sql if selected
+        return "#{selected.to_sql}\n" if selected
       end
 
       {% begin %}
@@ -549,7 +563,7 @@ module Lustra::Model
     private def projects_order_alias?(order : String)
       return false unless name = output_column_name(order)
 
-      @columns.any? do |selected|
+      through_selected_columns.any? do |selected|
         column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)
         column_alias && output_column_name(column_alias) == name
       end
@@ -567,7 +581,7 @@ module Lustra::Model
 
     private def validate_through_projection!
       names = [] of String
-      @columns.each do |selected|
+      through_selected_columns.each do |selected|
         if column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)
           if name = output_column_name(column_alias)
             names << name
@@ -749,7 +763,7 @@ module Lustra::Model
     private def projects_order_column?(expression : String?, name : String)
       sources = order_column_sources(expression, name)
 
-      @columns.any? do |selected|
+      through_selected_columns.any? do |selected|
         if column_alias = selected.var
           next false unless output_column_name(column_alias.to_s) == name
           next true if expression.nil?

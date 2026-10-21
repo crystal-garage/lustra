@@ -796,6 +796,63 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "plucks individual aliases from comma-separated selections" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        Post.create!(title: "Last", user_id: user.id, category_id: zulu.id)
+        categories = user.categories.clear_select
+          .select("categories.*, LENGTH(categories.name) AS name_length")
+          .order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col(:name_length).should eq([5, 4])
+        categories.pluck("categories.id": Int64, name_length: Int32)
+          .should eq([{alpha.id, 5}, {zulu.id, 4}])
+        categories.to_a(fetch_columns: true).map { |category| category["name_length"] }.should eq([5, 4])
+      end
+    end
+
+    it "preserves GROUPING expression identity for selected aliases and positions" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        {
+          {"LENGTH(categories.name)", "LENGTH(categories.name) AS name_length"},
+          {"LENGTH(categories.name)", "LENGTH(categories.name) name_length"},
+          {"1", "1 AS name_length"},
+        }.each do |expression, selection|
+          {"categories.id, ROLLUP(name_length)", "1, ROLLUP(2)"}.each do |group|
+            categories = user.categories.clear_select.select("categories.id", selection)
+              .group_by(group).order_by("categories.name")
+              .having("GROUPING(#{expression}) = 0")
+
+            categories.pluck_col("GROUPING(#{expression})", Int32).should eq([0])
+          end
+        end
+      end
+    end
+
+    it "preserves positional grouping through a joined-table wildcard" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        2.times { Post.create!(title: "Post", user_id: user.id, category_id: category.id) }
+        {"posts.*", %("posts" /* table */ . * -- columns\n)}.each do |wildcard|
+          categories = user.categories.clear_select.select("categories.id AS target_id", wildcard)
+            .group_by("categories.id, 2").order_by("categories.name")
+
+          categories.pluck_col("COUNT(posts.id)", Int64).should eq([1_i64])
+        end
+      end
+    end
+
     it "preserves positional GROUP BY bindings when replacing the pluck selection" do
       temporary do
         reinit_example_models
