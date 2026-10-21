@@ -741,6 +741,48 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "preserves selected aliases referenced by GROUP BY while plucking" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.select("LENGTH(categories.name) AS name_length")
+          .group_by("categories.id").group_by(:name_length)
+          .order_by(:name_length, :desc).order_by("categories.id")
+
+        categories.map(&.id).should eq([alpha.id, zulu.id])
+        categories.pluck_col("categories.id", Int64).should eq([alpha.id, zulu.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name_length).should eq([{zulu.id, 4}])
+      end
+    end
+
+    it "preserves quoted literals and whitespace around AS in plucked SQL expressions" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col("$$literal as value$$", String).should eq(["literal as value"])
+        categories.pluck_col("$tag$literal as value$tag$", String).should eq(["literal as value"])
+        categories.pluck_col(%q(E'literal\' as value'), String).should eq(["literal' as value"])
+        categories.pluck_col("categories.id AS\n target_id", Int64).should eq([category.id])
+        categories.pluck_col("categories.id\tas\ttarget_id", Int64).should eq([category.id])
+        categories.pluck_col("categories.id AS /* alias */ target_id -- done\n", Int64).should eq([category.id])
+        categories.pluck_col("categories.id -- AS comment\n", Int64).should eq([category.id])
+        categories.pluck_col("categories.id /* AS /* nested */ comment */", Int64).should eq([category.id])
+
+        categories.select(%(LENGTH(categories.name) AS /* alias */ "name as size" /* done */))
+          .clear_order_bys.order_by(%("name as size"), :desc).order_by("categories.id")
+          .pluck_col(%("name as size"), Int32).should eq([5])
+      end
+    end
+
     it "plucks multiple target columns and expressions from ordered through associations" do
       temporary do
         reinit_example_models

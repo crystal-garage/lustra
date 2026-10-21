@@ -342,7 +342,8 @@ module Lustra::Model
 
       # Keep field and sort expressions in the original join scope. The outer
       # query exposes only requested values after deduplication and ordering.
-      source = dup.clear_before_query_triggers.clear_select.clear_limit.clear_offset
+      # Retain selected aliases referenced by clauses such as GROUP BY.
+      source = dup.clear_before_query_triggers.clear_limit.clear_offset
       source.implicit_through_distinct = false
       prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
       columns = [] of String
@@ -444,14 +445,133 @@ module Lustra::Model
     private def raw_order_column(value : SQL::Selectable) : SQL::Column?
       return unless value.is_a?(String)
 
-      sql = value.downcase
-      offset = 0
-      while position = sql.index(" as ", offset)
-        column_alias = value[(position + 4)..].strip
-        return SQL::Column.new(value[0, position].rstrip, column_alias) if output_column_name(column_alias)
+      reader = Char::Reader.new(value)
+      while reader.has_next?
+        skipped = skip_order_sql_fragment(reader)
+        if skipped.pos != reader.pos
+          reader = skipped
+          next
+        end
 
-        offset = position + 4
+        position = reader.pos
+        if order_sql_identifier_char?(reader.current_char)
+          reader.next_char
+          while reader.has_next? && order_sql_identifier_char?(reader.current_char)
+            reader.next_char
+          end
+          next unless value.byte_slice(position, reader.pos - position).downcase == "as"
+          if column = read_order_column(reader, position)
+            return column
+          end
+        else
+          reader.next_char
+        end
       end
+    end
+
+    private def order_sql_identifier_char?(char : Char) : Bool
+      !char.ascii? || char.ascii_alphanumeric? || {'_', '$'}.includes?(char)
+    end
+
+    private def read_order_column(reader : Char::Reader, position : Int32) : SQL::Column?
+      reader = skip_order_sql_trivia(reader)
+      start = reader.pos
+      if reader.current_char == '"'
+        reader = skip_order_sql_quote(reader)
+      else
+        while reader.has_next? && order_sql_identifier_char?(reader.current_char)
+          reader.next_char
+        end
+      end
+      column_alias = reader.string.byte_slice(start, reader.pos - start)
+      return unless output_column_name(column_alias)
+      return if skip_order_sql_trivia(reader).has_next?
+
+      SQL::Column.new(reader.string.byte_slice(0, position).rstrip, column_alias)
+    end
+
+    private def skip_order_sql_trivia(reader : Char::Reader) : Char::Reader
+      while reader.has_next?
+        if reader.current_char.whitespace?
+          reader.next_char
+        elsif {'-', '/'}.includes?(reader.current_char)
+          skipped = skip_order_sql_fragment(reader)
+          break if skipped.pos == reader.pos
+          reader = skipped
+        else
+          break
+        end
+      end
+      reader
+    end
+
+    private def skip_order_sql_fragment(reader : Char::Reader) : Char::Reader
+      case reader.current_char
+      when '\'', '"'
+        reader = skip_order_sql_quote(reader)
+      when '$'
+        if ending = order_sql_dollar_quote_end(reader)
+          reader.pos = ending
+        end
+      when '-'
+        if reader.peek_next_char == '-'
+          while reader.has_next? && !{'\n', '\r'}.includes?(reader.current_char)
+            reader.next_char
+          end
+        end
+      when '/'
+        reader = skip_order_sql_comment(reader) if reader.peek_next_char == '*'
+      end
+      reader
+    end
+
+    private def skip_order_sql_quote(reader : Char::Reader) : Char::Reader
+      quote = reader.current_char
+      escape = quote == '\'' && reader.pos > 0 && {'E'.ord, 'e'.ord}.includes?(reader.string.byte_at(reader.pos - 1))
+      reader.next_char
+      while reader.has_next?
+        if escape && reader.current_char == '\\'
+          reader.next_char
+          reader.next_char if reader.has_next?
+        elsif reader.current_char == quote
+          reader.next_char
+          break unless reader.current_char == quote
+          reader.next_char
+        else
+          reader.next_char
+        end
+      end
+      reader
+    end
+
+    private def order_sql_dollar_quote_end(reader : Char::Reader) : Int32?
+      start = reader.pos
+      reader.next_char
+      while reader.has_next? && reader.current_char != '$' && order_sql_identifier_char?(reader.current_char)
+        reader.next_char
+      end
+      return unless reader.current_char == '$'
+
+      delimiter = reader.string.byte_slice(start, reader.pos - start + 1)
+      reader.string.byte_index(delimiter, reader.pos + 1).try { |ending| ending + delimiter.bytesize }
+    end
+
+    private def skip_order_sql_comment(reader : Char::Reader) : Char::Reader
+      reader.pos += 2
+      depth = 1
+      while reader.has_next?
+        if reader.current_char == '/' && reader.peek_next_char == '*'
+          depth += 1
+          reader.pos += 2
+        elsif reader.current_char == '*' && reader.peek_next_char == '/'
+          depth -= 1
+          reader.pos += 2
+          break if depth == 0
+        else
+          reader.next_char
+        end
+      end
+      reader
     end
 
     private def projects_order_column?(expression : String?, name : String)
