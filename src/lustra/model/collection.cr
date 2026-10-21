@@ -470,7 +470,7 @@ module Lustra::Model
       while reader.has_next?
         reader = skip_order_sql_trivia(reader)
         break unless reader.has_next?
-        if reader.current_char == '*' && previous == '.'
+        if reader.current_char == '*' && (previous == '.' || previous == '\0')
           ending = reader.pos + 1
           reader.next_char
           return expression.byte_slice(0, ending) unless skip_order_sql_trivia(reader).has_next?
@@ -586,6 +586,8 @@ module Lustra::Model
           if name = output_column_name(column_alias)
             names << name
           end
+        elsif (value = selected.value).is_a?(String) && !target_wildcard?(selected) && (wildcard = through_pluck_wildcard_selection(value))
+          names.concat(through_pluck_column_names(wildcard))
         else
           wildcard = target_wildcard?(selected)
           {% begin %}

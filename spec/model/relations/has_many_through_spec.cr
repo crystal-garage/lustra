@@ -1258,6 +1258,23 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "rejects overlapping joined wildcards before loading target models" do
+      temporary do
+        reinit_example_models
+        user = User.create!({first_name: "John"})
+        category = Category.create!({name: "Crystal"})
+        Post.create!({id: 101_i64, title: "Post", user_id: user.id, category_id: category.id})
+
+        {"posts.*", %("posts" /* table */ . * -- columns\n), "*"}.each do |wildcard|
+          categories = user.categories.select(wildcard).order_by("categories.name")
+
+          expect_raises(Lustra::SQL::QueryBuildingError, "Column 'id' is selected more than once; give additional expressions a unique alias.") do
+            categories.to_a
+          end
+        end
+      end
+    end
+
     it "rejects duplicate computed aliases when ordering through associations" do
       categories = User.new({id: 1_i64}).categories
         .select("posts.title AS label", "LOWER(posts.title) AS LABEL")
