@@ -37,16 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
-- Ordered through associations now reject duplicate output names, including joined columns, wildcards, and implicit aliases, before loading models.
-- Through-association plucks now resolve comma-separated selections and joined wildcards correctly, preserving `GROUPING` expressions.
-- Grouped through-association plucks now discard unused selections and accept aliases without `AS`, preserving grouping aliases and positions.
-- Ungrouped through-association plucks now accept SQL aliases written without `AS`.
-- Ordered through-association plucks now discard unused selections in ungrouped queries, preserving deduplication and pagination.
-- Ordered through-association plucks now preserve selected aliases referenced by `GROUP BY`.
-- Through-association alias extraction now respects SQL quoting, comments, and whitespace.
-- Ordered through associations now evaluate plucked expressions in source scope, including joined fields and columns omitted by partial selections.
-- Through associations now support ordering by target columns and selected aliases before the primary key, preserving deduplication and pagination when loading or plucking selected columns.
-- Automatic through-association ordering now reports duplicate selected column names with guidance to use unique aliases.
+- Through associations now support ordering by target columns and selected aliases before the primary key, preserving deduplication and pagination.
+- Ordered through-association plucks now evaluate expressions in source scope and preserve grouping aliases and positions while discarding unused selections.
+- Ordered through associations now reject duplicate output names before loading models, with guidance to use unique aliases.
 - Built-in aggregates now accept `Lustra::SQL::Column` for source expressions in wrapped queries, except with plain `DISTINCT`.
 - Reused eager-loaded model queries now refresh their association caches on each execution.
 - Model queries now honor explicit `use_connection` overrides, and `Model.import` uses the model's configured schema.

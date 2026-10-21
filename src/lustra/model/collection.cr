@@ -265,6 +265,9 @@ module Lustra::Model
       super
     end
 
+    # Render this collection as SQL. Ordered through associations with raw SQL
+    # projections may require a database connection to resolve output names.
+    # This uses PostgreSQL's describe protocol without executing the query.
     def to_sql : String
       if query = ordered_through_query
         query.to_sql
@@ -330,6 +333,13 @@ module Lustra::Model
       key
     end
 
+    private class ThroughPluckGrouping
+      property input_names : Array(String)? = nil
+      property output_names : Array(String)? = nil
+      property selected_expressions : Array(String)? = nil
+      property bindings : Array(String)? = nil
+    end
+
     private def pluck_sql(fields) : String
       return super unless key = through_ordering_key
 
@@ -342,14 +352,14 @@ module Lustra::Model
       # query exposes only requested values after deduplication and ordering.
       # Bind grouping aliases and positions before replacing the selection.
       source = dup.clear_before_query_triggers.clear_limit.clear_offset.clear_select.clear_group_bys
-      grouping_columns = {} of String => Array(String)
+      grouping = ThroughPluckGrouping.new
       @group_bys.each do |group|
-        source.group_by(through_pluck_grouping(group.is_a?(Symbol) ? SQL.escape(group) : group, grouping_columns))
+        source.group_by(through_pluck_grouping(group.is_a?(Symbol) ? SQL.escape(group) : group, grouping))
       end
       source.implicit_through_distinct = false
       prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
       source_columns = [] of String
-      if bindings = grouping_columns["bindings"]?
+      if bindings = grouping.bindings
         bindings.each_with_index do |expression, index|
           source.select(SQL::Column.new("#{expression}\n"))
           source_columns << "#{prefix}_group_#{index}"
@@ -376,26 +386,26 @@ module Lustra::Model
         .order_by(orders).limit(@limit).offset(@offset).to_sql
     end
 
-    private def through_pluck_grouping(expression : String, columns : Hash(String, Array(String))) : String
+    private def through_pluck_grouping(expression : String, grouping : ThroughPluckGrouping) : String
       split_order_sql_expressions(expression).map do |item|
         reference = through_pluck_grouping_reference(item)
         if position = reference.try(&.to_i?)
           if position > 0 && reference.try(&.each_char.all?(&.ascii_number?))
-            next through_pluck_grouping_column(position, columns)
+            next through_pluck_grouping_column(position, grouping)
           end
         end
         if name = reference.try { |value| output_column_name(value) }
-          inputs = columns["inputs"] ||= through_pluck_column_names("*")
+          inputs = grouping.input_names ||= through_pluck_column_names("*")
           unless inputs.includes?(name)
-            labels = columns["labels"] ||= through_pluck_column_names
+            labels = grouping.output_names ||= through_pluck_column_names
             if index = labels.index(name)
-              next through_pluck_grouping_column(index + 1, columns)
+              next through_pluck_grouping_column(index + 1, grouping)
             end
           end
         end
         if bounds = through_pluck_grouping_container(item)
           opening, closing = bounds
-          next "#{item[0..opening]}#{through_pluck_grouping(item[opening + 1...closing], columns)}#{item[closing..]}"
+          next "#{item[0..opening]}#{through_pluck_grouping(item[opening + 1...closing], grouping)}#{item[closing..]}"
         end
         item
       end.join("\n, ") + "\n"
@@ -439,8 +449,8 @@ module Lustra::Model
       expression.byte_slice(start, ending - start)
     end
 
-    private def through_pluck_grouping_column(position : Int32, cache : Hash(String, Array(String))) : String
-      columns = cache["selection"] ||= begin
+    private def through_pluck_grouping_column(position : Int32, grouping : ThroughPluckGrouping) : String
+      columns = grouping.selected_expressions ||= begin
         selected = [] of String
         selected.concat(through_pluck_wildcard_columns) if @columns.empty?
         through_selected_columns.each do |column|
@@ -454,7 +464,7 @@ module Lustra::Model
         selected
       end
       expression = columns[position - 1]? || raise SQL::QueryBuildingError.new("GROUP BY position #{position} is outside the selected columns.")
-      bindings = cache["bindings"] ||= [] of String
+      bindings = grouping.bindings ||= [] of String
       unless index = bindings.index(expression)
         index = bindings.size
         bindings << expression

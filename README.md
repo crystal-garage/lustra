@@ -154,6 +154,10 @@ admins = base.dup.where(role: "admin")
 editors = base.dup.where(role: "editor")
 ```
 
+For ordered through associations with raw SQL projections, `to_sql` may require
+a live database connection to resolve output column names. Lustra uses
+PostgreSQL's describe protocol without executing the query.
+
 ## Documentation
 
 - Manual: https://crystal-garage.gitbook.io/lustra-docs/
