@@ -759,6 +759,146 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "discards unused set-returning selections when plucking grouped targets" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.select("generate_series(1, 2) AS unused")
+          .group_by("categories.id").order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col(:id, Int64).should eq([alpha.id, zulu.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name).should eq([{zulu.id, "Zulu"}])
+        categories.columns.last.value.should eq("generate_series(1, 2) AS unused")
+      end
+    end
+
+    it "plucks grouped expressions with aliases written without AS" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+        categories = user.categories.group_by("categories.id")
+          .order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([alpha.id, zulu.id])
+        categories.pluck_col(%(categories.name "name as value"), String).should eq(["Alpha", "Zulu"])
+        categories.dup.limit(1).offset(1)
+          .pluck("categories.id /* alias */ target_id": Int64, "COUNT(posts.id) total": Int64)
+          .should eq([{zulu.id, 2_i64}])
+      end
+    end
+
+    it "preserves positional GROUP BY bindings when replacing the pluck selection" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+        categories = user.categories.clear_select
+          .select("categories.id", "LENGTH(categories.name) AS name_length", "generate_series(1, 2) AS unused")
+          .group_by("1, 2").order_by(:name_length, :desc).order_by("categories.id")
+
+        categories.pluck("categories.id target_id": Int64, "COUNT(posts.id) total": Int64)
+          .should eq([{alpha.id, 1_i64}, {zulu.id, 2_i64}])
+        categories.group_bys.should eq(["1, 2"])
+      end
+    end
+
+    it "resolves wildcard GROUP BY positions using the database column order" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("generate_series(1, 2) AS unused")
+          .group_by("(1)").order_by("categories.name")
+
+        categories.pluck("COUNT(posts.id) total": Int64, "categories.name label": String)
+          .should eq([{1_i64, "Alpha"}])
+        categories.group_bys.should eq(["(1)"])
+
+        categories.with_cte("categories", "SELECT 'Alpha'::text AS name, #{category.id}::bigint AS id")
+          .clear_group_bys.group_by("(1), 2")
+          .pluck("COUNT(posts.id) total": Int64, "categories.id target_id": Int64)
+          .should eq([{1_i64, category.id.to_i64}])
+      end
+    end
+
+    it "preserves input-column precedence over selected GROUP BY aliases" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "First", user_id: user.id, category_id: category.id)
+        Post.create!(title: "Last", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("LENGTH(categories.name) AS title")
+          .group_by("categories.id").group_by(:title).order_by("categories.name")
+
+        categories.pluck_col("COUNT(posts.id) total", Int64).should eq([1_i64])
+      end
+    end
+
+    it "preserves implicit selected aliases referenced by GROUP BY" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("LENGTH(categories.name) name_length", "generate_series(1, 2) unused")
+          .group_by("categories.id, name_length").order_by("categories.name")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([category.id])
+      end
+    end
+
+    it "preserves primary-key and constant aliases when binding GROUP BY" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("categories.id category_key", "1 AS constant_value")
+          .group_by("category_key, constant_value").order_by("categories.name")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([category.id])
+      end
+    end
+
+    it "describes grouping columns without evaluating CTEs" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        Lustra::SQL.execute("CREATE TEMP SEQUENCE through_grouping_sequence")
+        categories = user.categories
+          .with_cte("probe", "SELECT nextval('through_grouping_sequence') AS value")
+          .clear_from.from("categories CROSS JOIN probe")
+          .group_by("1").order_by("categories.name")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([category.id])
+        Lustra::SQL.select("last_value").from("through_grouping_sequence").scalar(Int64).should eq(1_i64)
+
+        Lustra::SQL.with_savepoint do
+          expect_raises(Lustra::SQL::Error) do
+            categories.dup.where("missing_grouping_column = 1").pluck_col("categories.id", Int64)
+          end
+          Lustra::SQL.rollback
+        end
+        Category.find!(category.id).name.should eq("Alpha")
+      end
+    end
+
     it "preserves selected aliases referenced by GROUP BY while plucking" do
       temporary do
         reinit_example_models
@@ -769,12 +909,16 @@ describe "Lustra::Model::Relations::HasManyThrough" do
         2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
 
         categories = user.categories.select("LENGTH(categories.name) AS name_length")
-          .group_by("categories.id").group_by(:name_length)
+          .group_by("categories.id").group_by("/* grouping */ name_length /* alias */")
           .order_by(:name_length, :desc).order_by("categories.id")
 
         categories.map(&.id).should eq([alpha.id, zulu.id])
         categories.pluck_col("categories.id", Int64).should eq([alpha.id, zulu.id])
         categories.dup.limit(1).offset(1).pluck(:id, :name_length).should eq([{zulu.id, 4}])
+        {"ROLLUP /* keys */ (name_length) /* done */", "GROUPING SETS ((name_length), ())"}.each do |group|
+          categories.dup.clear_group_bys.group_by("categories.id, #{group}")
+            .pluck_col("categories.id target_id", Int64).should eq([alpha.id, zulu.id])
+        end
       end
     end
 

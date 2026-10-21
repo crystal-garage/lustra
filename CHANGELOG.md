@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Grouped through-association plucks now discard unused selections and accept aliases without `AS`, preserving grouping aliases and positions.
 - Ungrouped through-association plucks now accept SQL aliases written without `AS`.
 - Ordered through-association plucks now discard unused selections in ungrouped queries, preserving deduplication and pagination.
 - Ordered through-association plucks now preserve selected aliases referenced by `GROUP BY`.

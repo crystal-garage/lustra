@@ -342,20 +342,19 @@ module Lustra::Model
 
       # Keep field and sort expressions in the original join scope. The outer
       # query exposes only requested values after deduplication and ordering.
-      # Grouped queries may reference the original selection by alias or position.
-      source = dup.clear_before_query_triggers.clear_limit.clear_offset
-      source.clear_select if @group_bys.empty?
+      # Bind grouping aliases and positions before replacing the selection.
+      source = dup.clear_before_query_triggers.clear_limit.clear_offset.clear_select.clear_group_bys
+      grouping_columns = {} of String => Array(String)
+      @group_bys.each do |group|
+        source.group_by(through_pluck_grouping(group.is_a?(Symbol) ? SQL.escape(group) : group, grouping_columns))
+      end
       source.implicit_through_distinct = false
       prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
       columns = [] of String
       fields.each_with_index do |field, index|
         column_alias = "#{prefix}_column_#{index}"
         expression = through_pluck_expression(field) || field
-        if @group_bys.empty?
-          source.select(SQL::Column.new(expression))
-        else
-          source.select(SQL::Column.new(unaliased_pluck_expression(expression), column_alias))
-        end
+        source.select(SQL::Column.new(expression))
         columns << column_alias
       end
 
@@ -367,10 +366,158 @@ module Lustra::Model
       source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
 
       # Rename leading pluck columns by position so PostgreSQL parses their aliases.
-      source_alias = SQL.escape(T.table)
-      source_alias += " (#{columns.join(", ")})" if @group_bys.empty?
-      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{source_alias}")
+      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{SQL.escape(T.table)} (#{columns.join(", ")})")
         .order_by(orders).limit(@limit).offset(@offset).to_sql
+    end
+
+    private def through_pluck_grouping(expression : String, columns : Hash(String, Array(String))) : String
+      split_order_sql_expressions(expression).map do |item|
+        reference = through_pluck_grouping_reference(item)
+        if position = reference.try(&.to_i?)
+          if position > 0 && reference.try(&.each_char.all?(&.ascii_number?))
+            next through_pluck_grouping_column(position, columns)
+          end
+        end
+        if name = reference.try { |value| output_column_name(value) }
+          inputs = columns["inputs"] ||= through_pluck_column_names("*")
+          unless inputs.includes?(name)
+            labels = columns["labels"] ||= through_pluck_column_names
+            if index = labels.index(name)
+              next through_pluck_grouping_column(index + 1, columns)
+            end
+          end
+        end
+        if bounds = through_pluck_grouping_container(item)
+          opening, closing = bounds
+          next "#{item[0..opening]}#{through_pluck_grouping(item[opening + 1...closing], columns)}#{item[closing..]}"
+        end
+        item
+      end.join("\n, ") + "\n"
+    end
+
+    private def through_pluck_grouping_container(expression : String) : Tuple(Int32, Int32)?
+      reader = skip_order_sql_trivia(Char::Reader.new(expression))
+      words = [] of String
+      while reader.has_next? && reader.current_char != '('
+        start = reader.pos
+        while reader.has_next? && reader.current_char.ascii_letter?
+          reader.next_char
+        end
+        return if reader.pos == start
+        words << expression.byte_slice(start, reader.pos - start).upcase
+        reader = skip_order_sql_trivia(reader)
+      end
+      return unless reader.has_next? && {"", "ROLLUP", "CUBE", "GROUPING SETS"}.includes?(words.join(" "))
+
+      opening = reader.pos
+      reader = skip_order_sql_fragment(reader)
+      closing = reader.pos - 1
+      return if skip_order_sql_trivia(reader).has_next?
+
+      {opening, closing}
+    end
+
+    private def through_pluck_grouping_reference(expression : String) : String?
+      reader = skip_order_sql_trivia(Char::Reader.new(expression))
+      start = reader.pos
+      if reader.current_char == '"'
+        reader = skip_order_sql_quote(reader)
+      else
+        while reader.has_next? && order_sql_identifier_char?(reader.current_char)
+          reader.next_char
+        end
+      end
+      ending = reader.pos
+      return if start == ending || skip_order_sql_trivia(reader).has_next?
+
+      expression.byte_slice(start, ending - start)
+    end
+
+    private def through_pluck_grouping_column(position : Int32, cache : Hash(String, Array(String))) : String
+      columns = cache["selection"] ||= begin
+        selected = [] of String
+        selected.concat(through_pluck_wildcard_columns) if @columns.empty?
+        @columns.each do |column|
+          if target_wildcard?(column)
+            selected.concat(through_pluck_wildcard_columns)
+          else
+            split_order_sql_expressions(column.to_sql).each do |expression|
+              value = unaliased_pluck_expression(expression)
+              if reference = through_pluck_column_reference(value)
+                selected << "(#{reference}\n)"
+              else
+                key = "#{SQL.escape(T.table)}.#{SQL.escape(T.__pkey__)}"
+                selected << "(SELECT #{expression}\nWHERE #{key} IS NOT NULL)"
+              end
+            end
+          end
+        end
+        selected
+      end
+      columns[position - 1]? || raise SQL::QueryBuildingError.new("GROUP BY position #{position} is outside the selected columns.")
+    end
+
+    private def through_pluck_column_reference(expression : String) : String?
+      reader = skip_order_sql_trivia(Char::Reader.new(expression))
+      loop do
+        start = reader.pos
+        if reader.current_char == '"'
+          reader = skip_order_sql_quote(reader)
+        else
+          return if reader.current_char.ascii_number?
+          while reader.has_next? && order_sql_identifier_char?(reader.current_char)
+            reader.next_char
+          end
+          word = expression.byte_slice(start, reader.pos - start).downcase
+          return if {"null", "true", "false"}.includes?(word)
+        end
+        return if reader.pos == start
+        ending = reader.pos
+        reader = skip_order_sql_trivia(reader)
+        return expression.byte_slice(0, ending) unless reader.has_next?
+        unless reader.current_char == '.'
+          return read_order_column(reader, ending).try(&.value.to_s)
+        end
+        reader.next_char
+        reader = skip_order_sql_trivia(reader)
+      end
+    end
+
+    private def through_pluck_wildcard_columns : Array(String)
+      # Ask PostgreSQL for wildcard order; model declarations need not match it.
+      through_pluck_column_names("#{SQL.escape(T.table)}.*")
+        .map { |name| "#{SQL.escape(T.table)}.#{SQL.escape(name)}" }
+    end
+
+    private def through_pluck_column_names(selection : String? = nil) : Array(String)
+      query = dup.clear_before_query_triggers.clear_order_bys.clear_limit.clear_offset.limit(0)
+      if selection
+        query.clear_select.clear_group_bys.clear_havings.clear_windows.clear_distinct.select(selection)
+      end
+      sql = query.to_sql
+      SQL::ConnectionPool.with_connection(connection_name) do |connection|
+        SQL.log_query(sql) { SQL::Query::Pluck::ProjectionStatement.new(connection, sql).column_names }
+      end
+    end
+
+    private def split_order_sql_expressions(expression : String) : Array(String)
+      items = [] of String
+      reader = Char::Reader.new(expression)
+      start = 0
+      while reader.has_next?
+        skipped = skip_order_sql_fragment(reader)
+        if skipped.pos != reader.pos
+          reader = skipped
+          next
+        end
+        if reader.current_char == ','
+          items << expression.byte_slice(start, reader.pos - start).strip
+          start = reader.pos + 1
+        end
+        reader.next_char
+      end
+      items << expression.byte_slice(start, expression.bytesize - start).strip
+      items
     end
 
     private def unaliased_pluck_expression(expression : String) : String
@@ -517,6 +664,8 @@ module Lustra::Model
       case reader.current_char
       when '\'', '"'
         reader = skip_order_sql_quote(reader)
+      when '(', '['
+        reader = skip_order_sql_group(reader)
       when '$'
         if ending = order_sql_dollar_quote_end(reader)
           reader.pos = ending
@@ -530,6 +679,21 @@ module Lustra::Model
       when '/'
         reader = skip_order_sql_comment(reader) if reader.peek_next_char == '*'
       end
+      reader
+    end
+
+    private def skip_order_sql_group(reader : Char::Reader) : Char::Reader
+      closing = reader.current_char == '(' ? ')' : ']'
+      reader.next_char
+      while reader.has_next? && reader.current_char != closing
+        skipped = skip_order_sql_fragment(reader)
+        if skipped.pos != reader.pos
+          reader = skipped
+        else
+          reader.next_char
+        end
+      end
+      reader.next_char if reader.has_next?
       reader
     end
 

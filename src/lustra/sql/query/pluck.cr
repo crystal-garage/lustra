@@ -1,4 +1,25 @@
+require "pg"
+
 module Lustra::SQL::Query::Pluck
+  # :nodoc:
+  class ProjectionStatement < PG::Statement
+    # Describe without sending Execute: CTEs and expressions must not run here.
+    def column_names : Array(String)
+      protocol = conn
+      protocol.send_parse_message(command)
+      protocol.send_bind_message([] of PQ::Param)
+      protocol.send_describe_portal_message
+      protocol.send_sync_message
+      protocol.expect_frame(PQ::Frame::ParseComplete)
+      protocol.expect_frame(PQ::Frame::BindComplete)
+      fields = protocol.expect_frame(PQ::Frame::RowDescription).fields
+      protocol.expect_frame(PQ::Frame::ReadyForQuery)
+      fields.map(&.name)
+    rescue exception : IO::Error
+      raise DB::ConnectionLost.new(connection, cause: exception)
+    end
+  end
+
   # Select a specific column of your SQL query, execute the query
   # and return an array containing this field.
   #
