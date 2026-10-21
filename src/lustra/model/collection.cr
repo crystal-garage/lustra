@@ -338,8 +338,6 @@ module Lustra::Model
         return super unless expression
         unaliased_pluck_expression(expression)
       end
-      validate_through_projection!
-
       # Keep field and sort expressions in the original join scope. The outer
       # query exposes only requested values after deduplication and ordering.
       # Bind grouping aliases and positions before replacing the selection.
@@ -582,24 +580,27 @@ module Lustra::Model
     private def validate_through_projection!
       names = [] of String
       through_selected_columns.each do |selected|
-        if column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)
-          if name = output_column_name(column_alias)
-            names << name
-          end
-        elsif (value = selected.value).is_a?(String) && !target_wildcard?(selected) && (wildcard = through_pluck_wildcard_selection(value))
-          names.concat(through_pluck_column_names(wildcard))
+        if (column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)) && (name = output_column_name(column_alias))
+          names << name
         else
           wildcard = target_wildcard?(selected)
+          known = wildcard
           {% begin %}
             {% unless T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
               {% for _, column in T::COLUMNS %}
                 {% name = column[:db_column_name] %}
                 if wildcard || (selected.value.is_a?(Symbol) && selected.value.to_s == {{ name }}) || order_column_sources(nil, {{ name }}).includes?(selected.value)
                   names << {{ name }}
+                  known = true
                 end
               {% end %}
             {% end %}
           {% end %}
+          unless known
+            # Describe the complete projection to preserve native output names.
+            names = through_pluck_column_names
+            break
+          end
         end
       end
 

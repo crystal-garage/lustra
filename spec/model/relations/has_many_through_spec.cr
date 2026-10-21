@@ -1275,6 +1275,64 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    {"posts.id", "posts.id id", %(posts.id "id")}.each do |selection|
+      it "rejects overlapping joined output selected as #{selection}" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          category = Category.create!(name: "Alpha")
+          Post.create!(id: 101_i64, title: "Post", user_id: user.id, category_id: category.id)
+          categories = user.categories.select(selection).order_by("categories.name")
+
+          expect_raises(Lustra::SQL::QueryBuildingError, "Column 'id' is selected more than once; give additional expressions a unique alias.") do
+            categories.to_a
+          end
+        end
+      end
+    end
+
+    it "allows uniquely named joined outputs with and without implicit aliases" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(id: 101_i64, title: "Post", user_id: user.id, category_id: category.id)
+
+        {"posts.title", "posts.title post_title"}.each do |selection|
+          categories = user.categories.select(selection).order_by("categories.name")
+          records = categories.to_a(fetch_columns: true)
+          records.map(&.id).should eq([category.id])
+          records.first.attributes[selection == "posts.title" ? "title" : "post_title"].should eq("Post")
+        end
+      end
+    end
+
+    it "discards unused joined outputs when plucking grouped values" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        2.times { Post.create!(title: "Post", user_id: user.id, category_id: category.id) }
+        categories = user.categories.select("posts.title post_title")
+          .group_by("categories.id").order_by("categories.name")
+
+        categories.pluck_col("COUNT(posts.id)", Int64).should eq([2_i64])
+      end
+    end
+
+    it "uses native output names for aliases outside the identifier parser" do
+      temporary do
+        reinit_example_models
+        categories = User.new({id: 1_i64}).categories
+          .select("posts.title AS naïve", "LOWER(posts.title) AS naïve")
+          .order_by("categories.name")
+
+        expect_raises(Lustra::SQL::QueryBuildingError, "Column 'naïve' is selected more than once") do
+          categories.to_sql
+        end
+      end
+    end
+
     it "rejects duplicate computed aliases when ordering through associations" do
       categories = User.new({id: 1_i64}).categories
         .select("posts.title AS label", "LOWER(posts.title) AS LABEL")
