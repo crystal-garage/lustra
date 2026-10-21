@@ -347,26 +347,33 @@ module Lustra::Model
 
       order_expressions = @order_bys.map do |order|
         expression = through_pluck_expression(order.op)
+
         return super unless expression
+
         unaliased_pluck_expression(expression)
       end
+
       # Keep field and sort expressions in the original join scope. The outer
       # query exposes only requested values after deduplication and ordering.
       # Bind grouping aliases and positions before replacing the selection.
       source = dup.clear_before_query_triggers.clear_limit.clear_offset.clear_select.clear_group_bys
       grouping = ThroughPluckGrouping.new
+
       @group_bys.each do |group|
         source.group_by(through_pluck_grouping(group.is_a?(Symbol) ? SQL.escape(group) : group, grouping))
       end
+
       source.implicit_through_distinct = false
       prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
       source_columns = [] of String
+
       if bindings = grouping.bindings
         bindings.each_with_index do |expression, index|
           source.select(SQL::Column.new("#{expression}\n"))
           source_columns << "#{prefix}_group_#{index}"
         end
       end
+
       columns = [] of String
       fields.each_with_index do |field, index|
         column_alias = "#{prefix}_column_#{index}"
@@ -380,35 +387,48 @@ module Lustra::Model
         source.select(SQL::Column.new("#{order_expressions[index]}\n", column_alias))
         SQL::Query::OrderBy::Record.new(column_alias, order.dir, order.nulls)
       end
+
       source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
 
       # Rename grouping and pluck columns by position; only plucked values escape.
       source_columns.concat(columns)
-      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{SQL.escape(T.table)} (#{source_columns.join(", ")})")
-        .order_by(orders).limit(@limit).offset(@offset).to_sql
+
+      SQL
+        .select(columns.join(", "))
+        .from("(#{source.to_sql}) #{SQL.escape(T.table)} (#{source_columns.join(", ")})")
+        .order_by(orders)
+        .limit(@limit)
+        .offset(@offset)
+        .to_sql
     end
 
     private def through_pluck_grouping(expression : String, grouping : ThroughPluckGrouping) : String
       split_order_sql_expressions(expression).map do |item|
         reference = through_pluck_grouping_reference(item)
+
         if position = reference.try(&.to_i?)
           if position > 0 && reference.try(&.each_char.all?(&.ascii_number?))
             next through_pluck_grouping_column(position, grouping)
           end
         end
+
         if name = reference.try { |value| output_column_name(value) }
           inputs = grouping.input_names ||= through_pluck_column_names("*")
+
           unless inputs.includes?(name)
             labels = grouping.output_names ||= through_pluck_column_names
+
             if index = labels.index(name)
               next through_pluck_grouping_column(index + 1, grouping)
             end
           end
         end
+
         if bounds = through_pluck_grouping_container(item)
           opening, closing = bounds
           next "#{item[0..opening]}#{through_pluck_grouping(item[opening + 1...closing], grouping)}#{item[closing..]}"
         end
+
         item
       end.join("\n, ") + "\n"
     end
@@ -416,6 +436,7 @@ module Lustra::Model
     private def through_pluck_grouping_container(expression : String) : Tuple(Int32, Int32)?
       reader = skip_order_sql_trivia(Char::Reader.new(expression))
       words = [] of String
+
       while reader.has_next? && reader.current_char != '('
         start = reader.pos
         while reader.has_next? && reader.current_char.ascii_letter?
@@ -425,11 +446,13 @@ module Lustra::Model
         words << expression.byte_slice(start, reader.pos - start).upcase
         reader = skip_order_sql_trivia(reader)
       end
+
       return unless reader.has_next? && {"", "ROLLUP", "CUBE", "GROUPING SETS"}.includes?(words.join(" "))
 
       opening = reader.pos
       reader = skip_order_sql_fragment(reader)
       closing = reader.pos - 1
+
       return if skip_order_sql_trivia(reader).has_next?
 
       {opening, closing}
@@ -438,6 +461,7 @@ module Lustra::Model
     private def through_pluck_grouping_reference(expression : String) : String?
       reader = skip_order_sql_trivia(Char::Reader.new(expression))
       start = reader.pos
+
       if reader.current_char == '"'
         reader = skip_order_sql_quote(reader)
       else
@@ -445,7 +469,9 @@ module Lustra::Model
           reader.next_char
         end
       end
+
       ending = reader.pos
+
       return if start == ending || skip_order_sql_trivia(reader).has_next?
 
       expression.byte_slice(start, ending - start)
@@ -660,6 +686,7 @@ module Lustra::Model
     private def read_order_column(reader : Char::Reader, position : Int32) : SQL::Column?
       reader = skip_order_sql_trivia(reader)
       start = reader.pos
+
       if reader.current_char == '"'
         reader = skip_order_sql_quote(reader)
       else
@@ -686,6 +713,7 @@ module Lustra::Model
           break
         end
       end
+
       reader
     end
 
@@ -708,58 +736,76 @@ module Lustra::Model
       when '/'
         reader = skip_order_sql_comment(reader) if reader.peek_next_char == '*'
       end
+
       reader
     end
 
     private def skip_order_sql_group(reader : Char::Reader) : Char::Reader
       closing = reader.current_char == '(' ? ')' : ']'
+
       reader.next_char
+
       while reader.has_next? && reader.current_char != closing
         skipped = skip_order_sql_fragment(reader)
+
         if skipped.pos != reader.pos
           reader = skipped
         else
           reader.next_char
         end
       end
+
       reader.next_char if reader.has_next?
+
       reader
     end
 
     private def skip_order_sql_quote(reader : Char::Reader) : Char::Reader
       quote = reader.current_char
+
       escape = quote == '\'' && reader.pos > 0 && {'E'.ord, 'e'.ord}.includes?(reader.string.byte_at(reader.pos - 1))
+
       reader.next_char
+
       while reader.has_next?
         if escape && reader.current_char == '\\'
           reader.next_char
           reader.next_char if reader.has_next?
         elsif reader.current_char == quote
           reader.next_char
+
           break unless reader.current_char == quote
+
           reader.next_char
         else
           reader.next_char
         end
       end
+
       reader
     end
 
     private def order_sql_dollar_quote_end(reader : Char::Reader) : Int32?
       start = reader.pos
+
       reader.next_char
+
       while reader.has_next? && reader.current_char != '$' && order_sql_identifier_char?(reader.current_char)
         reader.next_char
       end
+
       return unless reader.current_char == '$'
 
       delimiter = reader.string.byte_slice(start, reader.pos - start + 1)
+
       reader.string.byte_index(delimiter, reader.pos + 1).try { |ending| ending + delimiter.bytesize }
     end
 
     private def skip_order_sql_comment(reader : Char::Reader) : Char::Reader
       reader.pos += 2
+
       depth = 1
+
       while reader.has_next?
         if reader.current_char == '/' && reader.peek_next_char == '*'
           depth += 1
@@ -767,11 +813,13 @@ module Lustra::Model
         elsif reader.current_char == '*' && reader.peek_next_char == '/'
           depth -= 1
           reader.pos += 2
+
           break if depth == 0
         else
           reader.next_char
         end
       end
+
       reader
     end
 
