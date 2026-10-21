@@ -333,6 +333,8 @@ module Lustra::Model
       key
     end
 
+    # Keep GROUP BY aliases and positions bound to the original selection when
+    # pluck replaces it. Metadata is loaded lazily and shared during one rewrite.
     private class ThroughPluckGrouping
       property input_names : Array(String)? = nil
       property output_names : Array(String)? = nil
