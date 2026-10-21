@@ -741,6 +741,24 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "discards unused set-returning selections when plucking ordered targets" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.select("generate_series(1, 2) AS unused")
+          .order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col(:id, Int64).should eq([alpha.id, zulu.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name).should eq([{zulu.id, "Zulu"}])
+        categories.columns.last.value.should eq("generate_series(1, 2) AS unused")
+      end
+    end
+
     it "preserves selected aliases referenced by GROUP BY while plucking" do
       temporary do
         reinit_example_models

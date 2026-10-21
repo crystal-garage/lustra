@@ -342,8 +342,9 @@ module Lustra::Model
 
       # Keep field and sort expressions in the original join scope. The outer
       # query exposes only requested values after deduplication and ordering.
-      # Retain selected aliases referenced by clauses such as GROUP BY.
+      # Grouped queries may reference the original selection by alias or position.
       source = dup.clear_before_query_triggers.clear_limit.clear_offset
+      source.clear_select if @group_bys.empty?
       source.implicit_through_distinct = false
       prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
       columns = [] of String
