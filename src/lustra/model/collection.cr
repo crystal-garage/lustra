@@ -350,8 +350,12 @@ module Lustra::Model
       columns = [] of String
       fields.each_with_index do |field, index|
         column_alias = "#{prefix}_column_#{index}"
-        expression = unaliased_pluck_expression(through_pluck_expression(field) || field)
-        source.select(SQL::Column.new(expression, column_alias))
+        expression = through_pluck_expression(field) || field
+        if @group_bys.empty?
+          source.select(SQL::Column.new(expression))
+        else
+          source.select(SQL::Column.new(unaliased_pluck_expression(expression), column_alias))
+        end
         columns << column_alias
       end
 
@@ -362,7 +366,10 @@ module Lustra::Model
       end
       source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
 
-      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{SQL.escape(T.table)}")
+      # Rename leading pluck columns by position so PostgreSQL parses their aliases.
+      source_alias = SQL.escape(T.table)
+      source_alias += " (#{columns.join(", ")})" if @group_bys.empty?
+      SQL.select(columns.join(", ")).from("(#{source.to_sql}) #{source_alias}")
         .order_by(orders).limit(@limit).offset(@offset).to_sql
     end
 

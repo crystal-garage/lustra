@@ -778,6 +778,26 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "plucks expressions with aliases written without AS" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([alpha.id, zulu.id])
+        categories.pluck_col(%(categories.name "name as value"), String).should eq(["Alpha", "Zulu"])
+        categories.pluck("categories.id target_id", "UPPER(posts.title) title")
+          .should eq([{alpha.id, "FIRST"}, {zulu.id, "LAST"}])
+        categories.dup.limit(1).offset(1)
+          .pluck("categories.id /* alias */ target_id": Int64, "categories.name label": String)
+          .should eq([{zulu.id, "Zulu"}])
+      end
+    end
+
     it "preserves quoted literals and whitespace around AS in plucked SQL expressions" do
       temporary do
         reinit_example_models
