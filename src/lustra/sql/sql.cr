@@ -1,6 +1,5 @@
 require "../expression/expression"
 
-require "db"
 require "crypto/bcrypt/password"
 
 require "./errors"

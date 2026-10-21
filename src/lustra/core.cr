@@ -1,4 +1,5 @@
 # Require everything except the extensions and the CLI
+require "db"
 require "pg"
 require "random/secure"
 

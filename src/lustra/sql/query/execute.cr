@@ -1,5 +1,3 @@
-require "db"
-
 module Lustra::SQL::Query::Execute
   #
   # Execute an SQL statement which does not return anything.

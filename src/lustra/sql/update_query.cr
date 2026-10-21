@@ -1,4 +1,3 @@
-require "db"
 require "./sql"
 
 # An update query
