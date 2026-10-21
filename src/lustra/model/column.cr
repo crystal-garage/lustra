@@ -1,5 +1,3 @@
-require "db"
-
 # A column of a Model
 # Provide some methods like:
 #   - Persistence information (previous value, changed?)

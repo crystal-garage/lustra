@@ -1,7 +1,5 @@
 require "../expression/expression"
 
-require "pg"
-require "db"
 require "crypto/bcrypt/password"
 
 require "./errors"
@@ -53,6 +51,8 @@ module Lustra
     CURSOR_PREFIX = "__lustra_cursor_"
     # :nodoc:
     AGGREGATE_PREFIX = "__lustra_aggregate_"
+    # :nodoc:
+    PLUCK_PREFIX = "__lustra_pluck_"
     # :nodoc:
     QUERY_KEY_ALIAS = "__lustra_query_key"
     # :nodoc:

@@ -1,4 +1,3 @@
-require "pg"
 require "big"
 
 require "./query/*"

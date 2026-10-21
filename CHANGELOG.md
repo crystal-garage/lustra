@@ -37,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing primary key errors now retain essential setup guidance in release builds.
 
 ### Fixed
+- Through associations now support ordering by target columns and selected aliases before the primary key, preserving deduplication and pagination.
+- Ordered through-association plucks now evaluate expressions in source scope and preserve grouping aliases and positions while discarding unused selections.
+- Ordered through associations now reject duplicate output names before loading models, with guidance to use unique aliases.
 - Built-in aggregates now accept `Lustra::SQL::Column` for source expressions in wrapped queries, except with plain `DISTINCT`.
 - Reused eager-loaded model queries now refresh their association caches on each execution.
 - Model queries now honor explicit `use_connection` overrides, and `Model.import` uses the model's configured schema.

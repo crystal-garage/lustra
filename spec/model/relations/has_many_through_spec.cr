@@ -656,6 +656,726 @@ describe "Lustra::Model::Relations::HasManyThrough" do
   # Deduplicate by target identity, not by every selected column.
   # These cases guard against replacing DISTINCT ON with whole-row DISTINCT.
   context "target identity and distinctness" do
+    it "orders and paginates unique targets selected with an unquoted table wildcard" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Another", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.clear_select.select("categories.*")
+          .order_by("categories.name", :desc).order_by("categories.id")
+
+        categories.count.should eq(2)
+        categories.map(&.id).should eq([zulu.id, alpha.id])
+        categories.dup.paginate(1, 1).map(&.id).should eq([zulu.id])
+        categories.dup.paginate(2, 1).map(&.id).should eq([alpha.id])
+      end
+    end
+
+    it "plucks target IDs without discarding columns needed for ordering and pagination" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Another", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.order_by("categories.name", :desc).order_by("categories.id")
+        first_page = categories.dup.limit(1)
+        first_page.pluck_col("categories.id", Int64).should eq([zulu.id])
+        first_page.pluck_col(:id).should eq([zulu.id])
+        categories.dup.limit(1).offset(1).pluck_col(:id).should eq([alpha.id])
+        categories.map(&.id).should eq([zulu.id, alpha.id])
+      end
+    end
+
+    it "plucks joined expressions in source scope while preserving target ordering and pagination" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+        categories.pluck_col("posts.title", String).should eq(["First", "Last"])
+        categories.pluck("categories.id", "UPPER(posts.title) AS title")
+          .should eq([{alpha.id, "FIRST"}, {zulu.id, "LAST"}])
+        categories.dup.limit(1).offset(1).pluck("categories.id", "posts.title")
+          .should eq([{zulu.id, "Last"}])
+        categories.pluck("categories.id": Int64, "LOWER(posts.title)": String)
+          .should eq([{alpha.id, "first"}, {zulu.id, "last"}])
+        categories.dup.group_by("categories.id").pluck("categories.id": Int64, "COUNT(posts.id)": Int64)
+          .should eq([{alpha.id, 1_i64}, {zulu.id, 2_i64}])
+
+        Lustra::SQL.execute("CREATE TEMP SEQUENCE through_pluck_sequence")
+        categories.pluck_col("nextval('through_pluck_sequence')", Int64).uniq.size.should eq(2)
+        positions = categories.dup.select("nextval('through_pluck_sequence') AS position")
+          .clear_order_bys.order_by(:position, :desc).order_by("categories.id")
+          .pluck(position: Int64, "POSITION": Int64)
+        positions.each { |first, second| first.should eq(second) }
+        positions.map(&.[0]).should eq(positions.map(&.[0]).sort!.reverse!)
+      end
+    end
+
+    it "plucks target columns omitted by a partial selection without losing ordering" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.clear_select.select("categories.name")
+          .order_by("categories.name", :desc).order_by("categories.id")
+        categories.pluck_col("categories.id", Int64).should eq([zulu.id, alpha.id])
+        categories.pluck_col(:id).should eq([zulu.id, alpha.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name).should eq([{alpha.id, "Alpha"}])
+        categories.columns.map(&.value).should eq(["categories.name"])
+      end
+    end
+
+    it "discards unused set-returning selections when plucking ordered targets" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.select("generate_series(1, 2) AS unused")
+          .order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col(:id, Int64).should eq([alpha.id, zulu.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name).should eq([{zulu.id, "Zulu"}])
+        categories.columns.last.value.should eq("generate_series(1, 2) AS unused")
+      end
+    end
+
+    it "discards unused set-returning selections when plucking grouped targets" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.select("generate_series(1, 2) AS unused")
+          .group_by("categories.id").order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col(:id, Int64).should eq([alpha.id, zulu.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name).should eq([{zulu.id, "Zulu"}])
+        categories.columns.last.value.should eq("generate_series(1, 2) AS unused")
+      end
+    end
+
+    it "plucks grouped expressions with aliases written without AS" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+        categories = user.categories.group_by("categories.id")
+          .order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([alpha.id, zulu.id])
+        categories.pluck_col(%(categories.name "name as value"), String).should eq(["Alpha", "Zulu"])
+        categories.dup.limit(1).offset(1)
+          .pluck("categories.id /* alias */ target_id": Int64, "COUNT(posts.id) total": Int64)
+          .should eq([{zulu.id, 2_i64}])
+      end
+    end
+
+    it "plucks individual aliases from comma-separated selections" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        Post.create!(title: "Last", user_id: user.id, category_id: zulu.id)
+        categories = user.categories.clear_select
+          .select("categories.*, LENGTH(categories.name) AS name_length")
+          .order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col(:name_length).should eq([5, 4])
+        categories.pluck("categories.id": Int64, name_length: Int32)
+          .should eq([{alpha.id, 5}, {zulu.id, 4}])
+        categories.to_a(fetch_columns: true).map { |category| category["name_length"] }.should eq([5, 4])
+      end
+    end
+
+    it "preserves GROUPING expression identity for selected aliases and positions" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        {
+          {"LENGTH(categories.name)", "LENGTH(categories.name) AS name_length"},
+          {"LENGTH(categories.name)", "LENGTH(categories.name) name_length"},
+          {"1", "1 AS name_length"},
+        }.each do |expression, selection|
+          {"categories.id, ROLLUP(name_length)", "1, ROLLUP(2)"}.each do |group|
+            categories = user.categories.clear_select.select("categories.id", selection)
+              .group_by(group).order_by("categories.name")
+              .having("GROUPING(#{expression}) = 0")
+
+            categories.pluck_col("GROUPING(#{expression})", Int32).should eq([0])
+          end
+        end
+      end
+    end
+
+    it "preserves positional grouping through a joined-table wildcard" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        2.times { Post.create!(title: "Post", user_id: user.id, category_id: category.id) }
+        {"posts.*", %("posts" /* table */ . * -- columns\n)}.each do |wildcard|
+          categories = user.categories.clear_select.select("categories.id AS target_id", wildcard)
+            .group_by("categories.id, 2").order_by("categories.name")
+
+          categories.pluck_col("COUNT(posts.id)", Int64).should eq([1_i64])
+        end
+      end
+    end
+
+    it "preserves positional GROUP BY bindings when replacing the pluck selection" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+        categories = user.categories.clear_select
+          .select("categories.id", "LENGTH(categories.name) AS name_length", "generate_series(1, 2) AS unused")
+          .group_by("1, 2").order_by(:name_length, :desc).order_by("categories.id")
+
+        categories.pluck("categories.id target_id": Int64, "COUNT(posts.id) total": Int64)
+          .should eq([{alpha.id, 1_i64}, {zulu.id, 2_i64}])
+        categories.group_bys.should eq(["1, 2"])
+      end
+    end
+
+    it "resolves wildcard GROUP BY positions using the database column order" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("generate_series(1, 2) AS unused")
+          .group_by("(1)").order_by("categories.name")
+
+        categories.pluck("COUNT(posts.id) total": Int64, "categories.name label": String)
+          .should eq([{1_i64, "Alpha"}])
+        categories.group_bys.should eq(["(1)"])
+
+        categories.with_cte("categories", "SELECT 'Alpha'::text AS name, #{category.id}::bigint AS id")
+          .clear_group_bys.group_by("(1), 2")
+          .pluck("COUNT(posts.id) total": Int64, "categories.id target_id": Int64)
+          .should eq([{1_i64, category.id.to_i64}])
+      end
+    end
+
+    it "preserves input-column precedence over selected GROUP BY aliases" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "First", user_id: user.id, category_id: category.id)
+        Post.create!(title: "Last", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("LENGTH(categories.name) AS title")
+          .group_by("categories.id").group_by(:title).order_by("categories.name")
+
+        categories.pluck_col("COUNT(posts.id) total", Int64).should eq([1_i64])
+      end
+    end
+
+    it "preserves implicit selected aliases referenced by GROUP BY" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("LENGTH(categories.name) name_length", "generate_series(1, 2) unused")
+          .group_by("categories.id, name_length").order_by("categories.name")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([category.id])
+      end
+    end
+
+    it "preserves primary-key and constant aliases when binding GROUP BY" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.select("categories.id category_key", "1 AS constant_value")
+          .group_by("category_key, constant_value").order_by("categories.name")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([category.id])
+      end
+    end
+
+    it "describes grouping columns without evaluating CTEs" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        Lustra::SQL.execute("CREATE TEMP SEQUENCE through_grouping_sequence")
+        categories = user.categories
+          .with_cte("probe", "SELECT nextval('through_grouping_sequence') AS value")
+          .clear_from.from("categories CROSS JOIN probe")
+          .group_by("1").order_by("categories.name")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([category.id])
+        Lustra::SQL.select("last_value").from("through_grouping_sequence").scalar(Int64).should eq(1_i64)
+
+        Lustra::SQL.with_savepoint do
+          expect_raises(Lustra::SQL::Error) do
+            categories.dup.where("missing_grouping_column = 1").pluck_col("categories.id", Int64)
+          end
+          Lustra::SQL.rollback
+        end
+        Category.find!(category.id).name.should eq("Alpha")
+      end
+    end
+
+    it "preserves selected aliases referenced by GROUP BY while plucking" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+
+        categories = user.categories.select("LENGTH(categories.name) AS name_length")
+          .group_by("categories.id").group_by("/* grouping */ name_length /* alias */")
+          .order_by(:name_length, :desc).order_by("categories.id")
+
+        categories.map(&.id).should eq([alpha.id, zulu.id])
+        categories.pluck_col("categories.id", Int64).should eq([alpha.id, zulu.id])
+        categories.dup.limit(1).offset(1).pluck(:id, :name_length).should eq([{zulu.id, 4}])
+        {"ROLLUP /* keys */ (name_length) /* done */", "GROUPING SETS ((name_length), ())"}.each do |group|
+          categories.dup.clear_group_bys.group_by("categories.id, #{group}")
+            .pluck_col("categories.id target_id", Int64).should eq([alpha.id, zulu.id])
+        end
+      end
+    end
+
+    it "plucks expressions with aliases written without AS" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        zulu = Category.create!(name: "Zulu")
+        Post.create!(title: "First", user_id: user.id, category_id: alpha.id)
+        2.times { Post.create!(title: "Last", user_id: user.id, category_id: zulu.id) }
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col("categories.id target_id", Int64).should eq([alpha.id, zulu.id])
+        categories.pluck_col(%(categories.name "name as value"), String).should eq(["Alpha", "Zulu"])
+        categories.pluck("categories.id target_id", "UPPER(posts.title) title")
+          .should eq([{alpha.id, "FIRST"}, {zulu.id, "LAST"}])
+        categories.dup.limit(1).offset(1)
+          .pluck("categories.id /* alias */ target_id": Int64, "categories.name label": String)
+          .should eq([{zulu.id, "Zulu"}])
+      end
+    end
+
+    it "preserves quoted literals and whitespace around AS in plucked SQL expressions" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+
+        categories.pluck_col("$$literal as value$$", String).should eq(["literal as value"])
+        categories.pluck_col("$tag$literal as value$tag$", String).should eq(["literal as value"])
+        categories.pluck_col(%q(E'literal\' as value'), String).should eq(["literal' as value"])
+        categories.pluck_col("categories.id AS\n target_id", Int64).should eq([category.id])
+        categories.pluck_col("categories.id\tas\ttarget_id", Int64).should eq([category.id])
+        categories.pluck_col("categories.id AS /* alias */ target_id -- done\n", Int64).should eq([category.id])
+        categories.pluck_col("categories.id -- AS comment\n", Int64).should eq([category.id])
+        categories.pluck_col("categories.id /* AS /* nested */ comment */", Int64).should eq([category.id])
+
+        categories.select(%(LENGTH(categories.name) AS /* alias */ "name as size" /* done */))
+          .clear_order_bys.order_by(%("name as size"), :desc).order_by("categories.id")
+          .pluck_col(%("name as size"), Int32).should eq([5])
+      end
+    end
+
+    it "plucks multiple target columns and expressions from ordered through associations" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        2.times { Post.create!(title: "Post", user_id: user.id, category_id: category.id) }
+
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+        categories.pluck("categories.id", "categories.name").should eq([{category.id, "Alpha"}])
+        categories.pluck(:id, :name).should eq([{category.id, "Alpha"}])
+        categories.pluck(id: Int64, "UPPER(categories.name)": String).should eq([{category.id, "ALPHA"}])
+      end
+    end
+
+    {"length as value", %(length "quoted" as value)}.each do |name|
+      it "orders and paginates through associations by the quoted alias #{name}" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          alpha = Category.create!(name: "Alpha")
+          zulu = Category.create!(name: "Zulu")
+          2.times { Post.create!(title: "Post", user_id: user.id, category_id: alpha.id) }
+          Post.create!(title: "Another", user_id: user.id, category_id: zulu.id)
+
+          column_alias = Lustra::SQL.escape(name)
+          categories = user.categories.select("LENGTH(CAST(categories.name AS TEXT)) AS #{column_alias}")
+            .order_by(column_alias, :desc).order_by("categories.id")
+
+          categories.count.should eq(2)
+          first_page = categories.dup.paginate(1, 1)
+          first_page.total_entries.should eq(2)
+          records = first_page.to_a(fetch_columns: true)
+          records.map(&.id).should eq([alpha.id])
+          records.first.attributes[name].should eq(5)
+          categories.dup.paginate(2, 1).map(&.id).should eq([zulu.id])
+        end
+      end
+    end
+
+    it "rejects duplicate quoted aliases containing AS" do
+      categories = User.new({id: 1_i64}).categories
+        .select(%(LENGTH(categories.name) AS "length as value"), %(LENGTH(posts.title) AS "length as value"))
+        .order_by("categories.name").order_by("categories.id")
+
+      expect_raises(Lustra::SQL::QueryBuildingError, "Column 'length as value' is selected more than once") do
+        categories.to_sql
+      end
+    end
+
+    {"raw SQL", "structured column"}.each do |selection|
+      it "paginates unique self-referential targets ordered by a computed alias selected as #{selection}" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          low = User.create!(first_name: "Low", posts_count: 1)
+          high = User.create!(first_name: "High", posts_count: 10)
+          [low, high].each do |dependent|
+            Relationship.create!(master_id: dependent.id, dependency_id: user.id)
+          end
+
+          dependents = user.dependents.with_dependencies.group_by("users.id")
+          if selection == "raw SQL"
+            dependents.select("COALESCE(users.posts_count, 0) AS dependents_count")
+          else
+            dependents.select(Lustra::SQL::Column.new("COALESCE(users.posts_count, 0)", "dependents_count"))
+          end
+          dependents.order_by("dependents_count", :desc).order_by("users.id")
+
+          dependents.count.should eq(2)
+          dependents.dup.limit(1).pluck_col(:id).should eq([high.id])
+          dependents.dup.limit(1).pluck_col(:dependents_count).should eq([10])
+          first_page = dependents.dup.paginate(1, 1)
+          first_page.total_entries.should eq(2)
+          records = first_page.to_a(fetch_columns: true)
+          records.map(&.id).should eq([high.id])
+          records.first.attributes["dependents_count"].should eq(10)
+          records.first.dependencies.map(&.id).should eq([user.id])
+          dependents.dup.paginate(2, 1).map(&.id).should eq([low.id])
+        end
+      end
+    end
+
+    {"categories.name", %("categories"."name"), :name}.each do |order_column|
+      it "paginates unique targets ordered by a non-primary column before their primary key using #{order_column}" do
+        temporary do
+          reinit_example_models
+
+          user = User.create!(first_name: "Jane")
+          first_category = Category.create!(name: "Alpha")
+          second_category = Category.create!(name: "Zulu")
+          third_category = Category.create!(name: "Zulu")
+
+          Post.create!(title: "Alpha post", user_id: user.id, category_id: first_category.id)
+          2.times { Post.create!(title: "Zulu post", user_id: user.id, category_id: second_category.id) }
+          Post.create!(title: "Another Zulu post", user_id: user.id, category_id: third_category.id)
+
+          categories = user.categories.with_posts.with_users
+            .order_by(order_column, :desc)
+            .order_by("categories.id", :asc)
+
+          first_page = categories.dup.paginate(1, 2)
+          first_page.total_entries.should eq(3)
+          first_page.total_pages.should eq(2)
+          first_page.next_page.should eq(2)
+
+          records = first_page.to_a
+          records.map(&.id).should eq([second_category.id, third_category.id])
+          records.map(&.posts.count).should eq([2, 1])
+          records.each(&.users.map(&.id).should(eq([user.id])))
+
+          second_page = categories.dup.paginate(2, 2)
+          second_page.total_entries.should eq(3)
+          second_page.next_page.should be_nil
+          second_page.map(&.id).should eq([first_category.id])
+
+          categories.dup.clear_distinct.count.should eq(4)
+          categories.dup.distinct.count.should eq(3)
+        end
+      end
+    end
+
+    it "preserves an explicit DISTINCT ON clause when ordering by a target column" do
+      categories = User.new({id: 1_i64}).categories.order_by("categories.name", :desc)
+
+      categories.distinct("categories.id").to_sql.should contain("SELECT DISTINCT ON (categories.id)")
+    end
+
+    {"derived table", "CTE", "CTE column list"}.each do |source_kind|
+      it "preserves target identity when a #{source_kind} replaces the model table" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          category = Category.create!(name: "Original")
+          Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+          values = "VALUES (#{category.id}, 'Alpha'), (#{category.id}, 'Zulu')"
+          categories = user.categories
+          case source_kind
+          when "derived table"
+            categories.clear_from.from("(#{values}) AS categories(id, name)")
+          when "CTE"
+            categories.with_cte("categories", "SELECT * FROM (#{values}) AS source(id, name)")
+          when "CTE column list"
+            categories.with_cte("categories(id, name)", values)
+          end
+          categories.order_by("categories.name").order_by("categories.id")
+          categories.to_sql.should contain(%(DISTINCT ON ("categories"."id")))
+          categories.clear_order_bys.order_by("categories.id").order_by("categories.name")
+
+          categories.map { |record| {record.id, record.name} }.should eq([{category.id, "Alpha"}])
+          categories.count.should eq(1)
+          categories.dup.clear_distinct.count.should eq(2)
+        end
+      end
+    end
+
+    it "preserves target identity when an outer CTE shadows the model table" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Original")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.order_by("categories.id").order_by("categories.name")
+        values = "VALUES (#{category.id}, 'Alpha'), (#{category.id}, 'Zulu')"
+        query = Lustra::SQL.select("source.id", "source.name")
+          .with_cte("categories", "SELECT * FROM (#{values}) AS records(id, name)")
+          .from({source: categories})
+
+        query.to_a.map { |row| {row["id"], row["name"]} }.should eq([{category.id, "Alpha"}])
+        query.count.should eq(1)
+      end
+    end
+
+    it "preserves target identity with non-primary ordering inside an outer shadowing CTE" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Original")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.order_by("categories.name").order_by("categories.id")
+        values = "VALUES (#{category.id}, 'Alpha'), (#{category.id}, 'Zulu')"
+        query = Lustra::SQL.select("source.id", "source.name")
+          .with_cte("categories", "SELECT * FROM (#{values}) AS records(id, name)")
+          .from({source: categories})
+
+        query.to_a.map { |row| {row["id"], row["name"]} }.should eq([{category.id, "Alpha"}])
+        query.count.should eq(1)
+      end
+    end
+
+    it "preserves target identity when an unquoted selected alias folds to a target column name" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Original")
+        Post.create!(title: "Alpha", user_id: user.id, category_id: category.id)
+        Post.create!(title: "Zulu", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.clear_select
+          .select(Lustra::SQL::Column.new("categories.id", "id"))
+          .select(Lustra::SQL::Column.new("posts.title", "NAME"))
+          .order_by(:name).order_by("categories.id")
+
+        categories.map { |record| {record.id, record.name} }.should eq([{category.id, "Alpha"}])
+        categories.count.should eq(1)
+      end
+    end
+
+    {"raw SQL", "structured column"}.each do |selection|
+      it "rejects duplicate target output names selected as #{selection}" do
+        categories = User.new({id: 1_i64}).categories
+        if selection == "raw SQL"
+          categories.select("posts.title AS NAME")
+        else
+          categories.select(Lustra::SQL::Column.new("posts.title", %("name")))
+        end
+        categories.order_by("categories.name").order_by("categories.id")
+
+        expect_raises(Lustra::SQL::QueryBuildingError, "Column 'name' is selected more than once; give additional expressions a unique alias.") do
+          categories.to_sql
+        end
+      end
+    end
+
+    it "rejects duplicate output names alongside explicitly selected target columns" do
+      categories = User.new({id: 1_i64}).categories.clear_select
+        .select(:id, :name, "posts.title AS name")
+        .order_by("categories.name").order_by("categories.id")
+
+      expect_raises(Lustra::SQL::QueryBuildingError, "Column 'name' is selected more than once") do
+        categories.to_sql
+      end
+    end
+
+    it "rejects overlapping joined wildcards before loading target models" do
+      temporary do
+        reinit_example_models
+        user = User.create!({first_name: "John"})
+        category = Category.create!({name: "Crystal"})
+        Post.create!({id: 101_i64, title: "Post", user_id: user.id, category_id: category.id})
+
+        {"posts.*", %("posts" /* table */ . * -- columns\n), "*"}.each do |wildcard|
+          categories = user.categories.select(wildcard).order_by("categories.name")
+
+          expect_raises(Lustra::SQL::QueryBuildingError, "Column 'id' is selected more than once; give additional expressions a unique alias.") do
+            categories.to_a
+          end
+        end
+      end
+    end
+
+    {"posts.id", "posts.id id", %(posts.id "id")}.each do |selection|
+      it "rejects overlapping joined output selected as #{selection}" do
+        temporary do
+          reinit_example_models
+          user = User.create!(first_name: "User")
+          category = Category.create!(name: "Alpha")
+          Post.create!(id: 101_i64, title: "Post", user_id: user.id, category_id: category.id)
+          categories = user.categories.select(selection).order_by("categories.name")
+
+          expect_raises(Lustra::SQL::QueryBuildingError, "Column 'id' is selected more than once; give additional expressions a unique alias.") do
+            categories.to_a
+          end
+        end
+      end
+    end
+
+    it "allows uniquely named joined outputs with and without implicit aliases" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(id: 101_i64, title: "Post", user_id: user.id, category_id: category.id)
+
+        {"posts.title", "posts.title post_title"}.each do |selection|
+          categories = user.categories.select(selection).order_by("categories.name")
+          records = categories.to_a(fetch_columns: true)
+          records.map(&.id).should eq([category.id])
+          records.first.attributes[selection == "posts.title" ? "title" : "post_title"].should eq("Post")
+        end
+      end
+    end
+
+    it "discards unused joined outputs when plucking grouped values" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        2.times { Post.create!(title: "Post", user_id: user.id, category_id: category.id) }
+        categories = user.categories.select("posts.title post_title")
+          .group_by("categories.id").order_by("categories.name")
+
+        categories.pluck_col("COUNT(posts.id)", Int64).should eq([2_i64])
+      end
+    end
+
+    it "uses native output names for aliases outside the identifier parser" do
+      temporary do
+        reinit_example_models
+        categories = User.new({id: 1_i64}).categories
+          .select("posts.title AS naïve", "LOWER(posts.title) AS naïve")
+          .order_by("categories.name")
+
+        expect_raises(Lustra::SQL::QueryBuildingError, "Column 'naïve' is selected more than once") do
+          categories.to_sql
+        end
+      end
+    end
+
+    it "rejects duplicate computed aliases when ordering through associations" do
+      categories = User.new({id: 1_i64}).categories
+        .select("posts.title AS label", "LOWER(posts.title) AS LABEL")
+        .order_by("categories.name").order_by("categories.id")
+
+      expect_raises(Lustra::SQL::QueryBuildingError, "Column 'label' is selected more than once") do
+        categories.to_sql
+      end
+    end
+
+    it "allows a unique alias alongside target columns when ordering through associations" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        category = Category.create!(name: "Alpha")
+        Post.create!(title: "Post", user_id: user.id, category_id: category.id)
+
+        categories = user.categories.select("posts.title AS post_name")
+          .order_by("categories.name").order_by("categories.id")
+
+        record = categories.first!(fetch_columns: true)
+        record.name.should eq("Alpha")
+        record.attributes["post_name"].should eq("Post")
+      end
+    end
+
+    it "does not rebind qualified ordering to a different selected expression" do
+      categories = User.new({id: 1_i64}).categories.clear_select
+        .select(Lustra::SQL::Column.new("categories.id", "id"))
+        .select(Lustra::SQL::Column.new("posts.title", "name"))
+        .order_by("categories.name").order_by("categories.id")
+
+      categories.to_sql.should start_with(%(SELECT DISTINCT ON ("categories"."id")))
+    end
+
+    it "does not move an unselected ordering column outside its source scope" do
+      categories = User.new({id: 1_i64}).categories.clear_select
+        .select(Lustra::SQL::Column.new("categories.id", "id"))
+        .order_by(:name).order_by("categories.id")
+
+      categories.to_sql.should start_with(%(SELECT DISTINCT ON ("categories"."id")))
+    end
+
     it "allows duplicate targets after clearing implicit or explicit distinctness" do
       temporary do
         reinit_example_models

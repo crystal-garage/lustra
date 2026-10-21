@@ -1,5 +1,3 @@
-require "db"
-require "pg"
 require "./sql"
 
 # An update query

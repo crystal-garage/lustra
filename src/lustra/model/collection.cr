@@ -1,4 +1,5 @@
 require "../sql/select_query"
+require "../sql/fragment_scanner"
 
 # Model definition is made by adding the `Lustra::Model` mixin in your class.
 # ## Simple Model
@@ -218,6 +219,9 @@ module Lustra::Model
     property? autosave : Bool = false
 
     # :nodoc:
+    property? implicit_through_distinct : Bool = false
+
+    # :nodoc:
     def initialize(
       @distinct_value = nil,
       @cte = {} of String => Lustra::SQL::SelectBuilder | String,
@@ -250,10 +254,481 @@ module Lustra::Model
       copy.parent_model = parent_model
       copy.association_name = association_name
       copy.autosave = autosave?
+      copy.implicit_through_distinct = implicit_through_distinct?
       if @polymorphic && (polymorphic_key = @polymorphic_key) && (polymorphic_scope = @polymorphic_scope)
         copy.flag_as_polymorphic!(polymorphic_key, polymorphic_scope)
       end
       copy
+    end
+
+    def distinct(on : String? = "")
+      @implicit_through_distinct = false
+      super
+    end
+
+    # Render this collection as SQL. Ordered through associations with raw SQL
+    # projections may require a database connection to resolve output names.
+    # This uses PostgreSQL's describe protocol without executing the query.
+    def to_sql : String
+      if query = ordered_through_query
+        query.to_sql
+      else
+        super
+      end
+    end
+
+    protected def ordered_through_query : SQL::SelectQuery?
+      if key = through_ordering_key
+        projected_order_columns = @order_bys.all? do |order|
+          next true if projects_order_alias?(order.op)
+
+          {% begin %}
+            {% if T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
+              false
+            {% else %}
+              case order.op
+              {% for _, column in T::COLUMNS %}
+                {% name = column[:db_column_name] %}
+                when "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
+                  projects_order_column?(order.op, {{ name }})
+                {% if name == name.downcase %}
+                  when "#{T.table}." + {{ name }}
+                    unquoted_order_identifier?(T.table.to_s) && unquoted_order_identifier?({{ name }}) && projects_order_column?(order.op, {{ name }})
+                {% end %}
+                when SQL.escape({{ name }})
+                  projects_order_column?(nil, {{ name }})
+                {% if name == name.downcase %}
+                  when {{ name }}
+                    unquoted_order_identifier?({{ name }}) && projects_order_column?(nil, {{ name }})
+                {% end %}
+              {% end %}
+              else
+                false
+              end
+            {% end %}
+          {% end %}
+        end
+
+        if projected_order_columns
+          validate_through_projection!
+
+          # Choose one row per target before applying the requested result order
+          # and pagination. Keep DISTINCT ON restricted to the primary key.
+          source = dup.clear_limit.clear_offset
+          source.implicit_through_distinct = false
+          source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + @order_bys)
+
+          return SQL.select.from("(#{source.to_sql}) #{SQL.escape(T.table)}")
+            .order_by(@order_bys.dup).limit(@limit).offset(@offset)
+        end
+      end
+
+      nil
+    end
+
+    private def through_ordering_key : String?
+      return if @order_bys.empty?
+      return unless implicit_through_distinct? && (key = @distinct_value)
+      return if {key, "#{T.table}.#{T.__pkey__}", T.__pkey__, SQL.escape(T.__pkey__)}.includes?(@order_bys.first.op)
+
+      key
+    end
+
+    # Keep GROUP BY aliases and positions bound to the original selection when
+    # pluck replaces it. Metadata is loaded lazily and shared during one rewrite.
+    private class ThroughPluckGrouping
+      property input_names : Array(String)? = nil
+      property output_names : Array(String)? = nil
+      property selected_expressions : Array(String)? = nil
+      property bindings : Array(String)? = nil
+    end
+
+    private def pluck_sql(fields) : String
+      return super unless key = through_ordering_key
+
+      order_expressions = @order_bys.map do |order|
+        expression = through_pluck_expression(order.op)
+
+        return super unless expression
+
+        unaliased_pluck_expression(expression)
+      end
+
+      # Keep field and sort expressions in the original join scope. The outer
+      # query exposes only requested values after deduplication and ordering.
+      # Bind grouping aliases and positions before replacing the selection.
+      source = dup.clear_before_query_triggers.clear_limit.clear_offset.clear_select.clear_group_bys
+      grouping = ThroughPluckGrouping.new
+
+      @group_bys.each do |group|
+        source.group_by(through_pluck_grouping(group.is_a?(Symbol) ? SQL.escape(group) : group, grouping))
+      end
+
+      source.implicit_through_distinct = false
+      prefix = "#{SQL::PLUCK_PREFIX}#{Random::Secure.hex(16)}"
+      source_columns = [] of String
+
+      if bindings = grouping.bindings
+        bindings.each_with_index do |expression, index|
+          source.select(SQL::Column.new("#{expression}\n"))
+          source_columns << "#{prefix}_group_#{index}"
+        end
+      end
+
+      columns = [] of String
+      fields.each_with_index do |field, index|
+        column_alias = "#{prefix}_column_#{index}"
+        expression = through_pluck_expression(field) || field
+        source.select(SQL::Column.new(expression))
+        columns << column_alias
+      end
+
+      orders = @order_bys.map_with_index do |order, index|
+        column_alias = "#{prefix}_order_#{index}"
+        source.select(SQL::Column.new("#{order_expressions[index]}\n", column_alias))
+        SQL::Query::OrderBy::Record.new(column_alias, order.dir, order.nulls)
+      end
+
+      source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
+
+      # Rename grouping and pluck columns by position; only plucked values escape.
+      source_columns.concat(columns)
+
+      SQL
+        .select(columns.join(", "))
+        .from("(#{source.to_sql}) #{SQL.escape(T.table)} (#{source_columns.join(", ")})")
+        .order_by(orders)
+        .limit(@limit)
+        .offset(@offset)
+        .to_sql
+    end
+
+    private def through_pluck_grouping(expression : String, grouping : ThroughPluckGrouping) : String
+      SQL::FragmentScanner.split_expressions(expression).map do |item|
+        reference = through_pluck_grouping_reference(item)
+
+        if position = reference.try(&.to_i?)
+          if position > 0 && reference.try(&.each_char.all?(&.ascii_number?))
+            next through_pluck_grouping_column(position, grouping)
+          end
+        end
+
+        if name = reference.try { |value| output_column_name(value) }
+          inputs = grouping.input_names ||= through_pluck_column_names("*")
+
+          unless inputs.includes?(name)
+            labels = grouping.output_names ||= through_pluck_column_names
+
+            if index = labels.index(name)
+              next through_pluck_grouping_column(index + 1, grouping)
+            end
+          end
+        end
+
+        if bounds = through_pluck_grouping_container(item)
+          opening, closing = bounds
+          next "#{item[0..opening]}#{through_pluck_grouping(item[opening + 1...closing], grouping)}#{item[closing..]}"
+        end
+
+        item
+      end.join("\n, ") + "\n"
+    end
+
+    private def through_pluck_grouping_container(expression : String) : Tuple(Int32, Int32)?
+      reader = SQL::FragmentScanner.skip_trivia(Char::Reader.new(expression))
+      words = [] of String
+
+      while reader.has_next? && reader.current_char != '('
+        start = reader.pos
+        while reader.has_next? && reader.current_char.ascii_letter?
+          reader.next_char
+        end
+        return if reader.pos == start
+        words << expression.byte_slice(start, reader.pos - start).upcase
+        reader = SQL::FragmentScanner.skip_trivia(reader)
+      end
+
+      return unless reader.has_next? && {"", "ROLLUP", "CUBE", "GROUPING SETS"}.includes?(words.join(" "))
+
+      opening = reader.pos
+      reader = SQL::FragmentScanner.skip_fragment(reader)
+      closing = reader.pos - 1
+
+      return if SQL::FragmentScanner.skip_trivia(reader).has_next?
+
+      {opening, closing}
+    end
+
+    private def through_pluck_grouping_reference(expression : String) : String?
+      reader = SQL::FragmentScanner.skip_trivia(Char::Reader.new(expression))
+      start = reader.pos
+
+      if reader.current_char == '"'
+        reader = SQL::FragmentScanner.skip_quote(reader)
+      else
+        while reader.has_next? && SQL::FragmentScanner.identifier_char?(reader.current_char)
+          reader.next_char
+        end
+      end
+
+      ending = reader.pos
+
+      return if start == ending || SQL::FragmentScanner.skip_trivia(reader).has_next?
+
+      expression.byte_slice(start, ending - start)
+    end
+
+    private def through_pluck_grouping_column(position : Int32, grouping : ThroughPluckGrouping) : String
+      columns = grouping.selected_expressions ||= begin
+        selected = [] of String
+        selected.concat(through_pluck_wildcard_columns) if @columns.empty?
+        through_selected_columns.each do |column|
+          expression = column.to_sql
+          if column.var.nil? && (wildcard = through_pluck_wildcard_selection(expression))
+            selected.concat(through_pluck_wildcard_columns(wildcard))
+          else
+            selected << expression
+          end
+        end
+        selected
+      end
+      expression = columns[position - 1]? || raise SQL::QueryBuildingError.new("GROUP BY position #{position} is outside the selected columns.")
+      bindings = grouping.bindings ||= [] of String
+      unless index = bindings.index(expression)
+        index = bindings.size
+        bindings << expression
+      end
+      (index + 1).to_s
+    end
+
+    private def through_pluck_wildcard_selection(expression : String) : String?
+      reader = Char::Reader.new(expression)
+      previous = '\0'
+      while reader.has_next?
+        reader = SQL::FragmentScanner.skip_trivia(reader)
+        break unless reader.has_next?
+        if reader.current_char == '*' && (previous == '.' || previous == '\0')
+          ending = reader.pos + 1
+          reader.next_char
+          return expression.byte_slice(0, ending) unless SQL::FragmentScanner.skip_trivia(reader).has_next?
+        end
+        previous = reader.current_char
+        skipped = SQL::FragmentScanner.skip_fragment(reader)
+        if skipped.pos != reader.pos
+          reader = skipped
+        else
+          reader.next_char
+        end
+      end
+      nil
+    end
+
+    private def through_pluck_wildcard_columns(selection : String = "#{SQL.escape(T.table)}.*") : Array(String)
+      # Ask PostgreSQL for wildcard order; model declarations need not match it.
+      through_pluck_column_names(selection)
+        .map { |name| "#{selection[0...-1]}#{SQL.escape(name)}" }
+    end
+
+    private def through_pluck_column_names(selection : String? = nil) : Array(String)
+      query = dup.clear_before_query_triggers.clear_order_bys.clear_limit.clear_offset.limit(0)
+      if selection
+        query.clear_select.clear_group_bys.clear_havings.clear_windows.clear_distinct.select(selection)
+      end
+      sql = query.to_sql
+      SQL::ConnectionPool.with_connection(connection_name) do |connection|
+        SQL.log_query(sql) { SQL::Query::Pluck::ProjectionStatement.new(connection, sql).column_names }
+      end
+    end
+
+    private def unaliased_pluck_expression(expression : String) : String
+      raw_order_column(expression).try(&.value.to_s) || expression
+    end
+
+    private def through_selected_columns : Array(SQL::Column)
+      @columns.flat_map do |column|
+        value = column.value
+        if column.var.nil? && value.is_a?(String)
+          SQL::FragmentScanner.split_expressions(value).map { |expression| SQL::Column.new(expression) }
+        else
+          [column]
+        end
+      end
+    end
+
+    private def through_pluck_expression(field : String) : String?
+      if name = output_column_name(field)
+        selected = through_selected_columns.find do |column|
+          column_alias = column.var.try(&.to_s) || raw_order_alias(column.value)
+          column_alias && output_column_name(column_alias) == name
+        end
+        return "#{selected.to_sql}\n" if selected
+      end
+
+      {% begin %}
+        {% unless T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
+          {% for _, column in T::COLUMNS %}
+            {% name = column[:db_column_name] %}
+            if order_column_sources(nil, {{ name }}).includes?(field)
+              return "#{SQL.escape(T.table)}.#{SQL.escape({{ name }})}"
+            end
+          {% end %}
+        {% end %}
+      {% end %}
+      nil
+    end
+
+    private def projects_order_alias?(order : String)
+      return false unless name = output_column_name(order)
+
+      through_selected_columns.any? do |selected|
+        column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)
+        column_alias && output_column_name(column_alias) == name
+      end
+    end
+
+    private def output_column_name(order : String) : String?
+      if order.starts_with?('"')
+        name = order[1...-1].gsub(%(""), %("))
+        name if SQL.escape(name) == order
+      else
+        name = order.downcase
+        name if unquoted_order_identifier?(name)
+      end
+    end
+
+    private def validate_through_projection!
+      names = [] of String
+      through_selected_columns.each do |selected|
+        if (column_alias = selected.var.try(&.to_s) || raw_order_alias(selected.value)) && (name = output_column_name(column_alias))
+          names << name
+        else
+          wildcard = target_wildcard?(selected)
+          known = wildcard
+          {% begin %}
+            {% unless T.abstract? || !T.has_constant?("COLUMNS") || T::COLUMNS.empty? %}
+              {% for _, column in T::COLUMNS %}
+                {% name = column[:db_column_name] %}
+                if wildcard || (selected.value.is_a?(Symbol) && selected.value.to_s == {{ name }}) || order_column_sources(nil, {{ name }}).includes?(selected.value)
+                  names << {{ name }}
+                  known = true
+                end
+              {% end %}
+            {% end %}
+          {% end %}
+          unless known
+            # Describe the complete projection to preserve native output names.
+            names = through_pluck_column_names
+            break
+          end
+        end
+      end
+
+      seen = Set(String).new
+      if duplicate = names.find { |name| !seen.add?(name) }
+        raise SQL::QueryBuildingError.new("Column '#{duplicate}' is selected more than once; give additional expressions a unique alias.")
+      end
+    end
+
+    private def raw_order_alias(value : SQL::Selectable) : String?
+      raw_order_column(value).try(&.var.try(&.to_s))
+    end
+
+    private def raw_order_column(value : SQL::Selectable) : SQL::Column?
+      return unless value.is_a?(String)
+
+      reader = Char::Reader.new(value)
+      while reader.has_next?
+        skipped = SQL::FragmentScanner.skip_fragment(reader)
+        if skipped.pos != reader.pos
+          reader = skipped
+          next
+        end
+
+        position = reader.pos
+        if SQL::FragmentScanner.identifier_char?(reader.current_char)
+          reader.next_char
+          while reader.has_next? && SQL::FragmentScanner.identifier_char?(reader.current_char)
+            reader.next_char
+          end
+          next unless value.byte_slice(position, reader.pos - position).downcase == "as"
+          if column = read_order_column(reader, position)
+            return column
+          end
+        else
+          reader.next_char
+        end
+      end
+    end
+
+    private def read_order_column(reader : Char::Reader, position : Int32) : SQL::Column?
+      reader = SQL::FragmentScanner.skip_trivia(reader)
+      start = reader.pos
+
+      if reader.current_char == '"'
+        reader = SQL::FragmentScanner.skip_quote(reader)
+      else
+        while reader.has_next? && SQL::FragmentScanner.identifier_char?(reader.current_char)
+          reader.next_char
+        end
+      end
+      column_alias = reader.string.byte_slice(start, reader.pos - start)
+      return unless output_column_name(column_alias)
+      return if SQL::FragmentScanner.skip_trivia(reader).has_next?
+
+      SQL::Column.new(reader.string.byte_slice(0, position).rstrip, column_alias)
+    end
+
+    private def projects_order_column?(expression : String?, name : String)
+      sources = order_column_sources(expression, name)
+
+      through_selected_columns.any? do |selected|
+        if column_alias = selected.var
+          next false unless output_column_name(column_alias.to_s) == name
+          next true if expression.nil?
+        end
+
+        next true if target_wildcard?(selected)
+
+        case value = selected.value
+        when Symbol
+          value.to_s == name
+        when String
+          sources.includes?(value)
+        else
+          false
+        end
+      end
+    end
+
+    private def target_wildcard?(selected : SQL::Column) : Bool
+      return false unless selected.var.nil?
+
+      selected.value == "#{SQL.escape(T.table)}.*" ||
+        (unquoted_order_identifier?(T.table.to_s) && selected.value == "#{T.table}.*")
+    end
+
+    private def order_column_sources(expression : String?, name : String) : Array(String)
+      sources = [SQL.escape(name)]
+      unquoted_name = unquoted_order_identifier?(name)
+      sources << name if unquoted_name
+
+      if expression
+        sources << expression
+      else
+        sources << "#{SQL.escape(T.table)}.#{SQL.escape(name)}"
+        sources << "#{T.table}.#{name}" if unquoted_name && unquoted_order_identifier?(T.table.to_s)
+      end
+
+      sources
+    end
+
+    private def unquoted_order_identifier?(name : String)
+      first = name[0]?
+      return false unless first && (('a' <= first && first <= 'z') || first == '_')
+
+      name.each_char.all? do |char|
+        ('a' <= char && char <= 'z') || ('0' <= char && char <= '9') || char == '_' || char == '$'
+      end
     end
 
     protected setter eager_load_triggers : Array(Lustra::SQL::SelectBuilder -> Nil)
