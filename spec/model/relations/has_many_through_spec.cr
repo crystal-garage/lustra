@@ -693,6 +693,52 @@ describe "Lustra::Model::Relations::HasManyThrough" do
       end
     end
 
+    it "paginates unique targets ordered by a correlated scalar subquery" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        older = Category.create!(name: "Older")
+        newer = Category.create!(name: "Newer")
+        Post.create!(title: "First", user_id: user.id, category_id: older.id)
+        2.times { Post.create!(title: "Latest", user_id: user.id, category_id: newer.id) }
+
+        categories = user.categories.group_by("categories.id")
+          .order_by("(SELECT MAX(p.id) FROM posts p WHERE p.category_id = categories.id)", :desc, :nulls_last)
+          .order_by("categories.id", :asc)
+
+        first_page = categories.dup.paginate(1, 1)
+        first_page.total_entries.should eq(2_i64)
+        first_page.to_a.map(&.id).should eq([newer.id])
+        first_page.pluck_col("categories.id", Int64).should eq([newer.id.to_i64])
+
+        second_page = categories.dup.paginate(2, 1)
+        second_page.total_entries.should eq(2_i64)
+        second_page.to_a.map(&.id).should eq([older.id])
+      end
+    end
+
+    it "preserves selected aliases and null ordering alongside a source expression" do
+      temporary do
+        reinit_example_models
+        user = User.create!(first_name: "User")
+        alpha = Category.create!(name: "Alpha")
+        beta = Category.create!(name: "Beta")
+        2.times { Post.create!(title: "Published", published: true, user_id: user.id, category_id: alpha.id) }
+        Post.create!(title: "Draft", published: false, user_id: user.id, category_id: beta.id)
+
+        categories = user.categories.select("LENGTH(categories.name) AS name_length")
+          .group_by("categories.id")
+          .order_by("(SELECT MAX(p.id) FROM posts p WHERE p.category_id = categories.id AND p.published)", :desc, :nulls_last)
+          .order_by(:name_length).order_by("categories.id")
+        original_names = categories.dup.clear_order_bys.to_a(fetch_columns: true).first.attributes.keys.sort!
+
+        records = categories.to_a(fetch_columns: true)
+        records.map(&.name).should eq(["Alpha", "Beta"])
+        records.each { |record| record.attributes.keys.sort!.should eq(original_names) }
+        categories.pluck("categories.name", "name_length").should eq([{"Alpha", 5}, {"Beta", 4}])
+      end
+    end
+
     it "plucks joined expressions in source scope while preserving target ordering and pagination" do
       temporary do
         reinit_example_models

@@ -321,9 +321,46 @@ module Lustra::Model
           return SQL.select.from("(#{source.to_sql}) #{SQL.escape(T.table)}")
             .order_by(@order_bys.dup).limit(@limit).offset(@offset)
         end
+
+        if @order_bys.any? { |order| through_pluck_expression(order.op).nil? }
+          return ordered_through_expression_query(key)
+        end
       end
 
       nil
+    end
+
+    private def ordered_through_expression_query(key : String) : SQL::SelectQuery
+      validate_through_projection!
+      names = through_pluck_column_names
+      source = dup.clear_limit.clear_offset
+      source.implicit_through_distinct = false
+      source.select(print_wildcard) if @columns.empty?
+      prefix = "#{SQL::ORDER_PREFIX}#{Random::Secure.hex(16)}"
+
+      orders = @order_bys.map_with_index do |order, index|
+        if position = (through_pluck_grouping_reference(order.op) || order.op.strip).to_i?
+          name = position > 0 ? names[position - 1]? : nil
+          raise SQL::QueryBuildingError.new("ORDER BY position #{position} is outside the selected columns.") unless name
+          SQL::Query::OrderBy::Record.new(SQL.escape(name), order.dir, order.nulls)
+        elsif (name = output_column_name(order.op)) && names.includes?(name)
+          order
+        else
+          column_alias = "#{prefix}_#{index}"
+          source.select(SQL::Column.new("#{order.op}\n", column_alias))
+          SQL::Query::OrderBy::Record.new(column_alias, order.dir, order.nulls)
+        end
+      end
+      source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
+
+      # Evaluate source expressions before deduplication, exposing only the
+      # original projection after sorting by the internal helper columns.
+      SQL
+        .select(names.map { |name| SQL.escape(name) }.join(", "))
+        .from("(#{source.to_sql}) #{SQL.escape(T.table)}")
+        .order_by(orders)
+        .limit(@limit)
+        .offset(@offset)
     end
 
     private def through_ordering_key : String?
@@ -349,9 +386,9 @@ module Lustra::Model
       order_expressions = @order_bys.map do |order|
         expression = through_pluck_expression(order.op)
 
-        return super unless expression
+        return super if !expression && (through_pluck_grouping_reference(order.op) || order.op.strip).to_i?
 
-        unaliased_pluck_expression(expression)
+        unaliased_pluck_expression(expression || order.op)
       end
 
       # Keep field and sort expressions in the original join scope. The outer
