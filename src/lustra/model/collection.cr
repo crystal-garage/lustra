@@ -338,19 +338,25 @@ module Lustra::Model
       source.select(print_wildcard) if @columns.empty?
       prefix = "#{SQL::ORDER_PREFIX}#{Random::Secure.hex(16)}"
 
-      orders = @order_bys.map_with_index do |order, index|
-        if position = (through_pluck_grouping_reference(order.op) || order.op.strip).to_i?
-          name = position > 0 ? names[position - 1]? : nil
-          raise SQL::QueryBuildingError.new("ORDER BY position #{position} is outside the selected columns.") unless name
-          SQL::Query::OrderBy::Record.new(SQL.escape(name), order.dir, order.nulls)
-        elsif (name = output_column_name(order.op)) && names.includes?(name)
-          order
-        else
-          column_alias = "#{prefix}_#{index}"
-          source.select(SQL::Column.new("#{order.op}\n", column_alias))
-          SQL::Query::OrderBy::Record.new(column_alias, order.dir, order.nulls)
+      orders =
+        @order_bys.map_with_index do |order, index|
+          if position = (through_pluck_grouping_reference(order.op) || order.op.strip).to_i?
+            name = position > 0 ? names[position - 1]? : nil
+
+            unless name
+              raise SQL::QueryBuildingError.new("ORDER BY position #{position} is outside the selected columns.")
+            end
+
+            SQL::Query::OrderBy::Record.new(SQL.escape(name), order.dir, order.nulls)
+          elsif (name = output_column_name(order.op)) && names.includes?(name)
+            order
+          else
+            column_alias = "#{prefix}_#{index}"
+            source.select(SQL::Column.new("#{order.op}\n", column_alias))
+            SQL::Query::OrderBy::Record.new(column_alias, order.dir, order.nulls)
+          end
         end
-      end
+
       source.order_by([SQL::Query::OrderBy::Record.new(key, :asc, nil)] + orders)
 
       # Evaluate source expressions before deduplication, exposing only the
