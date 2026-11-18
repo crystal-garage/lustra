@@ -11,7 +11,7 @@ module Lustra::SQL::Query::Join
     change!
   end
 
-  def join(name : Selectable, type = :inner, lateral = false, &block)
+  def join(name : Selectable, type = :inner, lateral = false, &)
     join_impl(name, type, lateral, Lustra::Expression.ensure_node!(with Lustra::Expression.new yield))
   end
 
