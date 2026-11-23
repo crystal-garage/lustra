@@ -10,13 +10,13 @@ end
 
 struct Range
   def to_json(json : JSON::Builder)
-    json.string(to_s)
+    json.string(Lustra::SQL::RangeLiteral.format(self))
   end
 end
 
 struct PG::Range
   def to_json(json : JSON::Builder)
-    json.string(to_s)
+    json.string(Lustra::SQL::RangeLiteral.format(self))
   end
 end
 

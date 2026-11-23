@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added `PG::Range` columns for integer, numeric, and timestamp values, preserving empty values, unbounded ends, and inclusive/exclusive bounds. Native Crystal ranges and PostgreSQL range strings are accepted as input.
 - Added expression `after?` and `before?` predicates for readable greater-than and less-than comparisons between SQL expressions or literal values.
 - `JSON::Any` model columns now accept JSON-serializable Crystal collections such as hashes, arrays, and named tuples.
 - Added `Model#modified?` for checking whether a new or changed model requires database persistence.

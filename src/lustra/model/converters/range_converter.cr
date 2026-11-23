@@ -1,203 +1,89 @@
 require "./base"
+require "../../sql/range_literal"
 
-# Minimal PostgreSQL range parsing utilities tailored for Lustra converters.
-# This supports basic numeric and time ranges in the form: "[1,10)", "(2020-01-01,2020-12-31]".
-def string_to_range(str : String, &)
-  return if str.empty? || str == "empty"
-
-  match = str.match(/^([\[\(])\s*(.*?)\s*,\s*(.*?)\s*([\)\]])$/)
-  unless match
-    raise "Invalid range format: #{str}"
-  end
-
-  begin_incl = match[1] == "["
-  begin_s = match[2]
-  end_s = match[3]
-  end_incl = match[4] == "]"
-
-  begin_val = (begin_s == "" || begin_s == "") ? nil : yield(begin_s)
-  end_val = (end_s == "" || end_s == "") ? nil : yield(end_s)
-
-  # Crystal Range only supports an exclusive end flag; use right_exclusive accordingly.
-  exclusive = !end_incl
-
-  Range.new(begin_val, end_val, exclusive)
-end
-
-module Lustra::Model::Converter::RangeConverterInt32
-  def self.to_column(x) : Range(Int32?, Int32?)?
-    case x
+# Keep PostgreSQL's empty and bound flags; callers can explicitly convert a
+# representable value with PG::Range#to_crystal_range when needed.
+module Lustra::Model::Converter::RangeConverter(T)
+  def self.to_column(value) : PG::Range(T)?
+    case value
     when Nil
       nil
     when PG::Range
-      to_column(x.to_crystal_range)
-    when Range
-      b = x.begin.nil? ? nil : x.begin.to_s.to_i32
-      e = x.end.nil? ? nil : x.end.to_s.to_i32
-
-      Range.new(b, e, x.excludes_end?)
+      return PG::Range(T).empty if value.empty?
+      PG::Range(T).new(bound(value.begin), bound(value.end),
+        lower_inclusive: value.lower_inclusive, upper_inclusive: value.upper_inclusive)
+    when ::Range
+      lower = bound(value.begin)
+      upper = bound(value.end)
+      return PG::Range(T).empty if !lower.nil? && lower == upper && value.excludes_end?
+      PG::Range(T).new(lower, upper,
+        lower_inclusive: !lower.nil?, upper_inclusive: !upper.nil? && !value.excludes_end?)
     when String
-      string_to_range(x, &.to_i32)
+      SQL::RangeLiteral.parse(value, T) { |text| bound(text) }
     else
+      raise ArgumentError.new("Cannot convert #{value.class} to PG::Range(#{T})")
     end
   end
 
-  def self.to_db(x)
-    case x
-    when Nil
-      nil
-    when Range
-      Lustra::Model::Converter.format_numeric_range(x)
-    else
-    end
-  end
-end
-
-module Lustra::Model::Converter::RangeConverterInt64
-  def self.to_column(x) : Range(Int64?, Int64?)?
-    case x
-    when Nil
-      nil
-    when PG::Range
-      to_column(x.to_crystal_range)
-    when Range
-      b = x.begin.nil? ? nil : x.begin.to_s.to_i64
-      e = x.end.nil? ? nil : x.end.to_s.to_i64
-
-      Range.new(b, e, x.excludes_end?)
-    when String
-      string_to_range(x, &.to_i64)
-    else
-    end
+  def self.to_db(value : PG::Range(T)?) : String?
+    value.try { |range| SQL::RangeLiteral.format(range) }
   end
 
-  def self.to_db(x)
-    case x
-    when Nil
-      nil
-    when Range
-      Lustra::Model::Converter.format_numeric_range(x)
-    else
-    end
-  end
-end
-
-module Lustra::Model::Converter::RangeConverterPGNumeric
-  def self.to_column(x) : Range(PG::Numeric?, PG::Numeric?)?
-    case x
-    when Nil
-      nil
-    when PG::Range
-      to_column(x.to_crystal_range)
-    when Range(PG::Numeric?, PG::Numeric?)
-      x
-    else
-    end
-  end
-
-  def self.to_db(x)
-    case x
-    when Nil
-      nil
-    when Range
-      Lustra::Model::Converter.format_numeric_range(x)
-    else
-    end
-  end
-end
-
-module Lustra::Model::Converter::RangeConverterBigDecimal
-  def self.to_column(x) : Range(BigDecimal?, BigDecimal?)?
-    case x
-    when Nil
-      nil
-    when PG::Range
-      to_column(x.to_crystal_range)
-    when Range(BigDecimal?, BigDecimal?)
-      x
-    when Range
-      b = x.begin.nil? ? nil : BigDecimal.new(x.begin.to_s)
-      e = x.end.nil? ? nil : BigDecimal.new(x.end.to_s)
-
-      Range.new(b, e, x.excludes_end?)
-    when String
-      string_to_range(x) { |s| BigDecimal.new(s) }
-    else
-    end
-  end
-
-  def self.to_db(x)
-    case x
-    when Nil
-      nil
-    when Range
-      Lustra::Model::Converter.format_numeric_range(x)
-    else
-    end
-  end
-end
-
-module Lustra::Model::Converter::RangeConverterTime
-  def self.to_column(x) : Range(Time?, Time?)?
-    case x
-    when Nil
-      nil
-    when PG::Range
-      to_column(x.to_crystal_range)
-    when Range
-      b =
-        if x.begin.nil?
-          nil.as(Time?)
-        else
-          if x.begin.is_a?(Time)
-            x.begin.as(Time)
-          else
-            Time::Format::RFC_3339.parse(x.begin.to_s)
-          end
-        end
-
-      e =
-        if x.end.nil?
-          nil.as(Time?)
-        else
-          if x.end.is_a?(Time)
-            x.end.as(Time)
-          else
-            Time::Format::RFC_3339.parse(x.end.to_s)
-          end
-        end
-
-      Range.new(b, e, x.excludes_end?)
-    when String
-      r = string_to_range(x) do |s|
-        # Try local parse for non-RFC formats, fall back to RFC_3339
-        case s
-        when /[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]+/
-          Time.parse_local(s, "%F %X.%L")
-        else
-          Time::Format::RFC_3339.parse(s)
-        end
+  private def self.bound(value) : T?
+    return if value.nil?
+    return value if value.is_a?(T)
+    {% if T == Int32 %}
+      value.to_s.to_i32
+    {% elsif T == Int64 %}
+      value.to_s.to_i64
+    {% elsif T == BigDecimal %}
+      BigDecimal.new(value.to_s)
+    {% elsif T == PG::Numeric %}
+      numeric(value.to_s)
+    {% elsif T == Time %}
+      text = value.to_s
+      return Time.parse_utc(text, "%F") if text.size == 10
+      text = text.sub(' ', 'T')
+      if zone = text.index('+', 10) || text.index('-', 10)
+        text += ":00" if text.size - zone == 3
+      elsif !text.ends_with?('Z') && !text.ends_with?('z')
+        text += 'Z'
       end
-      r
-    else
-    end
+      Time.parse_iso8601(text)
+    {% else %}
+      {% raise "Unsupported range bound type: #{T}" %}
+    {% end %}
   end
 
-  def self.to_db(x)
-    case x
-    when Nil
-      nil
-    when Range
-      Lustra::Model::Converter.format_timestamp_range(x)
-    else
+  # PG::Numeric exposes a binary-value constructor. Build its base-10000 digits
+  # from BigDecimal's exact coefficient and scale, without passing through Float.
+  private def self.numeric(text : String) : PG::Numeric
+    if text == "NaN"
+      return PG::Numeric.new(0_i16, 0_i16, PG::Numeric::Sign::Nan.value, 0_i16, [] of Int16)
     end
+    decimal = BigDecimal.new(text)
+    scale = decimal.scale.to_i
+    padding = (4 - scale % 4) % 4
+    coefficient = decimal.value.abs * BigInt.new(10) ** padding
+    digits = [] of Int16
+    until coefficient.zero?
+      digits << (coefficient % 10_000).to_i16
+      coefficient //= 10_000
+    end
+    digits.reverse!
+    weight = digits.empty? ? 0 : digits.size - 1 - (scale + padding) // 4
+    while digits.last? == 0
+      digits.pop
+    end
+    sign = decimal.value < 0 ? PG::Numeric::Sign::Neg : PG::Numeric::Sign::Pos
+    PG::Numeric.new(digits.size.to_i16, weight.to_i16, sign.value, scale.to_i16, digits)
   end
 end
 
 module Lustra::Model::Converter
-  add_converter("Range(Int32 | Nil, Int32 | Nil)", Lustra::Model::Converter::RangeConverterInt32)
-  add_converter("Range(Int64 | Nil, Int64 | Nil)", Lustra::Model::Converter::RangeConverterInt64)
-  add_converter("Range(Time | Nil, Time | Nil)", Lustra::Model::Converter::RangeConverterTime)
-  add_converter("Range(PG::Numeric | Nil, PG::Numeric | Nil)", Lustra::Model::Converter::RangeConverterPGNumeric)
-  add_converter("Range(BigDecimal | Nil, BigDecimal | Nil)", Lustra::Model::Converter::RangeConverterBigDecimal)
+  add_converter("PG::Range(Int32)", Lustra::Model::Converter::RangeConverter(Int32))
+  add_converter("PG::Range(Int64)", Lustra::Model::Converter::RangeConverter(Int64))
+  add_converter("PG::Range(Time)", Lustra::Model::Converter::RangeConverter(Time))
+  add_converter("PG::Range(PG::Numeric)", Lustra::Model::Converter::RangeConverter(PG::Numeric))
+  add_converter("PG::Range(BigDecimal)", Lustra::Model::Converter::RangeConverter(BigDecimal))
 end

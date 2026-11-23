@@ -291,10 +291,11 @@ class RangeData
   primary_key
 
   column name : String?
-  column int32_range : Range(Int32?, Int32?)?
-  column int64_range : Range(Int64?, Int64?)?
-  column numeric_range : Range(BigDecimal?, BigDecimal?)?
-  column time_range : Range(Time?, Time?)?
+  column int32_range : PG::Range(Int32)?
+  column int64_range : PG::Range(Int64)?
+  column numeric_range : PG::Range(BigDecimal)?
+  column pg_numeric_range : PG::Range(PG::Numeric)?
+  column time_range : PG::Range(Time)?
 
   self.table = "range_data"
 end
@@ -537,6 +538,7 @@ class ModelSpecMigration123
       t.column "int32_range", "int4range", null: true
       t.column "int64_range", "int8range", null: true
       t.column "numeric_range", "numrange", null: true
+      t.column "pg_numeric_range", "numrange", null: true
       t.column "time_range", "tsrange", null: true
 
       t.timestamps

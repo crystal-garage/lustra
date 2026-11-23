@@ -70,7 +70,7 @@ module Lustra
                 JSON::Any | JSON::PullParser | PG::Interval | ::Crypto::Bcrypt::Password |
                 PG::Geo::Point | PG::Geo::Line | PG::Geo::LineSegment |
                 PG::Geo::Box | PG::Geo::Circle | PG::Geo::Path | PG::Geo::Polygon |
-                PG::Range(Int32) | PG::Range(Int64) | PG::Range(PG::Numeric) | PG::Range(Time) |
+                PG::Range(Int32) | PG::Range(Int64) | PG::Range(PG::Numeric) | PG::Range(BigDecimal) | PG::Range(Time) |
                 Range(Int32?, Int32?) | Range(Int64?, Int64?) | Range(PG::Numeric?, PG::Numeric?) | Range(Time?, Time?) |
                 Slice(UInt8) |
                 Array(PG::BoolArray) | Array(PG::CharArray) |
