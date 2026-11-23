@@ -117,6 +117,11 @@ class Lustra::Expression
   end
 
   # :nodoc:
+  def self.safe_literal(x : ::Range | PG::Range) : String
+    safe_literal(SQL::RangeLiteral.format(x))
+  end
+
+  # :nodoc:
   def self.safe_literal(x : ::Lustra::SQL::SelectBuilder)
     {"(", x.to_sql, ")"}.join
   end

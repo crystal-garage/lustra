@@ -7,6 +7,8 @@ class Lustra::Expression::Node::Literal < Lustra::Expression::Node
   def initialize(value)
     if value.is_a?(AvailableLiteral)
       @value = value
+    elsif value.is_a?(::Range) || value.is_a?(PG::Range)
+      @value = SQL::RangeLiteral.format(value)
     elsif value.responds_to?(:to_sql)
       @value = value.to_sql
     else

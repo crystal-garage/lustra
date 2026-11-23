@@ -158,6 +158,19 @@ For ordered through associations with raw SQL projections, `to_sql` may require
 a live database connection to resolve output column names. Lustra uses
 PostgreSQL's describe protocol without executing the query.
 
+## PostgreSQL Ranges
+
+Declare range columns using `PG::Range(T)`, for example
+`column availability : PG::Range(Time)?` in a model backed by a `tsrange` or
+`tstzrange` column. Supported bound types are `Int32`, `Int64`, `PG::Numeric`,
+`BigDecimal`, and `Time`.
+
+Assignments accept native Crystal ranges and PostgreSQL range strings. Returned
+values preserve both bound inclusivity flags, unbounded ends, and empty ranges.
+SQL `NULL` is represented by `nil`; an empty range is a non-nil value with
+`empty? == true`. Keep `PG::Range` for empty ranges or exclusive lower bounds;
+use `to_crystal_range` only for nonempty values that Crystal can represent.
+
 ## Documentation
 
 - Manual: https://crystal-garage.gitbook.io/lustra-docs/
